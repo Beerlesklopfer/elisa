@@ -26,7 +26,8 @@ elisa (0.3.0) unstable; urgency=medium
     Umgebung), ELIEZER_CHAT_MODEL, ELIEZER_EMBED_MODEL, ELIEZER_TIMEOUT.
     Default bleibt ollama; Provenienz (llm_model) folgt LOCAL_CHAT_MODEL.
   * Slogan „ELISA – Macht das Unsichtbare sichtbar.“ in README, CLAUDE.md
-    und Footer (übersetzt: Making the invisible visible).
+    und Footer (übersetzt: Making the invisible visible); Leitgedanke: begegnet
+    der Überforderung in der Angstdomäne Functional Safety.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

@@ -15,7 +15,9 @@ Stack: Django (deterministischer Kern + DB) und ein lokales LLM über Ollama
 (beratend, danebenlaufend). Norm-Bezug über ein RAG (Retrieval-Augmented
 Generation), nicht über Fine-Tuning – die Modellgewichte werden nie trainiert.
 
-**Slogan:** „ELISA – Macht das Unsichtbare sichtbar.“
+**Slogan:** „ELISA – Macht das Unsichtbare sichtbar.“ Er begegnet der
+Überforderung durch Norm- und Nachweisfülle: Struktur und Sichtbarkeit statt
+Unübersichtlichkeit.
 
 **Leitbild:** „Herr, öffne ihm die Augen!" (2 Kön 6,17). Functional Safety
 ist für viele Firmen eine Angstdomäne; ELISA macht sichtbar, was verborgen ist

@@ -6,7 +6,9 @@
 
 Funktionale Sicherheit ist für viele Firmen eine Angstdomäne: Was nicht
 sichtbar ist, macht Angst — die ungeprüfte Lücke, die verwaiste Anforderung,
-der fehlende Nachweis. **ELISA macht sichtbar, was verborgen ist.** Der Name
+der fehlende Nachweis. Die Fülle an Norm, Nachweisen und Abhängigkeiten
+überfordert. Der Slogan begegnet dieser Überforderung: ELISA ordnet, verlinkt
+und zeigt genau das, was als Nächstes zu tun ist. **ELISA macht sichtbar, was verborgen ist.** Der Name
 erinnert an Elisa, der nicht herrschte, sondern beriet: Er öffnete dem Diener
 die Augen für das, was schon da war. Genau so arbeitet das Werkzeug — es zeigt
 Zusammenhänge, Lücken und Widersprüche; entscheiden und verantworten bleibt
