@@ -15,7 +15,7 @@ from app.models import VModelRole
 
 
 def mcp_base() -> str:
-    return os.getenv("MCP_PUBLIC_BASE", "http://192.168.88.252/mcp")
+    return os.getenv("MCP_PUBLIC_BASE", "http://localhost/mcp")
 
 
 def _meta(token):

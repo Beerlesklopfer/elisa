@@ -55,13 +55,13 @@ SECRET_KEY = os.getenv(
 DEBUG = _env_bool("DJANGO_DEBUG", "True")
 
 # Bind-Adresse des Servers (siehe elisa.service). Auch in ALLOWED_HOSTS.
-BIND_ADDRESS = os.getenv("ELISA_BIND_ADDRESS", "192.168.88.252")
+BIND_ADDRESS = os.getenv("ELISA_BIND_ADDRESS", "127.0.0.1")
 
 ALLOWED_HOSTS = [
     h.strip()
     for h in os.getenv(
         "DJANGO_ALLOWED_HOSTS",
-        f"{BIND_ADDRESS},localhost,127.0.0.1",
+        "localhost,127.0.0.1",
     ).split(",")
     if h.strip()
 ]

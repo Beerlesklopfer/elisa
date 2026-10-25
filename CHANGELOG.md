@@ -16,6 +16,8 @@ elisa (0.3.0) unstable; urgency=medium
     CSS-Variablen --elisa-*, Setting ELISA_REFERENCE_DOCX. Die Word-Vorlage
     docs_templates/elisa-reference.docx ist nicht mehr enthalten und muss für
     die Dokumentgenerierung bereitgestellt werden.
+  * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
+    ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.
 
  -- Jörg Bernau <Joerg.Bernau@onesimus.io>  Sun, 25 Oct 2026 13:30:00 +0100

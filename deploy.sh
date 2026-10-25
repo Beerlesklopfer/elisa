@@ -120,7 +120,7 @@ fi
 
 # ── Nginx ──────────────────────────────────────────────────────────────────
 if [ "$NGINX" = 1 ]; then
-    [ -n "$HOSTNAME" ] || { read -rp "  Hostname [192.168.88.252]: " HOSTNAME; HOSTNAME="${HOSTNAME:-192.168.88.252}"; }
+    [ -n "$HOSTNAME" ] || { read -rp "  Hostname [localhost]: " HOSTNAME; HOSTNAME="${HOSTNAME:-localhost}"; }
     install -m 644 "$SRC/elisa.nginx.conf" "$CONF_DIR/nginx/elisa.conf"
     NGINX_CONF="/etc/nginx/sites-available/elisa.conf"
     sed "s|__SERVER_NAME__|${HOSTNAME}|g" "$CONF_DIR/nginx/elisa.conf" > "$NGINX_CONF"

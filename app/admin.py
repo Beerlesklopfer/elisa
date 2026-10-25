@@ -260,7 +260,7 @@ class MCPTokenAdmin(JSONExchangeAdmin, admin.ModelAdmin):
     # Öffentliche MCP-Basis (hinter nginx). Der V-Modell-Scope wird an die URL
     # angehängt: <base>/<scope>/sse.  Per env überschreibbar.
     import os as _os
-    MCP_BASE = _os.getenv("MCP_PUBLIC_BASE", "http://192.168.88.252/mcp")
+    MCP_BASE = _os.getenv("MCP_PUBLIC_BASE", "http://localhost/mcp")
 
     @admin.display(description="Token")
     def masked_token(self, obj):
