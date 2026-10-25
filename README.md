@@ -1,5 +1,7 @@
 # ELISA
 
+**ELISA – Macht das Unsichtbare sichtbar.**
+
 > *„Herr, öffne ihm die Augen, dass er sieht!"* — 2 Kön 6,17
 
 Funktionale Sicherheit ist für viele Firmen eine Angstdomäne: Was nicht

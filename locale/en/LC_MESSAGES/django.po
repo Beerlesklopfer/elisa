@@ -1122,3 +1122,6 @@ msgstr "New sub-item"
 
 #~ msgid "Verfeinert zu (unten)"
 #~ msgstr "Refined to (below)"
+
+msgid "Macht das Unsichtbare sichtbar."
+msgstr "Making the invisible visible."
