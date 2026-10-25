@@ -1,0 +1,11 @@
+# GPU-Durchreichung für Eliezer (AMD/ROCm):
+#   ELIEZER_RENDER_GID=$(stat -c %g /dev/dri/renderD128) ELIEZER_VIDEO_GID=$(stat -c %g /dev/kfd) \
+#   podman compose -f compose.yaml -f compose.podman.yaml -f compose.gpu.yaml up -d
+services:
+  eliezer:
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/kfd:/dev/kfd
+    group_add:
+      - "${ELIEZER_RENDER_GID:?specify the render device group}"
+      - "${ELIEZER_VIDEO_GID:?specify the video device group}"

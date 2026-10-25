@@ -30,6 +30,24 @@ bereitet vor, prüft und schlägt vor.
 > Arbeitskontext für die Weiterentwicklung (inkl. der „nicht verhandelbaren
 > Regeln") enthält [`CLAUDE.md`](CLAUDE.md).
 
+## Betrieb als Podman-Image
+
+ELISA wird als Container-Image ausgeliefert (`Containerfile`, `compose.yaml`):
+
+```bash
+cp .env.example elisa.env      # Secret, Hosts, Eliezer-URL/Key eintragen
+podman compose -f compose.yaml -f compose.podman.yaml up -d --build
+```
+
+Fünf Dienste: `eliezer` (Modellmanager, aus `../eliezer` gebaut; ELISAs
+Partner, erreichbar als `http://eliezer:1234`), `db` (PostgreSQL mit pgvector) sowie `web` (daphne, Port 8088, migriert und sammelt
+Static beim Start), `mcp` (MCP-SSE, Port 8765) und `worker` (Supervisor). Daten
+(media, Static, incoming) liegen im Volume `data`, die Datenbank in `pgdata`; die Konfiguration wird
+als `/etc/elisa/env` schreibgeschützt eingehängt. Wer Eliezer extern betreibt, lässt den Dienst weg und setzt die URL; er läuft dann auf dem
+GPU-Host (`ELIEZER_BASE_URL`). Für die GPU zusätzlich `-f compose.gpu.yaml`. Der Dienst läuft rootless als UID 10001 ohne
+Capabilities. `deploy.sh` und die systemd-Units bleiben als Alternative ohne
+Container bestehen.
+
 ## Lokale Modelle: Ollama oder Eliezer
 
 Chat, Embeddings und Notnagel-Hinweise laufen über ein lokales Modell. Standard
@@ -45,7 +63,10 @@ ELIEZER_CHAT_MODEL=<model-key>  # Key aus Eliezers Allowlist
 ELIEZER_EMBED_MODEL=<model-key> # 768-dimensional (Embedding-Spalte)
 ```
 
-Das Modell berät nur; verbindlich wird nichts ohne menschliche Freigabe.
+Das gilt für Chat, Embeddings, Notnagel-Hinweise, die Übersetzung
+(`app/translate.py`, Modell optional über `ELIEZER_TRANSLATE_MODEL`) und das
+eigenständige `rag/rag_normen.py`. Das Modell berät nur; verbindlich wird
+nichts ohne menschliche Freigabe.
 
 ## Worum es geht
 

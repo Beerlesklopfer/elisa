@@ -70,7 +70,8 @@ CSRF_TRUSTED_ORIGINS = [
     o.strip()
     for o in os.getenv(
         "DJANGO_CSRF_TRUSTED_ORIGINS",
-        f"http://{BIND_ADDRESS}:8000,http://{BIND_ADDRESS}",
+        f"http://{BIND_ADDRESS}:8000,http://{BIND_ADDRESS},"
+        "http://localhost:8088,http://127.0.0.1:8088",
     ).split(",")
     if o.strip()
 ]
@@ -92,11 +93,13 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
+    "django.contrib.postgres",   # nötig für HnswIndex (pgvector-Embeddings)
     "app",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",    # Static im Container ohne nginx
     "app.nocache_middleware.NoCacheHTMLMiddleware",   # HTML revalidieren → ?v=-Asset-Busting greift sofort
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",   # UI-Sprache je Request (i18n)
@@ -189,6 +192,7 @@ ELIEZER_BASE_URL = os.getenv("ELIEZER_BASE_URL", "http://127.0.0.1:1234")
 ELIEZER_API_KEY = os.getenv("ELIEZER_API_KEY", "")   # nur aus der Umgebung, nie im Repo
 ELIEZER_CHAT_MODEL = os.getenv("ELIEZER_CHAT_MODEL", "")
 ELIEZER_EMBED_MODEL = os.getenv("ELIEZER_EMBED_MODEL", "")
+ELIEZER_TRANSLATE_MODEL = os.getenv("ELIEZER_TRANSLATE_MODEL", "")   # leer = Chat-Modell
 ELIEZER_TIMEOUT = int(os.getenv("ELIEZER_TIMEOUT", "300"))
 if LOCAL_LLM_BACKEND == "eliezer":
     LOCAL_CHAT_MODEL, LOCAL_EMBED_MODEL = ELIEZER_CHAT_MODEL, ELIEZER_EMBED_MODEL

@@ -1,0 +1,79 @@
+# ELISA + Eliezer als Podman-/Compose-Stack:  podman compose up -d --build
+# Vorher:  cp .env.example elisa.env   und Werte setzen (Secret, Passwörter, Modelle).
+# Eliezer (Modellmanager, ../eliezer) ist der Partner: ELISA berät sich über
+# http://eliezer:1234 (OpenAI-Dialekt), Eliezer teilt sich die GPU.
+x-elisa: &elisa
+  image: elisa:0.3.0
+  build:
+    context: .
+    dockerfile: Containerfile
+  user: "10001:10001"
+  volumes:
+    # Aktiviert den FHS-Modus der Settings (DATA_DIR=/var/lib/elisa).
+    - "./elisa.env:/etc/elisa/env:ro"
+    - "data:/var/lib/elisa"
+  tmpfs:
+    - /tmp:mode=1777
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  restart: unless-stopped
+  environment:
+    LOCAL_LLM_BACKEND: "eliezer"
+    ELIEZER_BASE_URL: "http://eliezer:1234"
+
+services:
+  eliezer:
+    image: eliezer:0.2.0
+    build:
+      context: "${ELIEZER_SRC:-../eliezer}"
+    user: "10001:10001"
+    volumes:
+      - "${ELIEZER_CONFIG_FILE:-../eliezer/packaging/config.container.toml}:/etc/eliezer/config.toml:ro"
+      - "${ELIEZER_MODELS_DIR:-./models}:/var/lib/eliezer/models"
+      - "eliezer-state:/var/lib/eliezer"
+    tmpfs:
+      - /run:mode=1777
+      - /tmp:mode=1777
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 35s
+    restart: unless-stopped
+  db:
+    image: docker.io/pgvector/pgvector:pg16
+    env_file: ./elisa.env
+    volumes:
+      - "pgdata:/var/lib/postgresql/data"
+      - "./packaging/initdb:/docker-entrypoint-initdb.d:ro"
+    restart: unless-stopped
+  web:
+    <<: *elisa
+    command: ["web"]
+    depends_on:
+      - db
+    ports:
+      - "127.0.0.1:${ELISA_PORT:-8088}:8088"
+  mcp:
+    <<: *elisa
+    command: ["mcp"]
+    ports:
+      - "127.0.0.1:${ELISA_MCP_PORT:-8765}:8765"
+  worker:
+    <<: *elisa
+    command: ["worker"]
+    environment:
+      MCP_INTERNAL_BASE: "http://mcp:8765"
+    depends_on:
+      - mcp
+
+# GPU für Eliezer: zusätzlich -f compose.gpu.yaml (AMD). Ohne GPU läuft Eliezer
+# auf der CPU. Läuft Eliezer stattdessen auf einem anderen Host: Dienst
+# "eliezer" weglassen und ELIEZER_BASE_URL in elisa.env setzen.
+volumes:
+  data:
+  pgdata:
+  eliezer-state:

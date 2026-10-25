@@ -29,6 +29,14 @@ def translate_text(text, target_language_name):
     user = (f"Übersetze den folgenden Text vollständig und treu nach "
             f"{target_language_name}. Gib NUR die Übersetzung aus:\n\n{text}")
     try:
+        if provider == "OLLAMA" and settings.LOCAL_LLM_BACKEND == "eliezer":
+            # Lokale Inferenz läuft über Eliezer (OpenAI-Dialekt, app/local_llm.py).
+            from app import local_llm
+            model = (be.model if be and be.model else
+                     settings.ELIEZER_TRANSLATE_MODEL or settings.LOCAL_CHAT_MODEL)
+            return True, local_llm.chat([
+                {"role": "system", "content": TRANSLATOR_PERSONA},
+                {"role": "user", "content": user}], model=model).strip()
         if provider == "OLLAMA":
             import ollama
             host = base_url or settings.OLLAMA_HOST

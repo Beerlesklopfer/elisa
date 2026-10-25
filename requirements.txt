@@ -12,6 +12,7 @@ openai>=1.40    # mcp_worker Backend=openai (LM Studio, zuhause)
 anthropic>=0.40   # mcp_worker Backend=claude
 psycopg[binary]>=3.1   # PostgreSQL-Treiber (Phase 1)
 pgvector>=0.3          # Embeddings-Spalte (semantische Suche)
+whitenoise>=6.6        # Static-Auslieferung im Container
 markdown>=3.5
 bleach>=6.1
 openpyxl>=3.1          # MS-Excel (.xlsx) für Audit-/Eingangsdokumente

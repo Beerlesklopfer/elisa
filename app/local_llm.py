@@ -32,16 +32,16 @@ def backend_label() -> str:
     return "Eliezer" if settings.LOCAL_LLM_BACKEND == "eliezer" else "Ollama"
 
 
-def chat(messages: list, *, json_mode: bool = False) -> str:
+def chat(messages: list, *, json_mode: bool = False, model: str = "") -> str:
     """Antworttext des lokalen Modells. Wirft bei Fehlern (Aufrufer fängt)."""
     if settings.LOCAL_LLM_BACKEND == "eliezer":
-        payload = {"model": settings.LOCAL_CHAT_MODEL, "messages": messages}
+        payload = {"model": model or settings.LOCAL_CHAT_MODEL, "messages": messages}
         if json_mode:
             payload["response_format"] = {"type": "json_object"}
         data = _eliezer_post("/v1/chat/completions", payload)
         return data["choices"][0]["message"]["content"]
     kwargs = {"format": "json"} if json_mode else {}
-    resp = _ollama_client().chat(model=settings.LOCAL_CHAT_MODEL,
+    resp = _ollama_client().chat(model=model or settings.LOCAL_CHAT_MODEL,
                                  messages=messages, **kwargs)
     return resp["message"]["content"]
 

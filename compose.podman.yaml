@@ -1,0 +1,12 @@
+# Rootless Podman: Host-Benutzer auf die Container-Identität abbilden.
+x-podman:
+  in_pod: false
+services:
+  eliezer:
+    userns_mode: "keep-id:uid=10001,gid=10001"
+  web:
+    userns_mode: "keep-id:uid=10001,gid=10001"
+  mcp:
+    userns_mode: "keep-id:uid=10001,gid=10001"
+  worker:
+    userns_mode: "keep-id:uid=10001,gid=10001"

@@ -1,0 +1,15 @@
+.git
+.claude
+.venv
+.ollama
+**/__pycache__
+*.sqlite3
+incoming
+media
+staticfiles
+logs
+rag/chroma_db
+rag/indexed_pdfs
+.env
+.mcp.json
+elisa.env

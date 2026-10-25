@@ -28,6 +28,16 @@ elisa (0.3.0) unstable; urgency=medium
   * Slogan „ELISA – Macht das Unsichtbare sichtbar.“ in README, CLAUDE.md
     und Footer (übersetzt: Making the invisible visible); Leitgedanke: begegnet
     der Überforderung in der Angstdomäne Functional Safety.
+  * Eliezer jetzt auch in app/translate.py (ELIEZER_TRANSLATE_MODEL) und im
+    eigenständigen rag/rag_normen.py.
+  * Auslieferung als Podman-Image: Containerfile, compose.yaml,
+    compose.podman.yaml, packaging/container-entrypoint.sh (web|mcp|worker),
+    .env.example (fehlte bisher, deploy.sh verwies darauf), .containerignore;
+    WhiteNoise für Static; elisa.env in .gitignore.
+  * compose.yaml bindet Eliezer ein (Dienst "eliezer", Build aus ../eliezer,
+    ELISA → http://eliezer:1234); compose.gpu.yaml reicht die AMD-GPU durch.
+    PostgreSQL mit pgvector als Dienst "db"; django.contrib.postgres in
+    INSTALLED_APPS (HnswIndex-Systemcheck).
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

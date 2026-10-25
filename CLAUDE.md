@@ -139,6 +139,14 @@ die Modell-Keys müssen auf Eliezers Allowlist stehen. Achtung: die
 Embedding-Spalte ist 768-dimensional – ein anderes Embedding-Modell erfordert
 Neuindexierung (`manage.py index_project_docs`) und ggf. Migration.
 
+### Auslieferung (Podman-Image)
+
+Standard-Deployment ist das Image aus `Containerfile` (`compose.yaml`: `web`,
+`mcp`, `worker`, `db` und `eliezer` als Partner; Entrypoint `packaging/container-entrypoint.sh`). Konfiguration
+nur über `elisa.env` (aus `.env.example`, nie committen), eingehängt als
+`/etc/elisa/env`. Static liefert WhiteNoise. `deploy.sh`/systemd bleiben als
+Alternative.
+
 ## Toast-Vertrag (LLM-Ausgabe)
 
 Der Feedback-Endpoint erwartet vom LLM ausschließlich JSON dieser Form:

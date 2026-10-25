@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 """
-Norm-RAG mit Ollama. Liefert den Norm-Bezug fuer die Spezifikation.
+Norm-RAG mit Ollama oder Eliezer. Liefert den Norm-Bezug fuer die Spezifikation.
 
 Voraussetzungen:
-    pip install ollama chromadb pypdf
+    pip install ollama chromadb pypdf httpx
     ollama pull nomic-embed-text
     ollama pull llama3.1
+
+Eliezer statt Ollama (OpenAI-kompatibel):
+    LOCAL_LLM_BACKEND=eliezer ELIEZER_BASE_URL=http://127.0.0.1:1234 \\
+    ELIEZER_API_KEY=... ELIEZER_EMBED_MODEL=<key> ELIEZER_CHAT_MODEL=<key> \\
+    python rag/rag_normen.py
 
 Ablauf:
     1. Norm-PDFs aus ./documents einlesen
@@ -21,17 +26,48 @@ import os
 import glob
 import hashlib
 
-import ollama
 import chromadb
 from pypdf import PdfReader
 
-EMBED_MODEL = "nomic-embed-text"
-CHAT_MODEL = "llama3.1"
+BACKEND = os.getenv("LOCAL_LLM_BACKEND", "ollama").strip().lower()
+ELIEZER_URL = os.getenv("ELIEZER_BASE_URL", "http://127.0.0.1:1234").rstrip("/")
+ELIEZER_KEY = os.getenv("ELIEZER_API_KEY", "")
+if BACKEND == "eliezer":
+    EMBED_MODEL = os.getenv("ELIEZER_EMBED_MODEL", "")
+    CHAT_MODEL = os.getenv("ELIEZER_CHAT_MODEL", "")
+else:
+    EMBED_MODEL = "nomic-embed-text"
+    CHAT_MODEL = "llama3.1"
 DOCS_DIR = "./documents"
 DB_DIR = "./chroma_db"
 CHUNK_SIZE = 800
 CHUNK_OVERLAP = 150
 TOP_K = 4
+
+
+def _eliezer_post(path, payload):
+    import httpx
+    headers = {"Authorization": f"Bearer {ELIEZER_KEY}"} if ELIEZER_KEY else {}
+    r = httpx.post(ELIEZER_URL + path, json=payload, headers=headers, timeout=300)
+    r.raise_for_status()
+    return r.json()
+
+
+def embed(text):
+    if BACKEND == "eliezer":
+        data = _eliezer_post("/v1/embeddings", {"model": EMBED_MODEL, "input": [text]})
+        return data["data"][0]["embedding"]
+    import ollama
+    return ollama.embeddings(model=EMBED_MODEL, prompt=text)["embedding"]
+
+
+def chat(prompt):
+    messages = [{"role": "user", "content": prompt}]
+    if BACKEND == "eliezer":
+        data = _eliezer_post("/v1/chat/completions", {"model": CHAT_MODEL, "messages": messages})
+        return data["choices"][0]["message"]["content"]
+    import ollama
+    return ollama.chat(model=CHAT_MODEL, messages=messages)["message"]["content"]
 
 
 def load_pdfs(directory):
@@ -60,7 +96,7 @@ def build_index(collection):
         return
     for filename, page_no, text in docs:
         for j, chunk in enumerate(chunk_text(text)):
-            embedding = ollama.embeddings(model=EMBED_MODEL, prompt=chunk)["embedding"]
+            embedding = embed(chunk)
             chunk_id = hashlib.md5(f"{filename}-{page_no}-{j}".encode()).hexdigest()
             collection.add(
                 ids=[chunk_id],
@@ -72,7 +108,7 @@ def build_index(collection):
 
 
 def retrieve(collection, question, n=TOP_K):
-    q_emb = ollama.embeddings(model=EMBED_MODEL, prompt=question)["embedding"]
+    q_emb = embed(question)
     res = collection.query(query_embeddings=[q_emb], n_results=n)
     return list(zip(res["documents"][0], res["metadatas"][0]))
 
@@ -90,8 +126,7 @@ Kontext:
 
 Frage: {question}
 Antwort:"""
-    resp = ollama.chat(model=CHAT_MODEL, messages=[{"role": "user", "content": prompt}])
-    return resp["message"]["content"], hits
+    return chat(prompt), hits
 
 
 def main():
