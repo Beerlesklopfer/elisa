@@ -1,0 +1,18 @@
+django>=5.0
+ollama>=0.3
+pypdf>=4.0
+python-dotenv>=1.0   # .env / FHS-/etc/elisa/env laden (settings.py)
+mcp>=1.0             # MCP-Server (SSE) für PEP/REQ-Bereitstellung
+uvicorn>=0.30        # ASGI-Server für den MCP-SSE-Endpunkt
+daphne>=4.0          # ASGI-Server für die Django-App (hinter nginx)
+# Hinweis: Pandoc ist ein System-Tool (apt install pandoc), kein pip-Paket –
+# wird für die Dokumentgenerierung (Markdown -> .docx) gebraucht.
+httpx>=0.27
+openai>=1.40    # mcp_worker Backend=openai (LM Studio, zuhause)
+anthropic>=0.40   # mcp_worker Backend=claude
+psycopg[binary]>=3.1   # PostgreSQL-Treiber (Phase 1)
+pgvector>=0.3          # Embeddings-Spalte (semantische Suche)
+markdown>=3.5
+bleach>=6.1
+openpyxl>=3.1          # MS-Excel (.xlsx) für Audit-/Eingangsdokumente
+python-pptx>=0.6       # MS-PowerPoint (.pptx)

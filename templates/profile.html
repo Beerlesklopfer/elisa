@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="container" style="max-width:560px">
+  <h1 class="h4 mb-3"><i class="fas fa-id-card me-2"></i>{% trans "Mein Profil" %}</h1>
+  <form method="post" class="card card-body">
+    {% csrf_token %}
+    <div class="mb-2">
+      <label class="form-label small">{% trans "Login (Benutzername)" %}</label>
+      <input class="form-control" value="{{ user_obj.username }}" disabled>
+      <div class="form-text">{% trans "Der Login-Name bleibt unverändert." %}</div>
+    </div>
+    <div class="row g-2">
+      <div class="col">
+        <label class="form-label small">{% trans "Vorname" %}</label>
+        <input name="first_name" class="form-control" value="{{ user_obj.first_name }}">
+      </div>
+      <div class="col">
+        <label class="form-label small">{% trans "Nachname" %}</label>
+        <input name="last_name" class="form-control" value="{{ user_obj.last_name }}">
+      </div>
+    </div>
+    <div class="mt-2">
+      <label class="form-label small">{% trans "E-Mail" %}</label>
+      <input type="email" name="email" class="form-control" value="{{ user_obj.email }}">
+    </div>
+    <hr>
+    <div class="mb-2">
+      <label class="form-label small">{% trans "Neues Passwort" %}</label>
+      <input type="password" name="password" class="form-control" autocomplete="new-password"
+             placeholder="{% trans 'leer lassen = unverändert' %}">
+    </div>
+    <div class="mb-2">
+      <label class="form-label small">{% trans "Passwort wiederholen" %}</label>
+      <input type="password" name="password2" class="form-control" autocomplete="new-password"
+             placeholder="{% trans 'zur Kontrolle erneut eingeben' %}">
+      <div class="form-text">{% trans "Beide Eingaben müssen übereinstimmen (Schutz vor Tippfehlern)." %}</div>
+    </div>
+    <div>
+      <button class="btn btn-primary"><i class="fas fa-floppy-disk me-1"></i>{% trans "Speichern" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

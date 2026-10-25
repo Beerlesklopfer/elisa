@@ -1,0 +1,31 @@
+# =============================================================================
+# ELISA – Supervisor (ersetzt den alten Persona-Worker-Service).
+#   Startet/überwacht je aktivem WorkerBackend (Admin) einen MCP-CLIENT-Worker
+#   (Projekt+Persona+Provider) — Auto-Restart, Reload bei Konfig-Änderung (1×/min).
+#   Führt zudem den Unix-Socket (SUPERVISOR_SOCKET) als Register/Relay für die
+#   Inter-Worker-Kommunikation. Arbeit läuft über MCP-Chat (Primärkanal).
+# =============================================================================
+[Unit]
+Description=ELISA Supervisor (MCP-Client-Worker)
+After=network.target elisa-mcp.service
+Wants=elisa-mcp.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/usr/share/elisa
+EnvironmentFile=/etc/elisa/env
+Environment=MCP_INTERNAL_BASE=http://127.0.0.1:8765
+ExecStart=/usr/share/elisa/.venv/bin/python /usr/share/elisa/manage.py run_supervisor
+Restart=on-failure
+RestartSec=5s
+
+ProtectSystem=strict
+ReadWritePaths=/var/lib/elisa /var/log/elisa
+ProtectHome=true
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

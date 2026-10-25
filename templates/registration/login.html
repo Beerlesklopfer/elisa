@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card mt-5">
+      <div class="card-header bg-elisa-primary text-white">
+        <i class="fas fa-sign-in-alt me-1"></i>{% trans "Anmelden" %}
+      </div>
+      <div class="card-body">
+        {% if form.errors %}
+        <div class="alert alert-danger">{% trans "Benutzername oder Passwort falsch." %}</div>
+        {% endif %}
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">{% trans "Benutzername" %}</label>
+            <input type="text" name="username" class="form-control" autofocus>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">{% trans "Passwort" %}</label>
+            <input type="password" name="password" class="form-control">
+          </div>
+          {% if form.database.field.choices|length > 1 %}
+          <div class="mb-3">
+            <label class="form-label"><i class="fas fa-database me-1"></i>{% trans "Datenbank" %}</label>
+            <select name="database" class="form-select">
+              {% for val, label in form.database.field.choices %}
+              <option value="{{ val }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% else %}
+          <input type="hidden" name="database" value="default">
+          {% endif %}
+          <button class="btn btn-dark w-100">{% trans "Anmelden" %}</button>
+        </form>
+        <a href="{% url 'password_reset' %}" class="small d-inline-block mt-3">
+          <i class="fas fa-key me-1"></i>{% trans "Passwort vergessen?" %}
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

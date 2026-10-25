@@ -1,0 +1,731 @@
+{% extends "base.html" %}
+{% load i18n static %}
+{% block content %}
+
+{% blocktrans asvar ws_help %}Hierarchischer V-Modell-Worktree. Links spezifizieren (REQ→SPEC→ARCH→MOD), rechts verifizieren. Items wählst du im Baum; Inhalt schreibt immer der Mensch, das LLM berät nur.
+
+Tastenkürzel (Fokus außerhalb von Eingabefeldern):
+  ALT ↑ / ↓        voriges / nächstes Geschwister
+  ALT ← / →        Elter / erstes Kind
+  ALT Bild↑ / Bild↓  voriges / nächstes Item (ganze Liste)
+  ALT ⌫ / Strg ALT ⌫   Sprung-Historie zurück / vorwärts
+  Strg +           neues Item (gleiche Ebene)
+  Strg ⇧ +         neues Subitem
+  Rechtsklick      Kontextmenü{% endblocktrans %}
+<div class="d-flex align-items-center gap-2 mb-2">
+  <h1 class="h4 mb-0"><i class="fas fa-folder-tree me-2"></i>{% trans "Arbeitsbereich" %}</h1>
+  <i class="fas fa-circle-question text-muted" style="cursor:help"
+     title="{{ ws_help }}"></i>
+</div>
+
+{% comment %}V-Stufen als Tabelle (eigene volle Zeile): „ALLE" rowspan über beide Zeilen;
+Zeile 1 = linke (spezifizierende) Seite, Zeile 2 = rechte (verifizierende) Seite.
+Spalten gleich breit, Buttons füllen die Zellen. Mobile-CSS folgt später (BACKLOG).{% endcomment %}
+<table class="vmodel-stages mb-2">
+  <tbody>
+    <tr>
+      <td class="vm-all">
+        <a href="?phase=all" class="btn {% if current_phase == 'all' %}active{% endif %}">{% trans "Alle" %}</a>
+      </td>
+      {% for s in stages %}{% if s.side == 'left' %}
+      <td><a href="?phase={{ s.value }}" title="{% trans 'Spezifikation' %}" style="--c:{{ s.color }}"
+             class="btn{% if s.count %} started{% endif %}{% if current_phase == s.value %} active{% endif %}">{{ s.label }}</a></td>
+      {% endif %}{% endfor %}
+    </tr>
+    <tr>
+      <td class="vm-all">
+        <button type="button" id="ws-toggle-all" class="btn vm-collapse"
+                data-expand="{% trans 'Auf' %}" data-collapse="{% trans 'Zu' %}"
+                title="{% trans 'Alles auf-/zuklappen' %}"><i class="fas fa-angles-up me-1"></i><span class="lbl">{% trans "Zu" %}</span></button>
+      </td>
+      {# rechte Seite invers: Teststufe unter ihrem Entwicklungspartner #}
+      {% for s in right_stages %}
+      <td><a href="?phase={{ s.value }}" title="{% trans 'Verifikation' %}" style="--c:{{ s.color }}"
+             class="btn vm-right{% if s.count %} started{% endif %}{% if current_phase == s.value %} active{% endif %}">{{ s.label }}</a></td>
+      {% endfor %}
+    </tr>
+  </tbody>
+</table>
+
+<div class="ws-grid" data-sel="{{ sel }}">
+
+  {# ── Links: Gliederungsbaum ─────────────────────────────────────── #}
+  <div class="ws-col ws-tree">
+    {% for g in groups %}
+    {% if show_folders %}
+    <div class="ws-folder {% if g.side == 'right' and not g.items %}collapsed{% endif %}" data-folder="{{ g.phase }}">
+      <i class="fas fa-chevron-down ws-caret"></i>
+      <i class="fas fa-folder me-1 {% if g.side == 'right' %}text-secondary{% else %}text-warning{% endif %}"></i>{{ g.label }}
+      <span class="text-muted small">({{ g.items|length }}{% if g.side == 'right' %} · Verifikation{% endif %})</span>
+    </div>
+    <div class="ws-folder-items" data-of="{{ g.phase }}">
+      {% include "partials/ws_sections.html" %}
+    </div>
+    {% else %}
+    {% include "partials/ws_sections.html" %}
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  {# ── Mitte: Texte ───────────────────────────────────────────────── #}
+  <div class="ws-col ws-text" id="ws-text">
+    <div class="ws-empty text-muted text-center p-4">
+      <i class="fas fa-arrow-left me-1"></i>{% trans "Ein Item im Baum wählen." %}
+    </div>
+  </div>
+
+  {# ── Rechts: Chat ───────────────────────────────────────────────── #}
+  <div class="ws-col ws-chat" id="ws-chat">
+    <div class="ws-empty text-muted text-center p-4">
+      <i class="fas fa-comments me-1"></i>{% trans "Item-Chat" %}
+    </div>
+  </div>
+
+</div>
+
+{# ── Popup: Kreuzreferenz hinzufügen (M2M, beide Richtungen + Blocker) ── #}
+<div class="modal fade" id="refModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title mb-0">{% trans "Referenz hinzufügen" %} — <span id="ref-dir-label"></span></h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+      </div>
+      <div class="modal-body">
+        <input class="form-control form-control-sm mb-2" id="ref-filter" placeholder="{% trans 'Filtern …' %}">
+        <select class="form-select" id="ref-select" size="10"></select>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">{% trans "Abbrechen" %}</button>
+        <button type="button" class="btn btn-sm btn-primary" id="ref-add-confirm">{% trans "Hinzufügen" %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+{# ── Popup: Item bearbeiten (Felder ändern) — Admin/PM bei REQ, Bearbeiter bei SPEC/ARCH/MOD ── #}
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title mb-0"><i class="fas fa-pen me-1"></i>{% trans "Bearbeiten" %} — <span id="edit-ident"></span></h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label small mb-1">{% trans "Titel" %}</label>
+        <input id="edit-title" class="form-control form-control-sm mb-2">
+        <label class="form-label small mb-1">{% trans "Inhalt — WYSIWYG-Markdown-Editor (Mermaid-fähig), nur vom Menschen" %}</label>
+        {# TUI-Editor montiert hier (Ribbon-Toolbar + WYSIWYG/Markdown-Umschaltung). #}
+        <div id="edit-body-editor" class="mb-2"></div>
+        <label class="form-label small mb-1">{% trans "Begründung (prüfbar)" %}</label>
+        <textarea id="edit-rationale" class="form-control" rows="4"></textarea>
+      </div>
+      <div class="modal-footer py-2">
+        <span class="text-muted small me-auto">{% trans "Jede Änderung wird in der Historie protokolliert." %}</span>
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">{% trans "Abbrechen" %}</button>
+        <button type="button" class="btn btn-sm btn-primary" id="edit-save">{% trans "Speichern" %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+{# Gliederungs-Kontextmenü (Rechtsklick auf einen Baum-Knoten) #}
+<div id="ws-ctx" class="ws-ctx" style="display:none">
+  <div class="ws-ctx-head"><i class="fas fa-folder-tree me-1"></i><span id="ws-ctx-ref"></span></div>
+  <a href="#" class="ws-ctx-i" data-mode="sibling"><i class="fas fa-plus me-2"></i>{% trans "Neues Item (gleiche Ebene)" %}<span class="ws-ctx-kbd">Strg&nbsp;+</span></a>
+  <a href="#" class="ws-ctx-i" data-mode="child"><i class="fas fa-diagram-next me-2"></i>{% trans "Neues Subitem" %}<span class="ws-ctx-kbd">Strg&nbsp;Shift&nbsp;+</span></a>
+</div>
+
+<script type="application/json" id="ws-all-items">{{ all_items_json|safe }}</script>
+
+<style>
+  /* V-Stufen-Tabelle: eigene volle Zeile, gleich breite Spalten, Buttons füllen
+     die Zellen. Mobile-Anpassung folgt später (BACKLOG). */
+  .vmodel-stages { table-layout: fixed; width: 100%; border-collapse: separate;
+                   border-spacing: 5px; margin: 0; }
+  /* height:1px-Trick: lässt die Buttons (height:100%) ihre Zelle füllen –
+     so wird „Alle" (rowspan=2) ZWEIZEILIG hoch wie beide Zeilen zusammen. */
+  .vmodel-stages td { padding: 0; height: 1px; }
+  .vmodel-stages .vm-all { width: 96px; }   /* „Alle" (Zeile 1) + Collapse (Zeile 2) – kein rowspan */
+  .vmodel-stages .vm-collapse { font-size: .72rem; color: #495057; font-weight: 500; }
+  .vmodel-stages .btn {
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    width: 100%; height: 100%; min-height: 2.5rem;
+    white-space: normal; line-height: 1.12; font-size: .8rem; font-weight: 600;
+    padding: .25rem .45rem; border: 1.5px solid; border-radius: .45rem;
+    background: #fff; transition: all .12s;
+    /* Stufenfarbe (wie Übersicht) per --c; Outline = leer, Füllung = befüllt */
+    color: rgb(var(--c, 108,117,125)); border-color: rgb(var(--c, 108,117,125));
+  }
+  .vmodel-stages .btn:hover { filter: brightness(.96); }
+  /* befüllt (hat Items) = GEFÜLLT in der Stufenfarbe; leer = Outline */
+  .vmodel-stages .btn.started { background: rgb(var(--c)); color: #fff; }
+  /* selektiert = schmaler SCHWARZER Rand (über Füllung/Outline) */
+  .vmodel-stages .btn.active { border-color: #000; }
+  /* „Alle"/„Zu": neutral */
+  .vmodel-stages .vm-all .btn { font-weight: 700; color: #212529; border-color: #adb5bd; }
+  .vmodel-stages .vm-all .btn:hover { background: #f1f3f5; filter: none; }
+  .vmodel-stages .vm-all .btn.active { background: #212529; color: #fff; border-color: #000; }
+  .ws-grid { display:grid; grid-template-columns: 300px minmax(0,1fr) 380px;
+             gap:.5rem; height: calc(100vh - 200px); min-height: 420px; }
+  .ws-col { background:#fff; border:1px solid #dee2e6; border-radius:.5rem;
+            overflow:auto; padding:.5rem; }
+  .ws-tree { padding:.25rem; }
+  .ws-folder { cursor:pointer; padding:.3rem .4rem; font-weight:600; user-select:none;
+               border-radius:.3rem; }
+  .ws-folder:hover { background:#f1f3f5; }
+  .ws-caret { font-size:.7rem; width:1rem; transition:transform .15s; }
+  .ws-folder.collapsed .ws-caret { transform:rotate(-90deg); }
+  .ws-folder.collapsed + .ws-folder-items { display:none; }
+  .ws-folder-sec { font-weight:600; font-size:.9rem; }
+  .ws-folder-items { padding-left:.9rem; }
+  .ws-item { cursor:pointer; padding:.3rem .4rem; border-radius:.3rem;
+             white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ws-item:hover { background:#f1f3f5; }
+  .ws-item.active { background:#cfe2ff; }
+  .ws-item-title { color:#495057; }
+  .ws-item-icon { font-size:.8rem; }
+  .ws-caret-empty { visibility:hidden; }   /* Top-Level-Einzelitem: Pfeil-Platzhalter */
+  /* Gliederungs-Kontextmenü */
+  .ws-ctx { position:fixed; z-index:1090; background:#fff; border:1px solid #ced4da;
+            border-radius:.45rem; box-shadow:0 6px 18px rgba(0,0,0,.18); min-width:250px;
+            font-size:.85rem; overflow:hidden; }
+  .ws-ctx-head { padding:.35rem .7rem; color:#6c757d; border-bottom:1px solid #eee;
+                 font-weight:600; }
+  .ws-ctx-i { display:flex; align-items:center; gap:.1rem; padding:.45rem .7rem;
+              color:#212529; text-decoration:none; }
+  .ws-ctx-i:hover { background:#eef2ff; }
+  .ws-ctx-kbd { margin-left:auto; color:#adb5bd; font-size:.72rem; }
+  .ws-chat { display:flex; flex-direction:column; }
+  .chat-mention { cursor:pointer; }
+  .mention-menu .list-group-item { cursor:pointer; padding:.3rem .6rem; }
+</style>
+
+<script src="{% static 'vendor/mermaid/mermaid.min.js' %}"></script>
+<script>
+(function () {
+  var grid  = document.querySelector('.ws-grid');
+  var textC = document.getElementById('ws-text');
+  // Mermaid-Diagramme im Item-Body (```mermaid → <div class="mermaid"> via markdown_render).
+  if (window.mermaid) mermaid.initialize({ startOnLoad: false, securityLevel: 'loose' });
+  function renderBodyMermaid() {
+    if (!window.mermaid) return;
+    var nodes = textC.querySelectorAll('.mermaid');
+    if (!nodes.length) return;
+    nodes.forEach(function (n) { n.removeAttribute('data-processed'); });
+    try { mermaid.run({ nodes: nodes }); } catch (e) {}
+  }
+  var chatC = document.getElementById('ws-chat');
+
+  // Klickbare Item-Querverweise im Body (z. B. S4.2.3 → Item öffnen + im Baum zeigen).
+  textC.addEventListener('click', function (e) {
+    var ref = e.target.closest('.item-ref');
+    if (!ref) return;
+    e.preventDefault();
+    var id = ref.dataset.ref;
+    var node = grid.querySelector('.ws-item[data-identifier="' + id + '"]');
+    if (node) {
+      document.querySelectorAll('.ws-item.active').forEach(function (n) { n.classList.remove('active'); });
+      node.classList.add('active');
+      var f = node.closest('.ws-folder-items');     // Eltern-Ordner aufklappen
+      while (f) {
+        var hdr = f.previousElementSibling;
+        if (hdr && hdr.classList.contains('collapsed')) hdr.classList.remove('collapsed');
+        f = f.parentElement ? f.parentElement.closest('.ws-folder-items') : null;
+      }
+      node.scrollIntoView({ block: 'nearest' });
+    }
+    loadItem(id);
+  });
+
+  function getCookie(name) {
+    var m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return m ? m.pop() : '';
+  }
+
+  // ── Alles auf-/zuklappen ─────────────────────────────────────────
+  var toggleBtn = document.getElementById('ws-toggle-all');
+  function anyFolderOpen() {
+    return Array.prototype.some.call(grid.querySelectorAll('.ws-folder'),
+      function (f) { return !f.classList.contains('collapsed'); });
+  }
+  function updateToggleBtn() {
+    if (!toggleBtn) return;
+    var open = anyFolderOpen();
+    var icon = toggleBtn.querySelector('i'), lbl = toggleBtn.querySelector('.lbl');
+    // Beschriftung = NÄCHSTE Aktion: offen → „Zu" (↑), zu → „Auf" (↓).
+    if (icon) icon.className = (open ? 'fas fa-angles-up' : 'fas fa-angles-down') + ' me-1';
+    if (lbl) lbl.textContent = open ? toggleBtn.dataset.collapse : toggleBtn.dataset.expand;
+  }
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', function () {
+      var collapse = anyFolderOpen();
+      Array.prototype.forEach.call(grid.querySelectorAll('.ws-folder'),
+        function (f) { f.classList.toggle('collapsed', collapse); });
+      updateToggleBtn();
+    });
+    updateToggleBtn();
+  }
+
+  // ── Navigations-Historie (besuchte Items; ALT-Rück = zurück, ALT-Shift-Rück
+  //    = vorwärts) – wie Browser-Vor/Zurück über die Sprung-Reihenfolge. ──
+  var navHist = [], navPos = -1;
+  function navTo(id) {                      // neuer Sprung → Historie fortschreiben
+    if (navPos >= 0 && navHist[navPos] === id) return;
+    navHist = navHist.slice(0, navPos + 1);
+    navHist.push(id);
+    navPos = navHist.length - 1;
+  }
+  function navGo(delta) {                   // in der Historie blättern (ohne neuen Eintrag)
+    var np = navPos + delta;
+    if (np < 0 || np >= navHist.length) return;
+    navPos = np;
+    loadItem(navHist[navPos], false);       // push=false → Historie nicht verändern
+    navSelect(navHist[navPos]);
+  }
+  function navSelect(id) {                   // Baum-Auswahl mitführen + Eltern aufklappen
+    var node = grid.querySelector('.ws-item[data-identifier="' + id + '"]');
+    if (!node) return;
+    document.querySelectorAll('.ws-item.active').forEach(function (n) { n.classList.remove('active'); });
+    node.classList.add('active');
+    var items = node.closest('.ws-folder-items');
+    while (items) {
+      var folder = items.previousElementSibling;
+      if (folder && folder.classList.contains('ws-folder')) folder.classList.remove('collapsed');
+      items = items.parentElement ? items.parentElement.closest('.ws-folder-items') : null;
+    }
+    node.scrollIntoView({ block: 'nearest' });
+  }
+
+  // ── Tree-Navigation (ALT-Pfeile) über die Identifier-Hierarchie ──────
+  var ALL_IDS = [];
+  try { ALL_IDS = JSON.parse(document.getElementById('ws-all-items').textContent || '[]')
+                      .map(function (i) { return i.id; }); } catch (e) { ALL_IDS = []; }
+  function idParts(id) {
+    var m = (id || '').match(/^([A-Za-z]+)(.*)$/);
+    return m ? { p: m[1], n: (m[2].match(/\d+/g) || []).map(Number) } : { p: '', n: [] };
+  }
+  function joinId(p, n) { return p + n.join('.'); }
+  function lvlItems(prefix, parentNums, depth) {  // existierende Items dieser Ebene
+    return ALL_IDS.filter(function (x) {
+      var b = idParts(x);
+      return b.p === prefix && b.n.length === depth &&
+             b.n.slice(0, parentNums.length).join('.') === parentNums.join('.');
+    }).sort(function (x, y) { return idParts(x).n[depth - 1] - idParts(y).n[depth - 1]; });
+  }
+  function parentOf(id) {
+    var a = idParts(id);
+    if (a.n.length <= 1) return null;
+    var pid = joinId(a.p, a.n.slice(0, -1));
+    return ALL_IDS.indexOf(pid) >= 0 ? pid : null;
+  }
+  function firstChildOf(id) {
+    var a = idParts(id);
+    var k = lvlItems(a.p, a.n, a.n.length + 1);
+    return k.length ? k[0] : null;
+  }
+  function siblingNav(id, dir) {
+    var a = idParts(id);
+    if (!a.n.length) return null;
+    var sibs = lvlItems(a.p, a.n.slice(0, -1), a.n.length);
+    var i = sibs.indexOf(id);
+    return (i >= 0 && i + dir >= 0 && i + dir < sibs.length) ? sibs[i + dir] : null;
+  }
+  // ── Lineares Durchblättern ALLER Items in echter Dokumentreihenfolge ──
+  //    (Phase → Segmente numerisch, Elter vor Kind) – unabhängig von der
+  //    String-Sortierung des Servers, damit S2 nach S10 und A vor M korrekt liegt.
+  var PHASE_ORDER = ['R', 'S', 'A', 'M'];
+  function phaseRank(p) { var i = PHASE_ORDER.indexOf(p); return i < 0 ? 99 : i; }
+  function docCmp(x, y) {
+    var ax = idParts(x), ay = idParts(y);
+    if (ax.p !== ay.p) return phaseRank(ax.p) - phaseRank(ay.p) || (ax.p < ay.p ? -1 : 1);
+    for (var i = 0; i < Math.min(ax.n.length, ay.n.length); i++)
+      if (ax.n[i] !== ay.n[i]) return ax.n[i] - ay.n[i];   // erstes abweichendes Segment
+    return ax.n.length - ay.n.length;                       // kürzer (Elter) zuerst
+  }
+  var FLAT_ORDER = ALL_IDS.slice().sort(docCmp);
+  function flatNav(id, dir) {
+    var i = FLAT_ORDER.indexOf(id);
+    return (i >= 0 && i + dir >= 0 && i + dir < FLAT_ORDER.length) ? FLAT_ORDER[i + dir] : null;
+  }
+  document.addEventListener('keydown', function (e) {
+    if (!e.altKey) return;
+    var ae = document.activeElement;
+    if (ae && (/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || ae.isContentEditable)) return;
+    if (e.key === 'Backspace') {            // ALT+⌫ zurück, Strg+ALT+⌫ vorwärts (Sprung-Historie)
+      e.preventDefault(); navGo(e.ctrlKey ? 1 : -1); return;
+    }
+    var id = currentItemId(); if (!id) return;
+    var t = null;
+    if (e.key === 'ArrowUp') t = siblingNav(id, -1);        // voriges Geschwister (Liste hoch)
+    else if (e.key === 'ArrowDown') t = siblingNav(id, 1);  // nächstes Geschwister (Liste runter)
+    else if (e.key === 'ArrowLeft') t = parentOf(id);       // eine Ebene raus (Eltern)
+    else if (e.key === 'ArrowRight') t = firstChildOf(id);  // eine Ebene rein (erstes Kind)
+    else if (e.key === 'PageUp') t = flatNav(id, -1);       // voriges Item (gesamte Liste)
+    else if (e.key === 'PageDown') t = flatNav(id, 1);      // nächstes Item (gesamte Liste)
+    else return;
+    e.preventDefault();
+    if (t) { loadItem(t); navSelect(t); }
+  });
+
+  // ── Item-Chat: asynchrone Worker-Antworten per Auto-Refresh nachziehen ──
+  //    (nur den Nachrichten-Log ersetzen, NICHT das Eingabefeld/Scroll).
+  var chatItemId = null;
+  function refreshChatLog(id) {
+    if (!id) return;
+    fetch('/workspace/' + encodeURIComponent(id) + '/chat/')
+      .then(function (r) { return r.text(); })
+      .then(function (h) {
+        if (id !== chatItemId) return;
+        var tmp = document.createElement('div'); tmp.innerHTML = h;
+        var nl = tmp.querySelector('.chat-log'), cl = chatC.querySelector('.chat-log');
+        if (nl && cl && nl.innerHTML !== cl.innerHTML) {
+          var atBottom = cl.scrollTop + cl.clientHeight >= cl.scrollHeight - 30;
+          cl.innerHTML = nl.innerHTML;
+          if (atBottom) cl.scrollTop = cl.scrollHeight;
+        }
+      }).catch(function () {});
+  }
+  setInterval(function () { refreshChatLog(chatItemId); }, 4000);
+
+  // ── Item wählen → Text + Chat laden ──────────────────────────────
+  function loadItem(id, push) {
+    if (push !== false) navTo(id);           // Klick/Link schreibt Historie
+    chatItemId = id;                          // Auto-Refresh-Ziel
+    textC.innerHTML = '<div class="text-muted text-center p-4">lädt…</div>';
+    chatC.innerHTML = '<div class="text-muted text-center p-4">lädt…</div>';
+    fetch('/workspace/' + encodeURIComponent(id) + '/text/')
+      .then(function (r) { return r.text(); })
+      .then(function (h) { textC.innerHTML = h; startTranslationPoll(textC); renderBodyMermaid(); });
+    fetch('/workspace/' + encodeURIComponent(id) + '/chat/')
+      .then(function (r) { return r.text(); }).then(function (h) { chatC.innerHTML = h; scrollChat(); });
+  }
+
+  grid.addEventListener('click', function (e) {
+    var folder = e.target.closest('.ws-folder');
+    if (folder) { folder.classList.toggle('collapsed'); updateToggleBtn(); return; }
+    var item = e.target.closest('.ws-item');
+    if (item) {
+      document.querySelectorAll('.ws-item.active').forEach(function (n) { n.classList.remove('active'); });
+      item.classList.add('active');
+      loadItem(item.dataset.identifier);
+    }
+  });
+
+  function scrollChat() {
+    var log = chatC.querySelector('.chat-log'); if (log) log.scrollTop = log.scrollHeight;
+  }
+
+  // Async-Übersetzung: läuft im Hintergrund (Dragoman) → Zone pollen bis fertig.
+  function startTranslationPoll(container) {
+    var zone = (container || textC).querySelector('#translation-zone');
+    if (!zone || zone.dataset.polling) return;
+    zone.dataset.polling = '1';
+    var url = zone.dataset.poll, lang = zone.dataset.lang;
+    (function tick() {
+      fetch(url + '?lang=' + encodeURIComponent(lang))
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d.status === 'DONE') {
+            // Body neu laden → das Item erscheint IN der Sprache (Replacement).
+            if (chatItemId) fetch('/workspace/' + encodeURIComponent(chatItemId) + '/text/')
+              .then(function (r) { return r.text(); })
+              .then(function (h) { textC.innerHTML = h; startTranslationPoll(textC); renderBodyMermaid(); });
+          } else if (d.status === 'ERROR') { zone.innerHTML = d.html || ''; }
+          else { setTimeout(tick, 3000); }
+        })
+        .catch(function () { setTimeout(tick, 5000); });
+    })();
+  }
+
+  // ── Historie: Eintrag wählen → Item in jenem Stand laden ─────────
+  function loadText(id, at) {
+    var url = '/workspace/' + encodeURIComponent(id) + '/text/' + (at ? ('?at=' + encodeURIComponent(at)) : '');
+    fetch(url).then(function (r) { return r.text(); }).then(function (h) { textC.innerHTML = h; renderBodyMermaid(); });
+  }
+  function currentItemId() {
+    var holder = textC.querySelector('.item-text');
+    return holder ? holder.dataset.identifier : null;
+  }
+  textC.addEventListener('change', function (e) {
+    if (!e.target.classList.contains('history-select')) return;
+    var id = currentItemId(); if (!id) return;
+    var opt = e.target.selectedOptions[0];
+    loadText(id, opt ? opt.dataset.at : '');
+  });
+  textC.addEventListener('click', function (e) {
+    if (e.target.closest('.history-current')) {
+      var id = currentItemId(); if (id) loadText(id, '');
+      return;
+    }
+    // Bearbeiten-Button → Edit-Popup
+    if (e.target.closest('.edit-item')) { openEditModal(); return; }
+    // Referenz-Link (derived_from / refined_to) → Ziel-Item laden
+    var ref = e.target.closest('.ws-ref');
+    if (ref) {
+      e.preventDefault();
+      var rid = ref.dataset.identifier;
+      document.querySelectorAll('.ws-item.active').forEach(function (n) { n.classList.remove('active'); });
+      var node = grid.querySelector('.ws-item[data-identifier="' + rid + '"]');
+      if (node) node.classList.add('active');
+      loadItem(rid);
+      return;
+    }
+    // Kreuzreferenz hinzufügen (Popup) / entfernen
+    var add = e.target.closest('.add-ref');
+    if (add) { openRefModal(add.dataset.dir); return; }
+    var del = e.target.closest('.del-ref');
+    if (del) {
+      var cid = currentItemId();
+      if (cid) postRef(cid, del.dataset.target, del.dataset.dir, 'remove');
+    }
+  });
+
+  // ── Kreuzreferenzen-Popup (M2M: up/down/related/blocks/blocked_by) ─
+  var allItems = [];
+  try { allItems = JSON.parse(document.getElementById('ws-all-items').textContent || '[]'); } catch (e) {}
+  var DIR_LABELS = { up:'Leitet sich ab aus (oben)', down:'Verfeinert zu (unten)',
+                     related:'Querverweis ↔', blocks:'Blockiert →',
+                     blocked_by:'Wartet auf / blockiert von ←' };
+  var refModalEl = document.getElementById('refModal');
+  var refModal = (refModalEl && window.bootstrap) ? new bootstrap.Modal(refModalEl) : null;
+  var refDir = '';
+  function fillRefSelect(filter) {
+    var sel = document.getElementById('ref-select'); if (!sel) return;
+    var cur = currentItemId(), f = (filter || '').toLowerCase();
+    sel.innerHTML = '';
+    allItems.forEach(function (it) {
+      if (it.id === cur) return;
+      if (f && (it.id + ' ' + it.title).toLowerCase().indexOf(f) < 0) return;
+      var o = document.createElement('option');
+      o.value = it.id; o.textContent = it.id + ' [' + it.phase + '] ' + it.title;
+      sel.appendChild(o);
+    });
+  }
+  function openRefModal(dir) {
+    refDir = dir;
+    var lab = document.getElementById('ref-dir-label'); if (lab) lab.textContent = DIR_LABELS[dir] || dir;
+    var filt = document.getElementById('ref-filter'); if (filt) filt.value = '';
+    fillRefSelect('');
+    if (refModal) refModal.show();
+  }
+  function postRef(id, target, dir, op) {
+    var fd = new FormData();
+    fd.append('target', target); fd.append('direction', dir); fd.append('op', op);
+    fetch('/workspace/' + encodeURIComponent(id) + '/ref/', {
+      method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') }, body: fd
+    }).then(function (r) { return r.text(); }).then(function (h) { textC.innerHTML = h; });
+  }
+  var _rf = document.getElementById('ref-filter');
+  if (_rf) _rf.addEventListener('input', function () { fillRefSelect(this.value); });
+  var _rc = document.getElementById('ref-add-confirm');
+  if (_rc) _rc.addEventListener('click', function () {
+    var sel = document.getElementById('ref-select'), id = currentItemId();
+    if (id && sel && sel.value) { postRef(id, sel.value, refDir, 'add'); if (refModal) refModal.hide(); }
+  });
+
+  // ── Item bearbeiten: eigenes, frei über Monitore verschiebbares Fenster ──
+  var editWin = null;
+  function openEditModal() {
+    var id = currentItemId(); if (!id) return;
+    var feat = 'popup=yes,menubar=no,toolbar=no,location=no,status=no,' +
+               'resizable=yes,scrollbars=yes,width=1100,height=820';
+    editWin = window.open('/workspace/' + encodeURIComponent(id) + '/editor/',
+                          'elisa-editor-' + id, feat);
+    if (editWin) editWin.focus();
+  }
+  // Rückmeldung des Editor-Fensters (gespeichert) → Text-Pane neu laden.
+  window.addEventListener('message', function (e) {
+    if (e.data && e.data.type === 'item-saved') {
+      var id = e.data.id || currentItemId();
+      if (id) loadText(id, '');
+    }
+  });
+
+  // ── Formulare (Text speichern / Chat senden) via fetch ───────────
+  function handleSubmit(e) {
+    var form = e.target;
+    if (!form.classList.contains('panel-form')) return;
+    e.preventDefault();
+    if (form.dataset.confirm && !window.confirm(form.dataset.confirm)) return;  // Sicherheitsabfrage
+    var pane = form.dataset.pane === 'chat' ? chatC : textC;
+    var prev = pane.innerHTML;
+    // Lade-Welle statt blank (Übersetzen/Status können dauern).
+    pane.innerHTML = '<div class="text-muted text-center p-4">' +
+      '<span class="typing"><span></span><span></span><span></span></span></div>';
+    fetch(form.dataset.action, {
+      method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') },
+      body: new FormData(form),
+    }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .then(function (h) {
+        pane.innerHTML = (h && h.trim()) ? h : prev;    // nie blank
+        if (pane === chatC) scrollChat();
+        startTranslationPoll(pane);
+      })
+      .catch(function (err) {
+        pane.innerHTML = prev +
+          '<div class="alert alert-warning m-2 small">Aktion fehlgeschlagen (' + err +
+          '). Bei Übersetzungen kann das ein Timeout sein – bitte erneut versuchen.</div>';
+      });
+  }
+  textC.addEventListener('submit', handleSubmit);
+  chatC.addEventListener('submit', handleSubmit);
+
+  // ── @-Erwähnung: Chips + Autocomplete ────────────────────────────
+  function insertMention(input, handle) {
+    var v = input.value, pos = input.selectionStart;
+    var left = v.slice(0, pos), at = left.lastIndexOf('@');
+    if (at >= 0 && !/\s/.test(left.slice(at + 1))) {
+      input.value = v.slice(0, at) + '@' + handle + ' ' + v.slice(pos);
+    } else {
+      input.value = (v ? v + ' ' : '') + '@' + handle + ' ';
+    }
+    input.focus();
+  }
+
+  chatC.addEventListener('click', function (e) {
+    var chip = e.target.closest('.chat-mention');
+    if (chip) {
+      var input = chatC.querySelector('.chat-input');
+      if (input) insertMention(input, chip.dataset.handle);
+      return;
+    }
+    var mi = e.target.closest('.mention-menu .list-group-item');
+    if (mi) {
+      var inp = chatC.querySelector('.chat-input');
+      if (inp) insertMention(inp, mi.dataset.handle);
+      chatC.querySelector('.mention-menu').style.display = 'none';
+    }
+  });
+
+  function growChatInput(input) {        // Eingabezeile wächst mit dem Inhalt (kein Scrolling)
+    input.style.height = 'auto';
+    input.style.height = input.scrollHeight + 'px';
+  }
+  // Enter = Senden, Shift+Enter = neue Zeile; bei offenem Mention-Menü = ersten Treffer wählen.
+  chatC.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' || e.shiftKey || !e.target.classList.contains('chat-input')) return;
+    var input = e.target, form = input.closest('.chat-form');
+    var menu = form ? form.querySelector('.mention-menu') : null;
+    if (menu && menu.style.display !== 'none' && menu.firstChild) {
+      e.preventDefault();
+      insertMention(input, menu.firstChild.dataset.handle);
+      menu.style.display = 'none';
+      return;
+    }
+    e.preventDefault();
+    if (form) form.requestSubmit();
+  });
+
+  chatC.addEventListener('input', function (e) {
+    if (!e.target.classList.contains('chat-input')) return;
+    var input = e.target, form = input.closest('.chat-form');
+    growChatInput(input);
+    var menu = form.querySelector('.mention-menu');
+    var people = JSON.parse(form.dataset.participants || '[]');
+    var left = input.value.slice(0, input.selectionStart);
+    var at = left.lastIndexOf('@');
+    var frag = at >= 0 ? left.slice(at + 1) : null;
+    if (frag === null || /\s/.test(frag) || !people.length) { menu.style.display = 'none'; return; }
+    var hits = people.filter(function (p) { return p.handle.indexOf(frag.toLowerCase()) === 0; });
+    if (!hits.length) { menu.style.display = 'none'; return; }
+    menu.innerHTML = hits.map(function (p) {
+      return '<button type="button" class="list-group-item list-group-item-action" data-handle="' +
+             p.handle + '"><strong>@' + p.handle + '</strong> <span class="text-muted small">' + p.label + '</span></button>';
+    }).join('');
+    menu.style.display = '';
+  });
+
+  // ── Vorauswahl (?sel=<identifier>) automatisch öffnen ────────────
+  var pre = grid.dataset.sel;
+  if (pre) {
+    var node = grid.querySelector('.ws-item[data-identifier="' + pre + '"]');
+    if (node) {
+      var p = node.parentElement;        // alle übergeordneten Ordner aufklappen
+      while (p && p !== grid) {
+        if (p.classList && p.classList.contains('ws-folder-items')) {
+          var f = p.previousElementSibling;
+          if (f && f.classList.contains('ws-folder')) f.classList.remove('collapsed');
+        }
+        p = p.parentElement;
+      }
+      node.classList.add('active');
+      node.scrollIntoView({ block: 'nearest' });
+      loadItem(pre);
+    }
+  }
+
+  // ── Gliederung: Kontextmenü (Rechtsklick) + Shortcuts (Strg + / Strg Shift +) ──
+  var ctx = document.getElementById('ws-ctx');
+  var ctxRefId = null;
+  function hideCtx() { if (ctx) ctx.style.display = 'none'; }
+  function showCtx(x, y, ident) {
+    if (!ctx) return;
+    ctxRefId = ident;
+    document.getElementById('ws-ctx-ref').textContent = ident;
+    ctx.style.display = 'block';
+    var w = ctx.offsetWidth, h = ctx.offsetHeight;
+    ctx.style.left = Math.min(x, window.innerWidth - w - 6) + 'px';
+    ctx.style.top = Math.min(y, window.innerHeight - h - 6) + 'px';
+  }
+  grid.addEventListener('contextmenu', function (e) {
+    var n = e.target.closest('.ws-item, .ws-folder-sec');   // Items UND Ordner-Knoten
+    if (!n || !n.dataset.identifier) return;
+    e.preventDefault();
+    showCtx(e.clientX, e.clientY, n.dataset.identifier);
+  });
+  document.addEventListener('click', function (e) {
+    if (ctx && ctx.style.display !== 'none' && !ctx.contains(e.target)) hideCtx();
+  });
+  if (ctx) ctx.addEventListener('click', function (e) {
+    var it = e.target.closest('.ws-ctx-i');
+    if (!it) return;
+    e.preventDefault();
+    var ref = ctxRefId; hideCtx();
+    addOutlineItem(ref, it.dataset.mode);
+  });
+  // Tastatur: Strg + (gleiche Ebene), Strg Shift + (Subitem) auf dem aktuellen Item.
+  document.addEventListener('keydown', function (e) {
+    if (!(e.ctrlKey || e.metaKey) || ['+', '*', '='].indexOf(e.key) < 0) return;
+    var ae = document.activeElement;
+    if (ae && (/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || ae.isContentEditable)) return;
+    var id = currentItemId(); if (!id) return;
+    e.preventDefault();
+    addOutlineItem(id, e.shiftKey ? 'child' : 'sibling');
+  });
+  function postAdd(fd) {
+    fetch('/workspace/add/', {
+      method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') }, body: fd
+    })
+      .then(function (r) {
+        // Immer den Text holen und tolerant parsen – ein HTML-Fehler (500/Redirect)
+        // darf nicht als kryptischer JSON.parse-Fehler enden.
+        return r.text().then(function (t) {
+          var d = null; try { d = JSON.parse(t); } catch (e) {}
+          if (!d) throw new Error('HTTP ' + r.status);
+          if (!r.ok || d.error) throw new Error(d.error || ('HTTP ' + r.status));
+          return d;
+        });
+      })
+      .then(function (d) {
+        window.location = '/workspace/?phase=' + encodeURIComponent(d.phase) +
+                          '&sel=' + encodeURIComponent(d.identifier);
+      })
+      .catch(function (err) { alert('Anlegen fehlgeschlagen: ' + err.message); });
+  }
+  function addOutlineItem(ref, mode) {
+    if (!ref) return;
+    var fd = new FormData(); fd.append('ref', ref); fd.append('mode', mode);
+    postAdd(fd);
+  }
+  function addTopItem(phase) {            // erstes/neues Top-Item (auch leeres Projekt)
+    var fd = new FormData(); fd.append('ref', ''); fd.append('phase', phase);
+    postAdd(fd);
+  }
+  grid.addEventListener('click', function (e) {
+    var add = e.target.closest('.ws-add-top');
+    if (!add) return;
+    e.preventDefault();
+    addTopItem(add.dataset.phase);
+  });
+})();
+</script>
+{% endblock %}

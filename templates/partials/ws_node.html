@@ -1,0 +1,23 @@
+{% load i18n %}{% if node.children %}
+<div class="ws-folder ws-folder-sec" data-folder="ws-{{ node.key }}" data-identifier="{{ node.key }}">
+  <i class="fas fa-chevron-down ws-caret"></i>
+  <i class="fas fa-folder-open me-1 text-muted"></i>{{ node.key }}
+  <span class="text-muted small">({{ node.count }})</span>
+</div>
+<div class="ws-folder-items">
+  {% if node.item %}{% include "partials/ws_item.html" with item=node.item %}{% endif %}
+  {% for node in node.children %}{% include "partials/ws_node.html" %}{% endfor %}
+</div>
+{% elif node.item %}
+{% if top %}
+<div class="ws-item ws-top-leaf" data-identifier="{{ node.item.identifier }}">
+  <i class="fas fa-chevron-down ws-caret ws-caret-empty"></i>
+  <i class="fas fa-folder me-1 text-warning"></i>
+  <span class="badge badge-phase-{{ node.item.phase }}">{{ node.item.phase }}</span>
+  <strong>{{ node.item.identifier }}</strong> <span class="ws-item-title">{{ node.item.title }}</span>
+  {% if node.item.is_orphan %}<i class="fas fa-unlink text-warning ms-1" title="Orphan"></i>{% endif %}
+</div>
+{% else %}
+{% include "partials/ws_item.html" with item=node.item %}
+{% endif %}
+{% endif %}

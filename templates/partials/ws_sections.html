@@ -1,0 +1,7 @@
+{% load i18n %}{% if g.tree %}
+  {% for node in g.tree %}{% include "partials/ws_node.html" with top=True %}{% endfor %}
+{% else %}
+  {% for item in g.items %}{% include "partials/ws_item.html" %}
+  {% empty %}<div class="text-muted small ps-3 py-1">— {% trans "keine Items" %} —{% if g.phase != 'REQ' %}
+    <a href="#" class="ws-add-top ms-2" data-phase="{{ g.phase }}"><i class="fas fa-plus me-1"></i>{% trans "Neues Item" %}</a>{% endif %}</div>{% endfor %}
+{% endif %}

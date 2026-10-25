@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+{% load chat_extras %}
+{% load asset_extras %}
+{% block content %}
+<div class="advisory-banner mb-3">
+  <i class="fas fa-circle-info me-1"></i>
+  <strong>{% trans "Beratung, nicht verbindlich." %}</strong> {% trans "Der Chat ist RAG-gestützt (IEC 61508) und persistiert — aber nie Quelle der Wahrheit. Inhalt für eine Spezifikation entsteht nur durch dein bewusstes Einfügen im Arbeitsbereich." %}
+</div>
+
+<div class="chat-shell">
+  <aside class="chat-sidebar">
+    <form method="post" action="{% url 'chat-new' %}" class="mb-1">
+      {% csrf_token %}
+      <button class="btn btn-dark btn-sm w-100"><i class="fas fa-plus me-1"></i>{% trans "Neuer Chat" %}</button>
+    </form>
+    {% if can_new_project_chat %}
+    <form method="post" action="{% url 'chat-new-project' %}" class="mb-2">
+      {% csrf_token %}
+      <button class="btn btn-outline-dark btn-sm w-100"><i class="fas fa-users me-1"></i>{% trans "Neuer Projekt-Chat" %}</button>
+    </form>
+    {% endif %}
+    <div class="list-group" id="chat-list">
+      {% for s in sessions %}
+      <div class="list-group-item chat-entry {% if s.shared %}type-project{% else %}type-rag{% endif %} d-flex align-items-center gap-2 p-0
+                  {% if session and s.pk == session.pk %}active{% endif %}"
+           data-pk="{{ s.pk }}" data-title="{{ s.title|default:'' }}"
+           {% if not s.shared or can_new_project_chat %}data-editable="1"
+           data-rename-url="{% url 'chat-rename' s.pk %}"{% endif %}>
+        <a href="{% url 'chat-session' s.pk %}" style="min-width:0"
+           class="flex-grow-1 overflow-hidden text-decoration-none px-3 py-2 {% if session and s.pk == session.pk %}text-white{% endif %}">
+          <div class="chat-title text-truncate small">{% if s.shared %}<i class="fas fa-users chat-type-ico me-1 {% if session and s.pk == session.pk %}text-white{% endif %}" title="{% trans 'Projekt-Chat (alle Mitglieder)' %}"></i>{% else %}<i class="fas fa-comment-dots chat-type-ico me-1 {% if session and s.pk == session.pk %}text-white{% endif %}" title="{% trans 'Persönlicher RAG-Chat (nur für mich)' %}"></i>{% endif %}{{ s.title|default:_("(ohne Titel)") }}</div>
+          <div style="font-size:.7rem;opacity:.7">{{ s.updated_at|date:"d.m. H:i" }}</div>
+        </a>
+        {% if not s.shared or can_new_project_chat %}
+        <form method="post" action="{% url 'chat-delete' s.pk %}" class="pe-2"
+              onsubmit="return confirm('{% trans "Diesen Chat löschen?" %}');">
+          {% csrf_token %}
+          <button class="btn btn-sm btn-link text-danger p-1" title="{% trans 'Chat löschen' %}">
+            <i class="fas fa-trash-can"></i>
+          </button>
+        </form>
+        {% endif %}
+      </div>
+      {% empty %}
+      <p class="text-muted small">{% trans "Noch keine Chats." %}</p>
+      {% endfor %}
+    </div>
+  </aside>
+
+  {# Kontextmenü (Rechtsklick auf einen Chat) – nur für umbenennbare Chats #}
+  <div id="chat-ctx" class="chat-ctx d-none">
+    <a href="#" class="chat-ctx-i" data-act="rename"><i class="fas fa-i-cursor me-2"></i>{% trans "Umbenennen" %}</a>
+  </div>
+
+  {# Kontextmenü (Rechtsklick auf eine Nachricht) – Antwort zitieren #}
+  <div id="chat-msg-ctx" class="chat-ctx d-none">
+    <a href="#" class="chat-ctx-i" data-act="cite"><i class="fas fa-quote-right me-2"></i>{% trans "Zitieren" %}</a>
+  </div>
+
+  <section class="chat-main">
+    {% include "partials/chat_participants.html" %}
+    {% if session %}
+    <div class="chat-history" id="chat-history" data-send-url="{% url 'chat-send' session.pk %}"
+         data-poll-url="{% url 'chat-poll' session.pk %}" data-last-id="{{ messages.last.id|default:0 }}"
+         data-me="{{ request.user.get_full_name|default:request.user.username }}">
+      {% for m in messages %}
+      <div class="chat-msg {{ m.role|lower }}{% if mention_token and mention_token in m.content %} msg-tome{% endif %}">
+        <div class="sender small text-muted mb-1"><i class="fas {% if m.role == 'USER' %}fa-user{% elif m.role == 'ASSISTANT' %}{% if m.llm_model %}fa-worm text-success{% else %}fa-robot{% endif %}{% else %}fa-gear{% endif %} me-1"></i>{{ m.sender_label }}</div>
+        <div class="bubble">{{ m.content|chat_render }}</div>
+        {% if m.cited_sources %}
+        <div class="sources">{% trans "Quellen:" %}
+          {% for s in m.cited_sources %}<a href="{% url 'norms-download' %}?name={{ s.quelle|urlencode }}" class="norm-cite" data-name="{{ s.quelle }}" data-page="{{ s.seite|default:1 }}"><i class="fas fa-book-open me-1"></i>{{ s.quelle }}{% if s.seite %} S.{{ s.seite }}{% endif %}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+        </div>
+        {% elif m.cited_clauses.exists %}
+        <div class="sources">{% trans "Quellen:" %} {% for c in m.cited_clauses.all %}{{ c }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="chat-input">
+      {# @-Wake-Character: Mention-Autocomplete (Liste aller Teilnehmer) #}
+      <div id="mention-pop" class="mention-pop d-none"></div>
+      <textarea id="chat-text" class="form-control" rows="1" style="overflow-y:hidden;resize:none"
+                placeholder="{% trans 'Frage zur IEC 61508 …' %}"></textarea>
+      <button id="chat-send" class="btn btn-dark"><i class="fas fa-paper-plane"></i></button>
+    </div>
+    {% else %}
+    <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+      <div class="text-center">
+        <i class="fas fa-comments fa-2x mb-2"></i>
+        <p>{% trans "Starte einen neuen Chat, um RAG-gestützte Norm-Auskünfte zu erhalten." %}</p>
+      </div>
+    </div>
+    {% endif %}
+  </section>
+</div>
+
+<style>
+  .chat-ctx { position:fixed; z-index:1090; background:#fff; border:1px solid #ced4da;
+              border-radius:.45rem; box-shadow:0 6px 18px rgba(0,0,0,.18); min-width:180px;
+              font-size:.85rem; overflow:hidden; }
+  .chat-ctx-i { display:flex; align-items:center; padding:.45rem .7rem;
+                color:#212529; text-decoration:none; }
+  .chat-ctx-i:hover { background:#eef2ff; }
+  .chat-entry[data-editable] { cursor:context-menu; }
+  /* Ausgewählter Chat in der Liste: Akzent statt Bootstrap-Blau. */
+  .chat-sidebar .list-group-item.active {
+    background-color: var(--elisa-primary); border-color: var(--elisa-primary);
+  }
+  /* Chat-TYP auf einen Blick: farbiger Streifen links + typ-eigenes Icon.
+     Projekt-Chat (geteilt) = Charcoal/Gruppe · persönlicher RAG-Chat = Teal/Sprechblase. */
+  .chat-entry { border-left: 3px solid transparent; }
+  .chat-entry.type-rag     { border-left-color: var(--elisa-primary); }
+  .chat-entry.type-project { border-left-color: var(--elisa-dark); }
+  .chat-entry.type-rag     .chat-type-ico:not(.text-white) { color: var(--elisa-primary); }
+  .chat-entry.type-project .chat-type-ico:not(.text-white) { color: var(--elisa-dark); }
+  /* @-Mention-Autocomplete (öffnet sich über dem Eingabefeld). */
+  .chat-input { position: relative; }
+  .mention-pop { position:absolute; bottom:100%; left:0; right:0; margin-bottom:.3rem;
+    background:#fff; border:1px solid #ced4da; border-radius:.45rem;
+    box-shadow:0 6px 18px rgba(0,0,0,.18); max-height:240px; overflow-y:auto; z-index:1095; }
+  .mention-opt { display:flex; align-items:center; gap:.1rem; padding:.4rem .7rem; cursor:pointer; }
+  .mention-opt.active, .mention-opt:hover { background:var(--elisa-primary-soft); }
+</style>
+<script type="application/json" id="participant-glyphs">{{ participants|glyph_map_json }}</script>
+<script src="{% static_v 'js/chat.js' %}"></script>
+<script>
+(function () {
+  // ── Kontextmenü: Chat umbenennen (nur umbenennbare Einträge) ──
+  var menu = document.getElementById('chat-ctx');
+  var list = document.getElementById('chat-list');
+  if (!menu || !list) return;
+  var target = null;                 // .chat-entry, auf dem das Menü geöffnet wurde
+
+  function getCookie(name) {
+    var m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return m ? m.pop() : '';
+  }
+  function hide() { menu.classList.add('d-none'); target = null; }
+
+  list.addEventListener('contextmenu', function (e) {
+    var row = e.target.closest('.chat-entry[data-editable]');
+    if (!row) return;                // nicht-umbenennbare Chats: Browser-Menü lassen
+    e.preventDefault();
+    target = row;
+    menu.style.left = Math.min(e.clientX, window.innerWidth - 200) + 'px';
+    menu.style.top = Math.min(e.clientY, window.innerHeight - 60) + 'px';
+    menu.classList.remove('d-none');
+  });
+  document.addEventListener('click', function (e) { if (!menu.contains(e.target)) hide(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
+
+  menu.querySelector('[data-act="rename"]').addEventListener('click', async function (e) {
+    e.preventDefault();
+    if (!target) return;
+    var row = target, url = row.dataset.renameUrl;
+    hide();
+    var cur = row.dataset.title || '';
+    var name = window.prompt('{% trans "Neuer Chat-Name:" %}', cur);
+    if (name === null) return;
+    name = name.trim();
+    if (!name || name === cur) return;
+    try {
+      var res = await fetch(url, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken'),
+                   'X-Requested-With': 'XMLHttpRequest',
+                   'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'title=' + encodeURIComponent(name),
+      });
+      if (!res.ok) return;
+      var data = await res.json();
+      row.dataset.title = data.title;
+      var titleEl = row.querySelector('.chat-title');
+      // nur den Text hinter dem (optionalen) Gruppen-Icon ersetzen
+      var icon = titleEl.querySelector('i');
+      titleEl.textContent = '';
+      if (icon) titleEl.appendChild(icon);
+      titleEl.appendChild(document.createTextNode(data.title));
+    } catch (err) { /* Netzfehler: nichts ändern */ }
+  });
+})();
+</script>
+{% endblock %}

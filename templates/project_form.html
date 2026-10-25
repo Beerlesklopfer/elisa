@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">
+    <i class="fas fa-folder-tree me-2"></i>{% if project %}{% trans "Projekt bearbeiten" %}{% else %}{% trans "Neues Projekt" %}{% endif %}
+  </h1>
+  <a href="{% url 'projects' %}" class="btn btn-sm btn-outline-secondary">
+    <i class="fas fa-arrow-left me-1"></i>{% trans "Zurück" %}
+  </a>
+</div>
+
+<form method="post" class="card">
+  {% csrf_token %}
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-6">{% include 'partials/_field.html' with field=form.name %}</div>
+      <div class="col-md-6">{% include 'partials/_field.html' with field=form.customer %}</div>
+      <div class="col-md-4">{% include 'partials/_field.html' with field=form.key %}</div>
+      <div class="col-md-8">{% include 'partials/_field.html' with field=form.description %}</div>
+    </div>
+    {% if form.errors %}
+    <div class="alert alert-danger mt-3 mb-0">
+      {% for field, errs in form.errors.items %}<div>{{ field }}: {{ errs|join:", " }}</div>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-footer text-end">
+    <button class="btn btn-dark"><i class="fas fa-save me-1"></i>{% trans "Speichern" %}</button>
+  </div>
+</form>
+
+{% if project %}
+<div class="card mt-4">
+  <div class="card-header"><i class="fas fa-language me-1"></i>{% trans "Sprachen des Projekts" %}
+    <span class="text-muted small">{% blocktrans with primary=project.primary_language|default:"—" %}(Primärsprache: <strong>{{ primary }}</strong>; Änderungen werden in die übrigen übersetzt){% endblocktrans %}</span>
+  </div>
+  <div class="card-body">
+    <div class="mb-3">
+      <div class="text-muted small mb-1">{% blocktrans %}Genau EINE Sprache ist <strong>Normativ</strong> = die Projektsprache
+        (maßgeblicher Wortlaut, wird NIE übersetzt). „Normativ" auf eine andere Sprache setzen macht DIESE zur Projektsprache
+        (exklusiv). Alle übrigen sind <strong>informativ</strong> (übersetzbar).{% endblocktrans %}</div>
+      {% for l in lang_list %}
+      <div class="d-flex align-items-center gap-2 py-1 border-bottom">
+        <span class="fi fi-{{ l.flag }}"></span>
+        <span style="min-width:150px">{{ l.name }} <small class="text-muted">({{ l.code }})</small>
+          {% if l.is_primary %}<i class="fas fa-star text-warning ms-1" title="{% trans 'Primärsprache (immer normativ)' %}"></i>{% endif %}</span>
+        <form method="post" action="{% url 'project-lang-mode' project.pk %}" class="d-flex gap-3 align-items-center mb-0">
+          {% csrf_token %}<input type="hidden" name="language" value="{{ l.code }}">
+          <div class="form-check form-check-inline mb-0">
+            <input class="form-check-input" type="radio" name="mode" value="normative" id="norm-{{ l.code }}"
+                   {% if l.normative %}checked{% endif %} onchange="this.form.submit()">
+            <label class="form-check-label small" for="norm-{{ l.code }}">{% trans "Normativ" %}</label>
+          </div>
+          <div class="form-check form-check-inline mb-0">
+            <input class="form-check-input" type="radio" name="mode" value="informative" id="info-{{ l.code }}"
+                   {% if not l.normative %}checked{% endif %}{% if l.is_primary %} disabled{% endif %} onchange="this.form.submit()">
+            <label class="form-check-label small" for="info-{{ l.code }}">{% trans "informativ" %}</label>
+          </div>
+        </form>
+        {% if not l.is_primary %}
+        <form method="post" action="{% url 'project-lang-remove' project.pk %}" class="mb-0 ms-auto">
+          {% csrf_token %}<input type="hidden" name="language" value="{{ l.code }}">
+          <button class="btn-close" style="font-size:.6rem" title="{% trans 'entfernen' %}"></button>
+        </form>
+        {% endif %}
+      </div>
+      {% empty %}<span class="text-muted small">{% trans "Noch keine Sprache." %}</span>{% endfor %}
+    </div>
+    <form method="post" action="{% url 'project-lang-add' project.pk %}" class="row g-2">
+      {% csrf_token %}
+      <div class="col-md-6">
+        <input list="langOptions" name="language" class="form-control" autocomplete="off"
+               placeholder="{% trans 'Sprache tippen & wählen (de, en, fr, zh …)' %}" required>
+        <datalist id="langOptions">
+          {% for l in all_languages %}<option value="{{ l.code }}">{{ l.code }} — {{ l.name }}</option>{% endfor %}
+        </datalist>
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-outline-primary"><i class="fas fa-plus me-1"></i>{% trans "hinzufügen" %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+{% block extra_js %}
+<script>
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+    new bootstrap.Tooltip(el);
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "admin/jsonio_change_form.html" %}
+{% load admin_urls %}
+{% load i18n %}
+{% block object-tools-items %}
+  {% if original %}
+  <li><a class="button" href="{% url opts|admin_urlname:'mcpb' original.pk %}">⬇ {% trans "Claude Desktop Extension (.mcpb)" %}</a></li>
+  <li><a class="button" style="background:#ba2121"
+         href="{% url opts|admin_urlname:'regenerate' original.pk %}">{% trans "Token neu erzeugen" %}</a></li>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}

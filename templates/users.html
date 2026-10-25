@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<h1 class="h3 mb-3"><i class="fas fa-users-gear me-2"></i>{% trans "Userverwaltung" %}</h1>
+
+{% if messages %}{% for m in messages %}
+<div class="alert alert-{{ m.tags|default:'info' }} py-2">{{ m }}</div>
+{% endfor %}{% endif %}
+
+<div class="card mb-4">
+  <div class="card-header"><i class="fas fa-user-plus me-1"></i>{% trans "Neuer Benutzer" %}</div>
+  <div class="card-body">
+    <form method="post" action="{% url 'user-create' %}" class="row g-2">
+      {% csrf_token %}
+      <div class="col-md-3"><input name="first_name" class="form-control" placeholder="{% trans 'Vorname *' %}" required></div>
+      <div class="col-md-3"><input name="last_name" class="form-control" placeholder="{% trans 'Nachname *' %}" required></div>
+      <div class="col-md-3"><input name="email" type="email" class="form-control" placeholder="{% trans 'E-Mail' %}"></div>
+      <div class="col-md-3"><input name="password" type="text" class="form-control" placeholder="{% trans 'Passwort *' %}" required></div>
+      <div class="col-12 d-flex align-items-center gap-3">
+        <div class="form-check"><input class="form-check-input" type="checkbox" name="is_staff" id="st"><label class="form-check-label small" for="st">{% trans "Admin-Rechte" %}</label></div>
+        <span class="text-muted small"><i class="fas fa-circle-info me-1"></i>{% blocktrans %}Anmeldename wird automatisch als <code>vorname.nachname</code> erzeugt.{% endblocktrans %}</span>
+        <button class="btn btn-dark btn-sm ms-auto">{% trans "Anlegen" %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<table class="table bg-white align-middle">
+  <thead><tr><th>{% trans "Benutzer" %}</th><th>{% trans "Name" %}</th><th>{% trans "E-Mail" %}</th><th>{% trans "Rollen (Projekte)" %}</th><th>{% trans "Status" %}</th><th class="small">{% trans "Registriert" %}</th><th class="small">{% trans "Erste Anm." %}</th><th class="small">{% trans "Letzte Anm." %}</th><th class="small">{% trans "Passwort" %}</th><th></th></tr></thead>
+  <tbody>
+    {% for u in users %}
+    <tr>
+      <td><div class="d-flex align-items-center gap-2">
+        <span class="avatar">{% if u.first_name or u.last_name %}{{ u.first_name|slice:":1" }}{{ u.last_name|slice:":1" }}{% else %}{{ u.username|slice:":2" }}{% endif %}</span>
+        <strong>{{ u.username }}</strong>{% if u.is_staff %} <span class="badge bg-dark">Admin</span>{% endif %}
+      </div></td>
+      <td>{{ u.get_full_name|default:"—" }}</td>
+      <td class="small">{{ u.email|default:"—" }}</td>
+      <td class="small">
+        {% for m in u.project_memberships.all %}<span class="badge bg-light text-dark border">{{ m.project.key }}: {{ m.get_role_display }}</span> {% empty %}—{% endfor %}
+      </td>
+      <td>{% if u.is_active %}<span class="badge bg-success">{% trans "aktiv" %}</span>{% else %}<span class="badge bg-secondary">{% trans "inaktiv" %}</span>{% endif %}</td>
+      <td class="small text-nowrap text-muted">{{ u.date_joined|date:"d.m.y" }}</td>
+      <td class="small text-nowrap">{{ u.profile.first_login|date:"d.m.y H:i"|default:"—" }}</td>
+      <td class="small text-nowrap">{{ u.last_login|date:"d.m.y H:i"|default:"—" }}</td>
+      <td class="small text-nowrap text-muted">{{ u.profile.password_changed_at|date:"d.m.y"|default:"—" }}</td>
+      <td class="text-end text-nowrap">
+        <button class="btn btn-sm btn-outline-primary edit-user" title="{% trans 'Bearbeiten' %}"
+                data-bs-toggle="modal" data-bs-target="#editUserModal"
+                data-action="{% url 'user-edit' u.pk %}"
+                data-username="{{ u.username }}" data-first="{{ u.first_name }}"
+                data-last="{{ u.last_name }}" data-email="{{ u.email }}"
+                data-staff="{{ u.is_staff|yesno:'1,0' }}"><i class="fas fa-pen"></i></button>
+        <form method="post" action="{% url 'user-toggle' u.pk %}" class="d-inline">{% csrf_token %}
+          <button class="btn btn-sm btn-outline-secondary" title="{% trans 'aktiv/inaktiv' %}"><i class="fas fa-power-off"></i></button></form>
+        <form method="post" action="{% url 'user-set-password' u.pk %}" class="d-inline"
+              onsubmit="this.password.value=prompt('Neues Passwort für {{ u.username }}:')||'';return !!this.password.value;">
+          {% csrf_token %}<input type="hidden" name="password">
+          <button class="btn btn-sm btn-outline-dark" title="{% trans 'Passwort setzen' %}"><i class="fas fa-key"></i></button></form>
+        <form method="post" action="{% url 'user-delete' u.pk %}" class="d-inline"
+              onsubmit="return confirm('Benutzer „{{ u.username }}“ wirklich löschen?');">
+          {% csrf_token %}
+          <button class="btn btn-sm btn-outline-danger" title="{% trans 'Löschen' %}"
+                  {% if u == request.user %}disabled{% endif %}><i class="fas fa-trash"></i></button></form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{# ── Edit-Modal (UPDATE) ─────────────────────────────────────────── #}
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post" id="editUserForm">
+      {% csrf_token %}
+      <div class="modal-header">
+        <h5 class="modal-title">{% trans "Benutzer bearbeiten:" %} <span id="eu-username"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-2">
+          <div class="col-md-6"><label class="form-label small">{% trans "Vorname" %}</label>
+            <input name="first_name" id="eu-first" class="form-control" required></div>
+          <div class="col-md-6"><label class="form-label small">{% trans "Nachname" %}</label>
+            <input name="last_name" id="eu-last" class="form-control" required></div>
+          <div class="col-12"><label class="form-label small">{% trans "E-Mail" %}</label>
+            <input name="email" id="eu-email" type="email" class="form-control"></div>
+        </div>
+        <div class="form-check mt-3">
+          <input class="form-check-input" type="checkbox" name="is_staff" id="eu-staff">
+          <label class="form-check-label small" for="eu-staff">{% trans "Admin-Rechte" %}</label>
+        </div>
+        <p class="text-muted small mt-2"><i class="fas fa-circle-info me-1"></i>
+          {% blocktrans %}Bei Namensänderung wird der Login <code>vorname.nachname</code> angeglichen.{% endblocktrans %}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">{% trans "Abbrechen" %}</button>
+        <button class="btn btn-primary btn-sm">{% trans "Speichern" %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.getElementById('editUserModal').addEventListener('show.bs.modal', function (e) {
+  var b = e.relatedTarget;
+  var f = document.getElementById('editUserForm');
+  f.action = b.dataset.action;
+  document.getElementById('eu-username').textContent = b.dataset.username;
+  document.getElementById('eu-first').value = b.dataset.first;
+  document.getElementById('eu-last').value = b.dataset.last;
+  document.getElementById('eu-email').value = b.dataset.email;
+  document.getElementById('eu-staff').checked = b.dataset.staff === '1';
+});
+</script>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "admin/change_list.html" %}
+{% load admin_urls %}
+{% load i18n %}
+{% block object-tools-items %}
+  <li><a href="{% url cl.opts|admin_urlname:'exporttype' %}">{% trans "JSON exportieren" %}</a></li>
+  <li><a href="{% url cl.opts|admin_urlname:'importtype' %}">{% trans "JSON importieren" %}</a></li>
+  {{ block.super }}
+{% endblock %}

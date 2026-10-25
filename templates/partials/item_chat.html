@@ -1,0 +1,42 @@
+{% load static i18n chat_extras %}
+<div class="item-chat d-flex flex-column h-100" data-identifier="{{ item.identifier }}">
+
+  {# ── Angeschlossene Teilnehmer + Online-Status (zum @-Ansprechen) ── #}
+  {% include "partials/chat_participants.html" %}
+
+  {# ── Verlauf ──────────────────────────────────────────────────── #}
+  <div class="chat-log border rounded p-2 mb-2 flex-grow-1" style="overflow:auto">
+    {% for m in chat_messages %}
+    <div class="mb-2 p-1{% if mention_token and mention_token in m.content %} msg-tome{% endif %}">
+      <span class="badge {% if m.role == 'ASSISTANT' %}bg-info text-dark{% elif m.role == 'SYSTEM' %}bg-secondary{% else %}bg-primary{% endif %}"
+            title="{{ m.get_role_display }}"><i class="fas {% if m.role == 'USER' %}fa-user{% elif m.role == 'ASSISTANT' %}fa-robot{% else %}fa-gear{% endif %} me-1"></i>{{ m.sender_label }}</span>
+      <span style="white-space:pre-wrap">{{ m.content|chat_render }}</span>
+    </div>
+    {% empty %}<div class="text-muted">{% trans "Noch keine Nachrichten – alle Projektbeteiligten (inkl. LLM) schreiben hier. Sprich ein LLM per @handle direkt an." %}</div>{% endfor %}
+    {% for h in awaiting %}
+    <div class="mb-2 p-1 chat-typing">
+      <span class="badge bg-info text-dark"><i class="fas fa-robot me-1"></i>@{{ h }}</span>
+      <span class="typing align-middle ms-1"><span></span><span></span><span></span></span>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if active_llm %}
+  <div class="alert alert-info py-1 px-2 small mb-2 mb-0">
+    <i class="fas fa-robot me-1"></i>{% blocktrans with llm=active_llm %}{{ llm }} ist aktiv und antwortet auf jede Nachricht. Sprich @jemand-anderen an, um es zu stoppen.{% endblocktrans %}
+  </div>
+  {% endif %}
+
+  {# ── Eingabe ──────────────────────────────────────────────────── #}
+  <form class="panel-form chat-form position-relative" data-action="{% url 'workitem-chat-pane' item.identifier %}" data-pane="chat"
+        data-participants='[{% for p in participants %}{"handle":"{{ p.handle }}","label":"{{ p.label|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]'>
+    <div class="input-group input-group-sm">
+      <textarea class="form-control chat-input" name="message" autocomplete="off" rows="1"
+                style="overflow-y:hidden;resize:none"
+                placeholder="{% trans 'Nachricht … (@ für Teilnehmer)' %}" required></textarea>
+      <button class="btn btn-outline-primary" title="{% trans 'Senden' %}"><i class="fas fa-paper-plane"></i></button>
+    </div>
+    <div class="mention-menu list-group position-absolute w-100 shadow-sm" style="display:none;bottom:100%;z-index:20"></div>
+  </form>
+
+</div>

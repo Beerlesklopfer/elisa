@@ -1,0 +1,6 @@
+{% load i18n %}
+<div class="alert alert-info py-2 px-3 mt-3 mb-2 small">
+  <i class="fas fa-language me-1"></i><strong>{% trans "Informative Übersetzung" %} — {{ translation_name }}</strong>
+  · <span class="text-muted">{% trans "nicht normativ; maßgeblich ist der Wortlaut der Projektsprache" %}</span>
+</div>
+<div class="md-body border-start border-info ps-3">{{ translation_html|safe }}</div>

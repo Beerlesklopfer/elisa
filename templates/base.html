@@ -1,0 +1,245 @@
+{% load static i18n asset_extras %}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{{ company.product }}{% block title %}{% endblock %}</title>
+
+    <link rel="shortcut icon" type="image/svg" href="{% static 'img/a-icon-white.svg' %}">
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'fontawesome/css/all.min.css' %}" rel="stylesheet">
+    <link href="{% static_v 'css/site.css' %}" rel="stylesheet">
+    <link href="{% static 'vendor/flag-icons/css/flag-icons.min.css' %}" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-elisa-primary py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+                <span class="product">{{ company.product }}</span>
+            </a>
+            {% if user.is_authenticated %}
+            <ul class="navbar-nav ms-auto flex-row gap-3 align-items-center">
+                {% if all_projects or is_pm_or_admin %}
+                <!-- Mandant / Projektwahl + Verwaltung (nur mit Projekten oder für PM/Admin) -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                        <i class="fas fa-folder-tree me-1"></i>
+                        {{ current_project.name|default:"Projekt" }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        {% if all_projects %}
+                        <li><h6 class="dropdown-header">{% trans "Projekt wechseln" %}</h6></li>
+                        {% for p in all_projects %}
+                        <li>
+                          <form method="post" action="{% url 'project-switch' p.pk %}">
+                            {% csrf_token %}
+                            <button class="dropdown-item {% if current_project and p.pk == current_project.pk %}active{% endif %}">
+                              {% if current_project and p.pk == current_project.pk %}<i class="fas fa-check me-1"></i>{% endif %}{{ p.name }}
+                            </button>
+                          </form>
+                        </li>
+                        {% endfor %}
+                        {% endif %}
+                        {% if is_pm_or_admin %}
+                        {% if all_projects %}<li><hr class="dropdown-divider"></li>{% endif %}
+                        <li><a class="dropdown-item" href="{% url 'team' %}"><i class="fas fa-user-group me-1"></i>{% trans "Team & Rollen" %}</a></li>
+                        <li><a class="dropdown-item" href="{% url 'projects' %}"><i class="fas fa-folder-tree me-1"></i>{% trans "Projektverwaltung" %}</a></li>
+                        <li><a class="dropdown-item" href="{% url 'customers' %}"><i class="fas fa-building-user me-1"></i>{% trans "Kundenverwaltung" %}</a></li>
+                        {% endif %}
+                        {% if user.is_staff %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'users' %}"><i class="fas fa-users-gear me-1"></i>{% trans "Userverwaltung" %}</a></li>
+                        <li><a class="dropdown-item" href="/admin/"><i class="fas fa-toolbox me-1"></i>{% trans "Django Admin" %}</a></li>
+                        {% endif %}
+                    </ul>
+                </li>
+                {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link {% if active_tab == 'home' %}active{% endif %}" href="{% url 'home' %}">
+                        <i class="fas fa-gauge me-1"></i> {% trans "Übersicht" %}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_tab == 'workspace' %}active{% endif %}" href="{% url 'workspace' %}">
+                        <i class="fas fa-folder-tree me-1"></i> {% trans "Arbeitsbereich" %}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_tab == 'chat' %}active{% endif %}" href="{% url 'chat' %}">
+                        <i class="fas fa-comments me-1"></i> {% trans "Chat" %}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_tab == 'norms' %}active{% endif %}" href="{% url 'norms' %}">
+                        <i class="fas fa-book-open me-1"></i> {% trans "Normen" %}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_tab == 'docmgmt' %}active{% endif %}" href="{% url 'docmgmt' %}">
+                        <i class="fas fa-folder-open me-1"></i> {% trans "Eingänge" %}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_tab == 'documents' %}active{% endif %}" href="{% url 'documents' %}">
+                        <i class="fas fa-file-word me-1"></i> {% trans "Dokumente" %}
+                    </a>
+                </li>
+                <!-- Konto: Profil + Abmelden (links neben dem Sprachmenü) -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" title="{% trans 'Konto' %}">
+                        <i class="fas fa-circle-user me-1"></i><span class="d-none d-lg-inline">{{ user.first_name|default:user.username }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="fas fa-id-card me-1"></i>{{ user.first_name|default:user.username }}s {% trans "Profil" %}</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                          <form method="post" action="{% url 'logout' %}">
+                            {% csrf_token %}
+                            <button class="dropdown-item text-danger"><i class="fas fa-sign-out-alt me-1"></i>{% trans "Abmelden" %}</button>
+                          </form>
+                        </li>
+                    </ul>
+                </li>
+                {% if project_languages %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" title="{% trans 'Sprache' %}">
+                        {% if active_language %}<span class="fi fi-{{ active_language.flag }}"></span>
+                          <span class="ms-1 d-none d-lg-inline">{{ active_language.code|upper }}</span>
+                        {% else %}<i class="fas fa-language"></i>{% endif %}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><h6 class="dropdown-header">{% trans "Sprache umstellen" %} <span class="text-muted">(Alt+1…0)</span></h6></li>
+                        {% for l in lang_hotkeys %}
+                        <li><a class="dropdown-item d-flex align-items-center {% if active_language and active_language.code == l.code %}active{% endif %}"
+                               href="{% url 'set-language' %}?lang={{ l.code }}">
+                            <span class="fi fi-{{ l.flag }} me-2"></span>{{ l.name }}
+                            <kbd class="ms-auto small">Alt+{% if forloop.counter < 10 %}{{ forloop.counter }}{% else %}0{% endif %}</kbd>
+                            {% if active_language and active_language.code == l.code %}<i class="fas fa-check ms-2"></i>{% endif %}</a></li>
+                        {% endfor %}
+                    </ul>
+                </li>
+                {% endif %}
+            </ul>
+            {% else %}
+            <a class="nav-link text-white ms-auto" href="{% url 'login' %}">
+                <i class="fas fa-sign-in-alt me-1"></i> Login
+            </a>
+            {% endif %}
+        </div>
+    </nav>
+
+    {% if lang_hotkey_codes %}
+    {{ lang_hotkey_codes|json_script:"lang-hotkeys" }}
+    <script>
+    (function () {
+      var el = document.getElementById('lang-hotkeys');
+      var codes = el ? JSON.parse(el.textContent || '[]') : [];
+      var base = "{% url 'set-language' %}";
+      document.addEventListener('keydown', function (e) {
+        // Alt+1 = Primärsprache, Alt+2…Alt+0 = Sekundärsprachen (1-basiert, 0 = 10.).
+        if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+        if (!/^[0-9]$/.test(e.key)) return;
+        var idx = e.key === '0' ? 9 : parseInt(e.key, 10) - 1;
+        if (idx >= 0 && idx < codes.length) {
+          e.preventDefault();
+          window.location.href = base + '?lang=' + encodeURIComponent(codes[idx]);
+        }
+      });
+    })();
+    </script>
+    {% endif %}
+
+    <main class="py-4 flex-grow-1">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Container für die beratenden Live-Feedback-Toasts -->
+    <div id="toast-container"></div>
+
+    <footer class="footer mt-auto py-3">
+        <div class="container d-flex justify-content-between align-items-center flex-wrap">
+            <span class="small">&copy; {% now "Y" %} {{ company.product }}</span>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+    {# ── Globaler eingebetteter Norm-Viewer (springt zur zitierten Seite) ─ #}
+    {% if user.is_authenticated %}
+    <div class="modal fade" id="normViewer" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" style="max-width:92vw">
+        <div class="modal-content" style="height:90vh">
+          <div class="modal-header py-2">
+            <h6 class="modal-title mb-0" id="nv-title"></h6>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Schließen' %}"></button>
+          </div>
+          <div class="modal-body p-0">
+            <iframe id="nv-frame" title="Norm" style="width:100%;height:100%;border:0"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+    (function () {
+      var el = document.getElementById('normViewer');
+      if (!el) return;
+      var modal = new bootstrap.Modal(el);
+      var frame = document.getElementById('nv-frame');
+      // Klick auf .norm-cite (Norm) oder .doc-cite (Projektdokument) → einge-
+      // betteter Viewer, springt zur Seite. Ctrl/Cmd/Shift/Mittelklick → Default.
+      document.addEventListener('click', function (e) {
+        var a = e.target.closest('.norm-cite, .doc-cite');
+        if (!a) return;
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return;
+        e.preventDefault();
+        var page = a.dataset.page || 1, src, title;
+        if (a.classList.contains('doc-cite')) {
+          title = a.dataset.title || 'Dokument';
+          src = a.dataset.url + (a.dataset.url.indexOf('?') >= 0 ? '&' : '?') + 'inline=1#page=' + page;
+        } else {
+          title = a.dataset.name;
+          src = '/normen/download/?name=' + encodeURIComponent(a.dataset.name) + '&inline=1#page=' + page;
+        }
+        document.getElementById('nv-title').textContent = title + ' — Seite ' + page;
+        frame.src = src;
+        modal.show();
+      });
+      el.addEventListener('hidden.bs.modal', function () { frame.src = 'about:blank'; });
+    })();
+    </script>
+    {# ── who-is-online: Online-Punkte in allen Chat-Systemen ── #}
+    <style>
+      .presence-dot { display:inline-block; width:8px; height:8px; border-radius:50%;
+                      margin-right:3px; vertical-align:middle; }
+      .presence-dot.on  { background:#28a745; box-shadow:0 0 0 2px rgba(40,167,69,.2); }
+      .presence-dot.off { background:#adb5bd; }
+      /* Item-Headline (Titel) hervorgehoben, Markdown-Body kompakt */
+      .item-headline { font-weight:700; background:#eef1f4; border-left:3px solid var(--elisa-primary);
+                       padding:.35rem .6rem; border-radius:.25rem; margin-bottom:.5rem; }
+      .md-body > :first-child { margin-top:0; }
+      .md-body > :last-child { margin-bottom:0; }
+      .md-body table { width:auto; border-collapse:collapse; }
+      .md-body img { max-width:100%; height:auto; border-radius:.25rem; margin:.25rem 0; }
+      .md-body th, .md-body td { border:1px solid #dee2e6; padding:.2rem .5rem; }
+      /* An MICH gerichtete Chat-Nachrichten (@mention): nur die SPRECHBLASE
+         outlinen – KEIN Block-Hintergrund. Neutral (info-blau). */
+      .chat-msg.msg-tome .bubble { border-color:var(--elisa-primary); box-shadow:0 0 0 1px var(--elisa-primary); }
+      .msg-tome:not(.chat-msg) { border:1px solid var(--elisa-primary); border-radius:.4rem; }
+      /* @handle-Erwähnungen im Text – neutraler Chip, in ALLEN Chats. */
+      .mention { background:var(--elisa-primary-soft); color:var(--elisa-primary-text); border-radius:.5rem;
+                 padding:0 .35rem; font-weight:600; white-space:nowrap; }
+      /* Klickbare Item-Querverweise im Body (z. B. S4.2.3) */
+      .item-ref { color:var(--elisa-primary); text-decoration:none; border-bottom:1px dotted var(--elisa-primary);
+                  cursor:pointer; font-weight:600; }
+      .item-ref:hover { text-decoration:underline; }
+    </style>
+    <script src="{% static_v 'js/presence.js' %}"></script>
+    {% endif %}
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

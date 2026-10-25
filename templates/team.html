@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0"><i class="fas fa-user-group me-2"></i>{% trans "Projektteam & Rollen" %}</h1>
+  <span class="text-muted small">{% blocktrans with name=project.name %}Projekt: <strong>{{ name }}</strong>{% endblocktrans %}</span>
+</div>
+
+{% if messages %}{% for m in messages %}
+<div class="alert alert-{{ m.tags|default:'info' }} py-2">{{ m }}</div>
+{% endfor %}{% endif %}
+
+<div class="card mb-4">
+  <div class="card-header"><i class="fas fa-user-plus me-1"></i>{% trans "Mitarbeiter hinzufügen" %}</div>
+  <div class="card-body">
+    <form method="post" action="{% url 'team-add' %}" class="row g-2">
+      {% csrf_token %}
+      <div class="col-md-5">
+        <select name="user" class="form-select" required>
+          <option value="">{% trans "— Benutzer wählen —" %}</option>
+          {% for u in available_users %}<option value="{{ u.pk }}">{{ u.username }}{% if u.get_full_name %} ({{ u.get_full_name }}){% endif %}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <select name="role" class="form-select">
+          {% for val,label in roles %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3 d-grid"><button class="btn btn-dark">{% trans "Hinzufügen" %}</button></div>
+    </form>
+  </div>
+</div>
+
+<table class="table bg-white align-middle">
+  <thead><tr><th>{% trans "Mitarbeiter" %}</th><th>{% trans "Rolle" %}</th><th>{% trans "seit" %}</th><th></th></tr></thead>
+  <tbody>
+    {% for m in members %}
+    <tr>
+      <td><strong>{{ m.user.username }}</strong> <span class="text-muted small">{{ m.user.get_full_name }}</span></td>
+      <td>
+        <form method="post" action="{% url 'team-update' m.pk %}" class="d-flex gap-1" style="max-width:280px">
+          {% csrf_token %}
+          <select name="role" class="form-select form-select-sm">
+            {% for val,label in roles %}<option value="{{ val }}" {% if val == m.role %}selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+          <button class="btn btn-sm btn-outline-dark">{% trans "OK" %}</button>
+        </form>
+      </td>
+      <td class="small text-muted">{{ m.added_at|date:"d.m.Y" }}</td>
+      <td class="text-end">
+        <form method="post" action="{% url 'team-remove' m.pk %}" class="d-inline"
+              onsubmit="return confirm('„{{ m.user.username }}“ entfernen?');">
+          {% csrf_token %}<button class="btn btn-sm btn-outline-danger"><i class="fas fa-user-minus"></i></button>
+        </form>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4" class="text-muted text-center py-4">{% trans "Noch keine Mitarbeiter im Projekt." %}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

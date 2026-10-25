@@ -1,0 +1,162 @@
+{% load static i18n %}<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% trans "Editor" %} — {{ item.identifier }}</title>
+  <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'fontawesome/css/all.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/tui-editor/toastui-editor.min.css' %}" rel="stylesheet">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body { display: flex; flex-direction: column; background: #fff; }
+    .ed-bar { padding: .45rem .7rem; border-bottom: 1px solid #dee2e6; }
+    .ed-mid { flex: 1 1 auto; min-height: 0; display: flex; padding: .35rem .7rem; }
+    #editor { flex: 1 1 auto; min-height: 0; width: 100%; }
+    .ed-foot { padding: .45rem .7rem; border-top: 1px solid #dee2e6;
+               display: flex; gap: .5rem; align-items: center; }
+    .ed-rationale { height: 70px; }
+    .mermaid { background: #fff; text-align: center; margin: .5rem 0; }
+  </style>
+</head>
+<body data-save-url="{% url 'workitem-text' item.identifier %}"
+      data-id="{{ item.identifier }}" data-maysave="{{ may_save|yesno:'1,0' }}">
+  {% csrf_token %}
+  <div class="ed-bar d-flex align-items-center gap-2">
+    <span class="badge badge-phase-{{ item.phase }} bg-secondary">{{ item.phase }}</span>
+    <strong>{{ item.identifier }}</strong>
+    <input id="ed-title" class="form-control form-control-sm" value="{{ item.title }}"
+           placeholder="{% trans 'Titel' %}" style="max-width:560px">
+    <span class="ms-auto text-muted small">
+      <i class="fas fa-up-down-left-right me-1"></i>{% trans "Eigenes Fenster — frei über Monitore verschiebbar" %}</span>
+  </div>
+
+  <div class="ed-mid"><div id="editor"></div></div>
+
+  <div class="ed-bar" style="border-top:1px solid #dee2e6;border-bottom:none">
+    <label class="form-label small text-muted mb-1">{% trans "Begründung (prüfbar)" %}</label>
+    <textarea id="ed-rationale" class="form-control form-control-sm ed-rationale">{{ item.rationale }}</textarea>
+  </div>
+
+  <div class="ed-foot">
+    <span class="text-muted small me-auto">
+      <i class="fas fa-circle-info me-1"></i>{% trans "Inhalt nur vom Menschen. Jede Änderung wird historisiert." %}</span>
+    <button id="ed-cancel" class="btn btn-sm btn-secondary">{% trans "Schließen" %}</button>
+    <button id="ed-save" class="btn btn-sm btn-primary"{% if not may_save %} disabled{% endif %}>
+      <i class="fas fa-floppy-disk me-1"></i>{% trans "Speichern" %} <span class="opacity-50">(Strg+S)</span></button>
+  </div>
+
+  {{ item.body|json_script:"ed-body-data" }}
+  <script src="{% static 'vendor/tui-editor/toastui-editor-all.min.js' %}"></script>
+  <script src="{% static 'vendor/mermaid/mermaid.min.js' %}"></script>
+  <script>
+  (function () {
+    var body = document.body;
+    var saveUrl = body.dataset.saveUrl, itemId = body.dataset.id;
+    var initial = JSON.parse(document.getElementById('ed-body-data').textContent || '""');
+    function getCookie(n){var m=document.cookie.match('(^|;)\\s*'+n+'\\s*=\\s*([^;]+)');return m?m.pop():'';}
+
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'loose', theme: 'default' });
+    function renderMermaid() {
+      var nodes = document.querySelectorAll(
+        '.toastui-editor-md-preview .mermaid, .toastui-editor-contents .mermaid');
+      if (!nodes.length) return;
+      nodes.forEach(function (n) { n.removeAttribute('data-processed'); });
+      try { mermaid.run({ nodes: nodes }); } catch (e) {}
+    }
+    var mtimer;
+    function rmDeb() { clearTimeout(mtimer); mtimer = setTimeout(renderMermaid, 400); }
+
+    // Eigener Toolbar-Button (SVG-Icon) zum Einfügen eines Mermaid-Diagramms.
+    function mermaidButton() {
+      var b = document.createElement('button');
+      b.type = 'button'; b.style.margin = '0';
+      b.innerHTML = '<i class="fas fa-diagram-project"></i>';
+      b.setAttribute('title', 'Mermaid-Diagramm einfügen');
+      b.onclick = function () {
+        editor.insertText('\n```mermaid\ngraph TD;\n  A[Start] --> B{Prüfung};\n' +
+                          '  B -->|ok| C[Weiter];\n  B -->|nok| D[Stopp];\n```\n');
+      };
+      return b;
+    }
+
+    var Editor = toastui.Editor;
+    var editor = new Editor({
+      el: document.getElementById('editor'),
+      height: '100%',
+      initialValue: initial || '',
+      initialEditType: 'markdown',     // Markdown + Live-Vorschau; WYSIWYG-Tab verfügbar
+      previewStyle: 'vertical',
+      usageStatistics: false,
+      toolbarItems: [
+        ['heading', 'bold', 'italic', 'strike'],
+        ['hr', 'quote'],
+        ['ul', 'ol', 'task', 'indent', 'outdent'],
+        ['table', 'image', 'link'],
+        ['code', 'codeblock'],
+        [{ name: 'mermaid', tooltip: 'Mermaid-Diagramm', el: mermaidButton() }],
+        ['scrollSync'],
+      ],
+      // Bild einfügen per PASTE (Zwischenablage / Screenshot) ODER Drag&Drop →
+      // als base64-data-URI eingebettet (Markdown unterstützt das, s. Renderer).
+      hooks: {
+        addImageBlobHook: function (blob, callback) {
+          var reader = new FileReader();
+          reader.onload = function () { callback(reader.result, (blob && blob.name) || 'Bild'); };
+          reader.onerror = function () { callback('', 'Bild'); };
+          reader.readAsDataURL(blob);
+        }
+      },
+      customHTMLRenderer: {
+        codeBlock: function (node) {
+          var info = (node.info || '').trim().toLowerCase();
+          if (info === 'mermaid') {
+            return [
+              { type: 'openTag', tagName: 'div', classNames: ['mermaid'], outerNewLine: true },
+              { type: 'text', content: node.literal || '' },
+              { type: 'closeTag', tagName: 'div', outerNewLine: true },
+            ];
+          }
+          return [
+            { type: 'openTag', tagName: 'pre', outerNewLine: true },
+            { type: 'openTag', tagName: 'code',
+              attributes: node.info ? { 'data-language': node.info } : {} },
+            { type: 'text', content: node.literal || '' },
+            { type: 'closeTag', tagName: 'code' },
+            { type: 'closeTag', tagName: 'pre', outerNewLine: true },
+          ];
+        }
+      }
+    });
+    editor.on('change', rmDeb);
+    setTimeout(renderMermaid, 300);
+    editor.focus();
+
+    document.getElementById('ed-cancel').onclick = function () { window.close(); };
+    var sv = document.getElementById('ed-save');
+    if (sv && body.dataset.maysave === '1') sv.onclick = function () {
+      sv.disabled = true;
+      var fd = new FormData();
+      fd.append('title', document.getElementById('ed-title').value);
+      fd.append('body', editor.getMarkdown());
+      fd.append('rationale', document.getElementById('ed-rationale').value);
+      fetch(saveUrl, { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') }, body: fd })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+        .then(function () {
+          try {
+            if (window.opener && !window.opener.closed)
+              window.opener.postMessage({ type: 'item-saved', id: itemId }, '*');
+          } catch (e) {}
+          window.close();
+        })
+        .catch(function (e) { sv.disabled = false; alert('Speichern fehlgeschlagen: ' + e.message); });
+    };
+    window.addEventListener('keydown', function (e) {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault(); if (sv && !sv.disabled) sv.click();
+      }
+    });
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+<div class="ws-item" data-identifier="{{ item.identifier }}">
+  <i class="fas fa-file-lines me-1 text-muted ws-item-icon"></i>
+  <span class="badge badge-phase-{{ item.phase }}">{{ item.phase }}</span>
+  <strong>{{ item.identifier }}</strong>
+  <span class="ws-item-title">{{ item.title }}</span>
+  {% if item.is_orphan %}<i class="fas fa-unlink text-warning ms-1" title="Orphan"></i>{% endif %}
+</div>

@@ -1,0 +1,28 @@
+{% extends "admin/base_site.html" %}
+{% load admin_urls %}
+{% load i18n %}
+{% block content %}
+<div id="content-main">
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    <p><strong>{% trans "Alle" %}</strong> {% blocktrans with name=opts.verbose_name %}Datensätze dieses Typs ({{ name }}) aus einer Datei importieren.{% endblocktrans %}
+       {% trans "Erwarteter Header-Typ:" %} <code>elisa-{{ type_name }}</code>.
+       {% trans "Jeder bestehende Datensatz (gleicher Schlüssel) wird aktualisiert, neue werden angelegt." %}
+       {% trans "Eine Einzel-Export-Datei" %} (<code>item</code>) {% trans "wird ebenfalls akzeptiert." %}</p>
+    <fieldset class="module aligned">
+      <div class="form-row field-file">
+        <div><label for="id_file">{% trans "JSON-Datei:" %}</label>
+          <input type="file" name="file" id="id_file" accept="application/json,.json"></div>
+      </div>
+      <div class="form-row field-json">
+        <div><label for="id_json">{% trans "oder JSON einfügen:" %}</label>
+          <textarea name="json" id="id_json" rows="14" cols="100"
+                    style="font-family:monospace" placeholder='{ "_header": { "type": "elisa-{{ type_name }}", "schema_version": 1 }, "items": [ { ... } ] }'></textarea></div>
+      </div>
+    </fieldset>
+    <div class="submit-row">
+      <input type="submit" value="{% trans 'Importieren' %}" class="default">
+      <a href="{% url opts|admin_urlname:'changelist' %}" class="closelink">{% trans "Abbrechen" %}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{# Wiederverwendbares Formularfeld: Label + Hover-Tooltip (help_text) + Widget. #}
+<label class="form-label mb-1" for="{{ field.id_for_label }}">
+  {{ field.label }}
+  {% if field.help_text %}
+  <i class="fas fa-circle-info text-muted ms-1" style="cursor:help"
+     data-bs-toggle="tooltip" data-bs-placement="top"
+     title="{{ field.help_text }}"></i>
+  {% endif %}
+</label>
+{{ field }}
+{% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>{% endif %}

@@ -1,0 +1,156 @@
+{% extends "admin/jsonio_change_form.html" %}
+{% load i18n %}
+{% comment %}Buttons „API-Key erstellen" / „Modelle abrufen" sind als help_text der
+Felder im WorkerBackendForm (custom ModelForm) gerendert – erscheinen auf Hinzufügen
+UND Ändern. Dieses Skript verdrahtet ihr Verhalten.{% endcomment %}
+{% block extrahead %}{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  function val(id) { var e = document.getElementById(id); return e ? e.value : ''; }
+  function cookie(name) {
+    var m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return m ? m.pop() : '';
+  }
+
+  // ── „Secret-Key generieren": zufälliger, sicherer Key direkt ins Feld ──
+  var genBtn = document.getElementById('gen-key-btn');
+  var keyInp = document.getElementById('id_api_key');
+  function randomSecret(bytes) {
+    var a = new Uint8Array(bytes);
+    (window.crypto || window.msCrypto).getRandomValues(a);
+    var s = btoa(String.fromCharCode.apply(null, a));
+    return s.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  if (genBtn && keyInp) genBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    keyInp.type = 'text';                 // sichtbar
+    var key = 'sk-' + randomSecret(36);   // ~48 Zeichen, base64url
+    keyInp.value = key;
+    keyInp.focus(); keyInp.select();
+    function done(ok) { genBtn.textContent = ok ? '✓ generiert + in Zwischenablage'
+                                                : '✓ generiert (kopieren: Strg+C)'; }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(key).then(function () { done(true); })
+        .catch(function () { try { document.execCommand('copy'); done(true); }
+                             catch (_) { done(false); } });
+    } else {
+      try { document.execCommand('copy'); done(true); } catch (_) { done(false); }
+    }
+  });
+
+  // ── „In Provider-Console erstellen": öffnet die richtige Console ──────
+  var keyBtn = document.getElementById('get-key-btn');
+  var prov = document.getElementById('id_provider');
+  var KEY_URLS = {
+    CLAUDE:   'https://platform.claude.com/settings/keys',
+    OPENAI:   'https://platform.openai.com/api-keys',
+    DEEPSEEK: 'https://platform.deepseek.com/api_keys'
+  };
+  // Keys sind LLM-SPEZIFISCH: echte Provider-Keys (sk-ant-api03-… / sk-…) lassen
+  // sich NICHT lokal erzeugen. Nur CUSTOM (eigener/lokaler Endpunkt) darf einen
+  // Secret generieren; Ollama/LM Studio brauchen gar keinen.
+  var KEY_HINTS = {
+    CLAUDE:   'Anthropic-Key – beginnt mit „sk-ant-api03-…" (nicht generierbar).',
+    OPENAI:   'OpenAI-Key – beginnt mit „sk-…" (nicht generierbar).',
+    DEEPSEEK: 'DeepSeek-Key – beginnt mit „sk-…" (nicht generierbar).',
+    OLLAMA:   'Lokal – KEIN API-Key nötig (Feld leer lassen).',
+    LMSTUDIO: 'Lokal – KEIN API-Key nötig (Feld leer lassen).',
+    CUSTOM:   'Eigener/lokaler Endpunkt – Secret frei wählbar (generierbar).'
+  };
+  var hintEl = null;
+  function ensureHint() {
+    if (hintEl || !keyInp) return;
+    hintEl = document.createElement('div');
+    hintEl.style.cssText = 'margin-top:.25rem;font-size:.8rem;color:#666;';
+    keyInp.parentNode.appendChild(hintEl);
+  }
+  function updateProviderUI() {
+    if (!prov) return;
+    var p = prov.value;
+    if (keyBtn) {
+      var u = KEY_URLS[p];
+      if (u) {
+        keyBtn.href = u; keyBtn.style.display = '';
+        var o = prov.options[prov.selectedIndex];
+        keyBtn.textContent = 'API-Key erstellen (' + (o ? o.text : '') + ') ↗';
+      } else { keyBtn.style.display = 'none'; }
+    }
+    // „Secret generieren" NUR für CUSTOM – NICHT für Claude/OpenAI/DeepSeek!
+    if (genBtn) genBtn.style.display = (p === 'CUSTOM') ? '' : 'none';
+    ensureHint();
+    if (hintEl) hintEl.textContent = KEY_HINTS[p] || '';
+  }
+  if (prov) { prov.addEventListener('change', updateProviderUI); updateProviderUI(); }
+
+  // ── „Modelle abrufen": aus den Formularwerten (auch beim Hinzufügen) ──
+  var btn = document.getElementById('get-models-btn');
+  var inp = document.getElementById('id_model');
+  if (!btn || !inp) return;
+
+  // Modell-Feld als COMBOBOX: klickbare Dropdown-Liste der geladenen Modelle,
+  // Feld bleibt frei tippbar/filterbar.
+  var comboModels = [], comboBox = null;
+  function ensureCombo() {
+    if (comboBox) return;
+    comboBox = document.createElement('div');
+    comboBox.style.cssText = 'position:absolute;z-index:1080;background:#fff;border:1px solid #ccc;'
+      + 'border-radius:4px;max-height:240px;overflow:auto;box-shadow:0 4px 12px rgba(0,0,0,.15);display:none;';
+    document.body.appendChild(comboBox);
+    inp.setAttribute('autocomplete', 'off');
+    inp.addEventListener('focus', function () { renderCombo(inp.value); });
+    inp.addEventListener('input', function () { renderCombo(inp.value); });
+    document.addEventListener('click', function (e) {
+      if (e.target !== inp && comboBox && !comboBox.contains(e.target)) comboBox.style.display = 'none';
+    });
+  }
+  function renderCombo(filter) {
+    if (!comboModels.length) { if (comboBox) comboBox.style.display = 'none'; return; }
+    ensureCombo();
+    var f = (filter || '').toLowerCase();
+    var items = comboModels.filter(function (m) { return !f || m.toLowerCase().indexOf(f) >= 0; });
+    comboBox.innerHTML = '';
+    items.forEach(function (m) {
+      var it = document.createElement('div');
+      it.textContent = m;
+      it.style.cssText = 'padding:.35rem .6rem;cursor:pointer;font-size:.85rem;white-space:nowrap;';
+      it.addEventListener('mouseenter', function () { it.style.background = '#f1f3f5'; });
+      it.addEventListener('mouseleave', function () { it.style.background = '#fff'; });
+      it.addEventListener('mousedown', function (e) {
+        e.preventDefault(); inp.value = m; comboBox.style.display = 'none';
+      });
+      comboBox.appendChild(it);
+    });
+    var r = inp.getBoundingClientRect();
+    comboBox.style.left = (window.scrollX + r.left) + 'px';
+    comboBox.style.top = (window.scrollY + r.bottom) + 'px';
+    comboBox.style.width = r.width + 'px';
+    comboBox.style.display = items.length ? 'block' : 'none';
+  }
+  function showCombo(models) { comboModels = models; ensureCombo(); renderCombo(''); }
+  btn.addEventListener('click', function (e) {
+    e.preventDefault();
+    btn.textContent = '… lade Modelle';
+    var fd = new FormData();
+    fd.append('provider', val('id_provider'));
+    fd.append('api_key', val('id_api_key'));
+    fd.append('base_url', val('id_base_url'));
+    fetch(btn.dataset.url, {
+      method: 'POST', headers: {'X-CSRFToken': cookie('csrftoken'),
+                                'X-Requested-With': 'XMLHttpRequest'},
+      body: fd,
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.error) { btn.textContent = '⚠ ' + d.error; return; }
+        var models = d.models || [];
+        showCombo(models);
+        inp.setAttribute('placeholder', 'Modell wählen oder tippen …');
+        btn.textContent = '✓ ' + models.length + ' Modelle (' + d.provider + ')'
+                          + (d.note ? ' – ' + d.note : '');
+        inp.focus();
+      })
+      .catch(function (err) { btn.textContent = '⚠ ' + err; });
+  });
+});
+</script>
+{% endblock %}

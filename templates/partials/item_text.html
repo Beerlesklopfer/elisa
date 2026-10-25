@@ -1,0 +1,180 @@
+{% load static i18n %}
+<div class="item-text" data-identifier="{{ item.identifier }}">
+
+  <div class="d-flex align-items-center gap-2 mb-3">
+    <span class="badge badge-phase-{{ item.phase }}">{{ item.phase }}</span>
+    <strong>{{ item.identifier }}</strong>
+    {% if historical %}
+      <span class="badge bg-dark"><i class="fas fa-clock-rotate-left me-1"></i>{{ historical.status_display }}</span>
+    {% else %}
+      <span class="badge bg-secondary">{{ item.get_status_display }}</span>
+    {% endif %}
+    <span class="text-muted small ms-auto">{% trans "Rev." %} {{ item.version }}</span>
+  </div>
+
+  {% if notice %}<div class="alert alert-info py-1 px-2 small mb-2">{{ notice }}</div>{% endif %}
+
+  {% comment %}Historie: Eintrag wählen = Item in jenem Stand anzeigen{% endcomment %}
+  <div class="mb-3">
+    <label class="form-label small text-muted mb-1">
+      <i class="fas fa-clock-rotate-left me-1"></i>{% trans "Historie" %} ({{ history|length }}) — {% trans "Eintrag wählen zeigt den damaligen Stand" %}</label>
+    <select class="form-select form-select-sm history-select">
+      <option value="" {% if not historical %}selected{% endif %}>— {% trans "aktueller Stand" %} —</option>
+      {% for h in history %}
+      <option data-at="{{ h.at }}" data-detail="{{ h.detail }}"
+              {% if historical and historical.at_iso == h.at %}selected{% endif %}>{{ h.label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  {% if historical %}
+  <div class="alert alert-secondary py-2 small d-flex align-items-center">
+    <i class="fas fa-clock-rotate-left me-2"></i>
+    <div>{% trans "Historischer Stand vom" %} <strong>{{ historical.when|date:"d.m.Y H:i" }}</strong>
+      · {{ historical.kind }} · {{ historical.who }}</div>
+    <button type="button" class="btn btn-sm btn-outline-dark ms-auto history-current">
+      <i class="fas fa-rotate-left me-1"></i>{% trans "Zur aktuellen Version" %}</button>
+  </div>
+  <div class="item-headline">{{ historical.state.title }}</div>
+  {% if show_hist_body %}<div class="md-body">{{ hist_body_html|safe }}</div>{% endif %}
+  {% if historical.state.rationale %}<hr>
+  <div class="small text-muted" style="white-space:pre-wrap">{{ historical.state.rationale }}</div>{% endif %}
+  <p class="text-muted small mt-2"><i class="fas fa-lock me-1"></i>{% trans "Nachweisstand (read-only). Referenzen/Normen sind nicht versioniert — nur im aktuellen Stand sichtbar." %}</p>
+
+  {% else %}
+  <div class="item-headline">{{ item.title }}</div>
+  {% if showing_lang %}
+  <div class="alert alert-info py-2 px-3 mb-2 small">
+    <i class="fas fa-language me-1"></i><strong>{% trans "Informative Übersetzung" %} — {{ showing_lang_name }}</strong>
+    · <span class="text-muted">{% trans "nicht normativ; maßgeblich ist der Wortlaut der Projektsprache" %}</span>
+  </div>
+  {% endif %}
+  {% if show_body %}<div class="md-body{% if showing_lang %} border-start border-info ps-3{% endif %}">{{ body_html|safe }}</div>{% endif %}
+
+  {% if translation_pending %}
+  <div id="translation-zone" data-poll="{% url 'workitem-translation-poll' item.identifier %}"
+       data-lang="{{ translation_pending }}">
+    <div class="alert alert-info py-2 px-3 mt-3 mb-2 small">
+      <span class="typing"><span></span><span></span><span></span></span>
+      {% trans "Übersetzung läuft" %} — {{ translation_pending_name }} …
+    </div>
+  </div>
+  {% endif %}
+  {% if item.rationale %}<hr><div class="small text-muted" style="white-space:pre-wrap">{{ item.rationale }}</div>{% endif %}
+
+  {% comment %}Anhang: Abbildungen & Tabellen am Dokumentende, je mit Nummer
+  („Abbildung 3"/„Tabelle 1"), Bildunterschrift und optionaler Urheberangabe.{% endcomment %}
+  {% if exhibits %}
+  <div class="exhibits mt-4 border-top pt-3">
+    <div class="small text-muted text-uppercase fw-semibold mb-2">
+      <i class="fas fa-images me-1"></i>{% trans "Anhang — Abbildungen & Tabellen" %}</div>
+    {% for ex in exhibits %}
+    <figure class="exhibit mb-3" id="exhibit-{{ item.identifier }}-{{ ex.number }}">
+      {% if ex.kind == 'TABLE' %}<div class="table-responsive">{{ ex.table_html|safe }}</div>
+      {% elif ex.data_uri %}<img src="{{ ex.data_uri }}" alt="{{ ex.caption|default:ex.label }}" class="img-fluid border rounded">
+      {% endif %}
+      <figcaption class="small mt-1">
+        <strong>{{ ex.label }}</strong>{% if ex.caption %} — {{ ex.caption }}{% endif %}
+        {% if ex.attribution %}<span class="text-muted ms-1">· <i class="fas fa-copyright me-1"></i>{{ ex.attribution }}</span>{% endif %}
+      </figcaption>
+    </figure>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% comment %}Manueller „Übersetzen"-Button entfällt – Items werden beim Öffnen in
+  der eingestellten Sekundärsprache automatisch übersetzt (Replacement).{% endcomment %}
+  {% if translate_blocked_name %}
+  <div class="text-muted small mt-2"><i class="fas fa-ban me-1"></i>{% trans "Keine Übersetzung nach" %} {{ translate_blocked_name }} — {% trans "normative Sprache" %}</div>
+  {% endif %}
+  {% if can_edit %}
+  <button type="button" class="btn btn-sm btn-outline-primary mt-2 edit-item">
+    <i class="fas fa-pen me-1"></i>{% trans "Bearbeiten" %}</button>
+  {{ edit_data|json_script:"edit-data" }}
+  {% elif req_locked %}
+  <p class="text-muted small mt-2"><i class="fas fa-file-import me-1"></i>{% trans "Anforderung (REQ) — Spiegel des Quelldokuments. Änderungen nur durch erneuten Reimport, nicht im Arbeitsbereich." %}</p>
+  {% else %}
+  <p class="text-muted small mt-2"><i class="fas fa-lock me-1"></i>{% trans "Nur lesend (keine Bearbeitungsrechte)." %}</p>
+  {% endif %}
+
+  {% if can_delete_rev %}
+  <form class="panel-form d-inline" data-action="{% url 'workitem-revision-delete' item.identifier %}" data-pane="text"
+        data-confirm="{% trans 'Aktuelle Revision wirklich löschen? Der jüngste Inhalts-Stand wird unwiderruflich entfernt und auf die vorige Revision zurückgerollt.' %}">
+    <input type="hidden" name="go" value="1">
+    <button class="btn btn-sm btn-outline-danger mt-2 ms-1"
+            title="{% trans 'Nur Admin/PM – jüngstes Inhalts-Edit zurückrollen' %}">
+      <i class="fas fa-clock-rotate-left me-1"></i>{% trans "Aktuelle Revision löschen" %}</button>
+  </form>
+  {% endif %}
+
+  {% comment %}Freigabe-Workflow (ab SPEC) — NICHT für REQ (Status vom Reimport){% endcomment %}
+  {% if not is_req %}
+  <div class="mt-3 border-top pt-2">
+    <div class="small text-muted mb-1">
+      <i class="fas fa-user-check me-1"></i>{% trans "Freigabe (Autor → Review ≠ Autor → Freigabe ≠ beide)" %}</div>
+    {% if item.created_by %}<div class="small">{% trans "Autor:" %} {{ item.created_by.get_full_name|default:item.created_by.username }}</div>{% endif %}
+    {% if item.reviewed_by %}<div class="small text-success"><i class="fas fa-check me-1"></i>{% trans "Reviewt von:" %} <strong>{{ item.reviewed_by.get_full_name|default:item.reviewed_by.username }}</strong></div>{% endif %}
+    {% if item.approved_by %}<div class="small text-success"><i class="fas fa-check-double me-1"></i>{% trans "Freigegeben von:" %} <strong>{{ item.approved_by.get_full_name|default:item.approved_by.username }}</strong></div>{% endif %}
+    {% if status_error %}<div class="alert alert-danger py-1 px-2 small my-1 mb-0">{{ status_error }}</div>{% endif %}
+    {% if next_states %}
+    <form class="panel-form d-flex gap-1 mt-1" data-action="{% url 'workitem-status' item.identifier %}" data-pane="text" style="max-width:360px">
+      <select name="status" class="form-select form-select-sm">
+        {% for code,label in next_states %}<option value="{{ code }}">→ {{ label }}</option>{% endfor %}
+      </select>
+      <input name="note" class="form-control form-control-sm" placeholder="{% trans 'Notiz (optional)' %}">
+      <button class="btn btn-sm btn-outline-dark">{% trans "OK" %}</button>
+    </form>
+    {% else %}<div class="small text-muted">{% trans "Endzustand." %}</div>{% endif %}
+    {% if can_audit and audit_down_name %}
+    <form class="panel-form d-flex gap-1 mt-2" data-action="{% url 'workitem-audit' item.identifier %}" data-pane="text" style="max-width:440px">
+      <span class="badge bg-warning text-dark align-self-center" title="{% trans 'Externes Audit' %}"><i class="fas fa-gavel me-1"></i>{% trans "Audit" %}</span>
+      <input name="note" class="form-control form-control-sm" placeholder="{% trans 'Finding / Befund …' %}" required>
+      <button class="btn btn-sm btn-outline-warning" title="{% trans 'Audit-Rückstufung: genau eine Stufe zurück' %}"><i class="fas fa-arrow-down me-1"></i>→ {{ audit_down_name }}</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% comment %}Referenzen: 3 Spalten (2× eigenes Dokusystem + Normen/Regelwerke){% endcomment %}
+  <div class="mt-3 border-top pt-2">
+    <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button"
+            data-bs-toggle="collapse" data-bs-target="#refs-{{ item.id }}">
+      <i class="fas fa-diagram-project me-1"></i>{% trans "Referenzen" %}
+      ({{ refs_count }} {% trans "intern" %} · {{ cited_norms|length }} {% trans "Normen" %})</button>
+    <div class="collapse show" id="refs-{{ item.id }}">
+      <div class="row g-2 mt-1 small">
+        {% for g in ref_groups %}
+        <div class="col-md-4 col-lg-3">
+          <div class="fw-semibold d-flex align-items-center">
+            <i class="fas {{ g.icon }} me-1 text-muted"></i><span class="me-1">{{ g.label }}</span>
+            {% if can_ref %}<button type="button" class="btn btn-sm btn-link p-0 add-ref" data-dir="{{ g.dir }}" title="{% trans 'Referenz hinzufügen' %}"><i class="fas fa-plus"></i></button>{% endif %}
+          </div>
+          <ul class="mb-0 ps-3">
+            {% for r in g.items %}<li><a href="#" class="ws-ref" data-identifier="{{ r.identifier }}"><strong>{{ r.identifier }}</strong></a> – {{ r.title }}{% if can_ref %} <button type="button" class="btn btn-sm btn-link p-0 text-danger del-ref" data-target="{{ r.identifier }}" data-dir="{{ g.dir }}" title="{% trans 'entfernen' %}"><i class="fas fa-xmark"></i></button>{% endif %}</li>
+            {% empty %}<li class="text-muted">{% trans "keine" %}</li>{% endfor %}
+          </ul>
+        </div>
+        {% endfor %}
+        <div class="col-md-4 col-lg-3">
+          <div class="fw-semibold"><i class="fas fa-book-open me-1 text-muted"></i>{% trans "Normen & Regelwerke" %}</div>
+          <ul class="mb-0 ps-3">
+            {% for c in cited_norms %}
+            <li>{% if c.in_system %}<a href="{% url 'norms-download' %}?name={{ c.name|urlencode }}"
+                   class="norm-cite" data-name="{{ c.name }}" data-page="1"
+                   title="{% trans 'Im System – im Viewer öffnen' %}"><i class="fas fa-book-open me-1"></i>{{ c.label }}</a>
+              {% else %}{{ c.label }} <span class="text-muted">({% trans "nicht im System" %})</span>{% endif %}</li>
+            {% endfor %}
+            {% for n in norms %}
+            <li><i class="fas fa-link me-1 text-muted"></i>{{ n.clause.standard }} {{ n.clause.clause }}
+              {% if n.confirmed %}<span class="badge bg-success">{% trans "bestätigt" %}</span>
+              {% else %}<span class="badge bg-warning text-dark">{% trans "Vorschlag" %}</span>{% endif %}</li>
+            {% endfor %}
+            {% if not cited_norms and not norms %}<li class="text-muted">{% trans "keine" %}</li>{% endif %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>

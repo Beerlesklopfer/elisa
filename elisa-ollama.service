@@ -1,0 +1,31 @@
+# =============================================================================
+# ELISA – lokal gehostetes Ollama (CPU), für RAG-Embeddings & Chat.
+#   Binary + Modelle liegen unter /usr/share/elisa/.ollama/.
+#   Hinweis: Ist Ollama bereits systemweit installiert, diesen Service NICHT
+#   aktivieren, sondern OLLAMA_HOST in /etc/elisa/env auf die vorhandene
+#   Instanz zeigen lassen.
+# =============================================================================
+[Unit]
+Description=ELISA lokales Ollama
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/lib/elisa
+Environment=OLLAMA_HOST=127.0.0.1:11434
+Environment=OLLAMA_MODELS=/var/lib/elisa/ollama-models
+# Mehrere Personas nutzen verschiedene Modelle (salinar/auditor=llama3.1,
+# dragoman=towerinstruct, RAG=nomic-embed-text). Default lädt nur EIN Modell →
+# ständiges Swappen, blockierte Worker. Genug RAM (>200 GB) → mehrere parallel
+# halten und nicht entladen.
+Environment=OLLAMA_MAX_LOADED_MODELS=4
+Environment=OLLAMA_NUM_PARALLEL=2
+Environment=OLLAMA_KEEP_ALIVE=30m
+ExecStart=/usr/share/elisa/.ollama/dist/bin/ollama serve
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

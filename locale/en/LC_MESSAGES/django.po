@@ -1,0 +1,1124 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-06-09 23:03+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Deutsch"
+msgstr "German"
+
+msgid "English"
+msgstr "English"
+
+msgid "Français"
+msgstr "French"
+
+msgid "Español"
+msgstr "Spanish"
+
+msgid "Italiano"
+msgstr "Italian"
+
+msgid "中文"
+msgstr "Chinese"
+
+msgid "Norm-Index neu aufbauen"
+msgstr "Rebuild standards index"
+
+msgid "JSON exportieren"
+msgstr "Export JSON"
+
+msgid "JSON importieren"
+msgstr "Import JSON"
+
+msgid "Alle"
+msgstr "All"
+
+#, python-format
+msgid "Datensätze dieses Typs (%(name)s) aus einer Datei importieren."
+msgstr "Import records of this type (%(name)s) from a file."
+
+msgid "Erwarteter Header-Typ:"
+msgstr "Expected header type:"
+
+msgid ""
+"Jeder bestehende Datensatz (gleicher Schlüssel) wird aktualisiert, neue "
+"werden angelegt."
+msgstr "Each existing record (same key) is updated, new ones are created."
+
+msgid "Eine Einzel-Export-Datei"
+msgstr "A single-export file"
+
+msgid "wird ebenfalls akzeptiert."
+msgstr "is also accepted."
+
+msgid "JSON-Datei:"
+msgstr "JSON file:"
+
+msgid "oder JSON einfügen:"
+msgstr "or paste JSON:"
+
+msgid "Importieren"
+msgstr "Import"
+
+msgid "Abbrechen"
+msgstr "Cancel"
+
+msgid "Claude Desktop Extension (.mcpb)"
+msgstr "Claude Desktop Extension (.mcpb)"
+
+msgid "Token neu erzeugen"
+msgstr "Regenerate token"
+
+#, python-format
+msgid "Bearer-Token für <strong>%(obj)s</strong> wirklich neu erzeugen?"
+msgstr "Really regenerate the bearer token for <strong>%(obj)s</strong>?"
+
+msgid "Das"
+msgstr "The"
+
+msgid "alte Token wird sofort ungültig"
+msgstr "old token becomes invalid immediately"
+
+msgid ""
+"Verbundene MCP-Clients (z. B. Claude Desktop) müssen das neue Token "
+"eintragen."
+msgstr "Connected MCP clients (e.g. Claude Desktop) must enter the new token."
+
+#, python-format
+msgid ""
+"Diese WorkerBackends nutzen diesen Token und übernehmen den neuen Wert "
+"automatisch (Neustart nötig): %(backend_list)s."
+msgstr ""
+"These worker backends use this token and adopt the new value automatically "
+"(restart required): %(backend_list)s."
+
+msgid "Ja, Token neu erzeugen"
+msgstr "Yes, regenerate token"
+
+msgid "Projekt wechseln"
+msgstr "Switch project"
+
+msgid "Team & Rollen"
+msgstr "Team & Roles"
+
+msgid "Projektverwaltung"
+msgstr "Projects"
+
+msgid "Kundenverwaltung"
+msgstr "Customers"
+
+msgid "Userverwaltung"
+msgstr "Users"
+
+msgid "Django Admin"
+msgstr "Django Admin"
+
+msgid "Übersicht"
+msgstr "Overview"
+
+msgid "Arbeitsbereich"
+msgstr "Workspace"
+
+msgid "Chat"
+msgstr "Chat"
+
+msgid "Normen"
+msgstr "Standards"
+
+msgid "Eingänge"
+msgstr "Incoming"
+
+msgid "Dokumente"
+msgstr "Documents"
+
+msgid "Konto"
+msgstr "Account"
+
+msgid "Profil"
+msgstr "Profile"
+
+msgid "Abmelden"
+msgstr "Sign out"
+
+msgid "Sprache"
+msgstr "Language"
+
+msgid "Sprache umstellen"
+msgstr "Switch language"
+
+msgid "Schließen"
+msgstr "Close"
+
+msgid "Beratung, nicht verbindlich."
+msgstr "Advisory, not binding."
+
+msgid ""
+"Der Chat ist RAG-gestützt (IEC 61508) und persistiert — aber nie Quelle der "
+"Wahrheit. Inhalt für eine Spezifikation entsteht nur durch dein bewusstes "
+"Einfügen im Arbeitsbereich."
+msgstr ""
+"The chat is RAG-backed (IEC 61508) and persistent — but never a source of "
+"truth. Content for a specification arises only through your deliberate "
+"insertion in the Workspace."
+
+msgid "Neuer Chat"
+msgstr "New chat"
+
+msgid "Neuer Projekt-Chat"
+msgstr "New project chat"
+
+msgid "Projekt-Chat (alle Mitglieder)"
+msgstr "Project chat (all members)"
+
+msgid "Persönlicher RAG-Chat (nur für mich)"
+msgstr "Personal RAG chat (only me)"
+
+msgid "(ohne Titel)"
+msgstr "(untitled)"
+
+msgid "Diesen Chat löschen?"
+msgstr "Delete this chat?"
+
+msgid "Chat löschen"
+msgstr "Delete chat"
+
+msgid "Noch keine Chats."
+msgstr "No chats yet."
+
+msgid "Umbenennen"
+msgstr "Rename"
+
+msgid "Zitieren"
+msgstr "Cite"
+
+msgid "Quellen:"
+msgstr "Sources:"
+
+msgid "Frage zur IEC 61508 …"
+msgstr "Question about IEC 61508 …"
+
+msgid "Starte einen neuen Chat, um RAG-gestützte Norm-Auskünfte zu erhalten."
+msgstr "Start a new chat to get RAG-based standards information."
+
+msgid "Neuer Chat-Name:"
+msgstr "New chat name:"
+
+msgid "Kunde bearbeiten"
+msgstr "Edit customer"
+
+msgid "Neuer Kunde"
+msgstr "New customer"
+
+msgid "Zurück"
+msgstr "Back"
+
+msgid "Identität"
+msgstr "Identity"
+
+msgid "Anschrift (international)"
+msgstr "Address (international)"
+
+msgid "Steuer / Recht"
+msgstr "Tax / legal"
+
+msgid "Kontakt"
+msgstr "Contact"
+
+msgid "Notizen"
+msgstr "Notes"
+
+msgid "Speichern"
+msgstr "Save"
+
+msgid "Ein Kunde kann mehrere Projekte (Mandanten) haben."
+msgstr "A customer can have multiple projects (tenants)."
+
+msgid "Kunde"
+msgstr "Customer"
+
+msgid "Nr."
+msgstr "No."
+
+msgid "Land"
+msgstr "Country"
+
+msgid "Projekte"
+msgstr "Projects"
+
+msgid "bearbeiten"
+msgstr "edit"
+
+msgid "archivieren"
+msgstr "archive"
+
+msgid "löschen"
+msgstr "delete"
+
+msgid "Noch keine Kunden."
+msgstr "No customers yet."
+
+msgid "Eingangsdokumente"
+msgstr "Input documents"
+
+#, python-format
+msgid "Projekt: <strong>%(name)s</strong>"
+msgstr "Project: <strong>%(name)s</strong>"
+
+msgid ""
+"\n"
+"  Hier sammeln Sie alle Unterlagen, die der <strong>Kunde zum Projekt liefert</strong> —\n"
+"  vor allem den Ablaufplan <strong>PEP</strong> (wie das Produkt entwickelt wird) und\n"
+"  die <strong>Anforderungen (REQ)</strong> (was das Produkt können muss).\n"
+msgstr ""
+"\n"
+"  Here you collect all documents the <strong>customer provides for the project</strong> —\n"
+"  above all the process plan <strong>PEP</strong> (how the product is developed) and\n"
+"  the <strong>requirements (REQ)</strong> (what the product must do).\n"
+
+msgid "So gehen Sie vor"
+msgstr "How to proceed"
+
+msgid ""
+"Datei wählen und die <strong>Art</strong> bestimmen (PEP, Anforderungen, "
+"Spezifikation …)."
+msgstr ""
+"Choose a file and set its <strong>type</strong> (PEP, requirements, "
+"specification …)."
+
+msgid ""
+"<strong>Vertraulichkeit</strong> einstufen und ankreuzen, ob das Dokument "
+"<strong>sicherheitsrelevant</strong> ist."
+msgstr ""
+"Classify the <strong>confidentiality</strong> and tick whether the document "
+"is <strong>safety-relevant</strong>."
+
+msgid ""
+"<strong>„Hochladen\"</strong> klicken — das System liest den Inhalt "
+"automatisch ein, damit der Assistent später Fragen dazu beantworten kann."
+msgstr ""
+"Click <strong>“Upload”</strong> — the system reads the content automatically"
+" so the assistant can answer questions about it later."
+
+msgid ""
+"PEP und Anforderungen werden so abgelegt, <strong>wie der Kunde sie "
+"geliefert hat</strong>, und hier nicht verändert. Inhaltliche "
+"Spezifikationen schreiben Sie im Tab <em>Arbeitsbereich</em>."
+msgstr ""
+"PEP and requirements are stored <strong>exactly as the customer delivered "
+"them</strong> and are not changed here. You write the actual specifications "
+"in the <em>Workspace</em> tab."
+
+msgid "Dokument hochladen"
+msgstr "Upload document"
+
+msgid "Art"
+msgstr "Type"
+
+msgid "Vertraulichkeit (Klassifizierung)"
+msgstr "Confidentiality (classification)"
+
+msgid "Revision"
+msgstr "Revision"
+
+msgid "z. B. V1.1.2"
+msgstr "e.g. V1.1.2"
+
+msgid "Titel"
+msgstr "Title"
+
+msgid "(optional)"
+msgstr "(optional)"
+
+msgid "sicherheitsrelevant"
+msgstr "safety-relevant"
+
+msgid "Hochladen & indizieren"
+msgstr "Upload & index"
+
+msgid "PEP – Product Engineering Process"
+msgstr "PEP – Product Engineering Process"
+
+msgid "REQ – Kundenanforderungen"
+msgstr "REQ – Customer requirements"
+
+msgid "Sonstige Dokumente"
+msgstr "Other documents"
+
+msgid "statisch · MCP"
+msgstr "static · MCP"
+
+#, python-format
+msgid "Rev. %(it)s"
+msgstr "Rev. %(it)s"
+
+msgid "Norm"
+msgstr "Standard"
+
+msgid "statisch"
+msgstr "static"
+
+msgid "im RAG-Index"
+msgstr "in RAG index"
+
+#, python-format
+msgid "indiziert · %(n)s"
+msgstr "indexed · %(n)s"
+
+msgid "indiziert …"
+msgstr "indexing …"
+
+#, python-format
+msgid "→ %(lbl)s"
+msgstr "→ %(lbl)s"
+
+msgid "Endzustand"
+msgstr "Final state"
+
+#, python-format
+msgid "„%(name)s“ löschen?"
+msgstr "Delete „%(name)s“?"
+
+msgid "Keine Dokumente."
+msgstr "No documents."
+
+msgid "Dokument (V-Phase)"
+msgstr "Document (V-phase)"
+
+msgid "Items"
+msgstr "Items"
+
+msgid ".docx zusammensetzen"
+msgstr "Assemble .docx"
+
+msgid "Noch keine Items vorhanden."
+msgstr "No items yet."
+
+msgid "Editor"
+msgstr "Editor"
+
+msgid "Eigenes Fenster — frei über Monitore verschiebbar"
+msgstr "Separate window — freely movable across monitors"
+
+msgid "Begründung (prüfbar)"
+msgstr "Rationale (verifiable)"
+
+msgid "Inhalt nur vom Menschen. Jede Änderung wird historisiert."
+msgstr "Content by humans only. Every change is recorded in history."
+
+msgid "V-Modell — die 8 Ebenen"
+msgstr "V-model — the 8 levels"
+
+msgid ""
+"links automatisiert (klickbar, Umriss = noch leer) · rechts Verifikation"
+msgstr ""
+"left automated (clickable, outline = still empty) · right verification"
+
+#, python-format
+msgid "prüft %(vs)s"
+msgstr "verifies %(vs)s"
+
+msgid "Status"
+msgstr "Status"
+
+#, python-format
+msgid "Gesamt: <strong>%(total)s</strong>"
+msgstr "Total: <strong>%(total)s</strong>"
+
+#, python-format
+msgid "Freigegeben (APPROVED): <strong>%(approved)s</strong>"
+msgstr "Approved (APPROVED): <strong>%(approved)s</strong>"
+
+msgid "Orphans (Lücken in der Traceability)"
+msgstr "Orphans (gaps in traceability)"
+
+msgid "Keine Orphans — alle abgeleiteten Items sind verknüpft."
+msgstr "No orphans — all derived items are linked."
+
+msgid "Leitnorm:"
+msgstr "Lead standard:"
+
+msgid "Inhalt schreibt immer der Mensch; das LLM berät nur."
+msgstr "Content is always written by a human; the LLM only advises."
+
+msgid "Normen (RAG)"
+msgstr "Standards (RAG)"
+
+msgid ""
+"Norm-PDFs sind i. d. R. lizenzpflichtig — bitte nur lizenzierte Dokumente "
+"hochladen. Ollama erzeugt die Embeddings lokal; das Modell wird nicht "
+"trainiert."
+msgstr ""
+"Standard PDFs are usually subject to licensing — please upload only licensed"
+" documents. Ollama generates the embeddings locally; the model is not "
+"trained."
+
+msgid "Zu beschaffen"
+msgstr "To procure"
+
+msgid ""
+"In den vorhandenen Normen referenziert, aber nicht im System (Top 8 — "
+"vollständige Liste unten):"
+msgstr ""
+"Referenced in the available standards but not in the system (top 8 — full "
+"list below):"
+
+#, python-format
+msgid "%(count)s× referenziert"
+msgstr "referenced %(count)s×"
+
+msgid ""
+"Index noch leer — Normen indexieren, dann erscheinen hier die Verweise."
+msgstr "Index still empty — index standards, then references appear here."
+
+msgid "Im System vorhanden"
+msgstr "Available in the system"
+
+msgid "herunterladen"
+msgstr "download"
+
+#, python-format
+msgid "%(n)s Chunks"
+msgstr "%(n)s chunks"
+
+msgid "Noch keine Norm vollständig indexiert."
+msgstr "No standard fully indexed yet."
+
+msgid "Aus den Spezifikationen referenziert (aktives Projekt)"
+msgstr "Referenced from the specifications (active project)"
+
+msgid "vorhanden"
+msgstr "available"
+
+msgid "fehlt"
+msgstr "missing"
+
+msgid "Norm-PDF(s) hochladen"
+msgstr "Upload standard PDF(s)"
+
+msgid "Hochladen"
+msgstr "Upload"
+
+msgid "Warteschlange (incoming/)"
+msgstr "Queue (incoming/)"
+
+msgid "Indexierung läuft …"
+msgstr "Indexing in progress …"
+
+msgid "im Leerlauf"
+msgstr "idle"
+
+msgid "Alle indexieren"
+msgstr "Index all"
+
+msgid "Datei"
+msgstr "File"
+
+msgid "Größe"
+msgstr "Size"
+
+msgid "Fortschritt"
+msgstr "Progress"
+
+#, python-format
+msgid "%(done)s/%(total)s Seiten · %(chunks)s Chunks"
+msgstr "%(done)s/%(total)s pages · %(chunks)s chunks"
+
+msgid "indexieren"
+msgstr "index"
+
+msgid "Warteschlange leer — oben hochladen."
+msgstr "Queue empty — upload above."
+
+msgid "Indexierte Normen"
+msgstr "Indexed standards"
+
+msgid "aus incoming/ entfernt, im Index"
+msgstr "removed from incoming/, in index"
+
+msgid "Norm (Datei)"
+msgstr "Standard (file)"
+
+msgid "Chunks"
+msgstr "Chunks"
+
+msgid "Klassifizierung"
+msgstr "Classification"
+
+msgid "Ansehen (Strg-Klick: Download)"
+msgstr "View (Ctrl-click: download)"
+
+msgid "Normativ"
+msgstr "Normative"
+
+msgid "Informativ"
+msgstr "Informative"
+
+msgid "unklassifiziert"
+msgstr "unclassified"
+
+msgid "indexiert"
+msgstr "indexed"
+
+msgid "verwalten"
+msgstr "manage"
+
+msgid "Noch nichts vollständig indexiert."
+msgstr "Nothing fully indexed yet."
+
+msgid "Seiten"
+msgstr "Pages"
+
+msgid "neuer Dateiname …"
+msgstr "new file name …"
+
+msgid "Setzen"
+msgstr "Set"
+
+msgid "vergessen (löschen)"
+msgstr "forget (delete)"
+
+msgid "Beschaffungsbedarf aus Normverweisen"
+msgstr "Procurement needs from standard references"
+
+msgid "in den vorhandenen Normen referenziert, aber nicht im System"
+msgstr "referenced in the available standards but not in the system"
+
+msgid "Technical Reports/Specifications und Guides ausblenden"
+msgstr "Hide Technical Reports/Specifications and Guides"
+
+msgid "informative ignorieren"
+msgstr "ignore informative"
+
+msgid "Referenzierte Norm"
+msgstr "Referenced standard"
+
+msgid "Verweise"
+msgstr "References"
+
+msgid "Keine offenen Normverweise (oder Index leer)."
+msgstr "No open standard references (or index empty)."
+
+msgid "Teilnehmer:"
+msgstr "Participants:"
+
+msgid "offline"
+msgstr "offline"
+
+msgid "keine Teilnehmer (Projektmitglieder/LLM-Backends im Admin anlegen)"
+msgstr "no participants (add project members / LLM backends in Admin)"
+
+msgid ""
+"Noch keine Nachrichten – alle Projektbeteiligten (inkl. LLM) schreiben hier."
+" Sprich ein LLM per @handle direkt an."
+msgstr ""
+"No messages yet – all project participants (incl. LLM) write here. Address "
+"an LLM directly via @handle."
+
+#, python-format
+msgid ""
+"%(llm)s ist aktiv und antwortet auf jede Nachricht. Sprich @jemand-anderen "
+"an, um es zu stoppen."
+msgstr ""
+"%(llm)s is active and replies to every message. Address @someone-else to "
+"stop it."
+
+msgid "Nachricht … (@ für Teilnehmer)"
+msgstr "Message … (@ for participants)"
+
+msgid "Senden"
+msgstr "Send"
+
+msgid "Rev."
+msgstr "Rev."
+
+msgid "Historie"
+msgstr "History"
+
+msgid "Eintrag wählen zeigt den damaligen Stand"
+msgstr "selecting an entry shows the state at that time"
+
+msgid "aktueller Stand"
+msgstr "current state"
+
+msgid "Historischer Stand vom"
+msgstr "Historical state from"
+
+msgid "Zur aktuellen Version"
+msgstr "To current version"
+
+msgid ""
+"Nachweisstand (read-only). Referenzen/Normen sind nicht versioniert — nur im"
+" aktuellen Stand sichtbar."
+msgstr ""
+"Evidence state (read-only). References/standards are not versioned — only "
+"visible in the current state."
+
+msgid "Informative Übersetzung"
+msgstr "Informative translation"
+
+msgid "nicht normativ; maßgeblich ist der Wortlaut der Projektsprache"
+msgstr "not normative; the wording in the project language is authoritative"
+
+msgid "Übersetzung läuft"
+msgstr "Translation in progress"
+
+msgid "Anhang — Abbildungen & Tabellen"
+msgstr "Appendix — figures & tables"
+
+msgid "Keine Übersetzung nach"
+msgstr "No translation into"
+
+msgid "normative Sprache"
+msgstr "normative language"
+
+msgid "Bearbeiten"
+msgstr "Edit"
+
+msgid ""
+"Anforderung (REQ) — Spiegel des Quelldokuments. Änderungen nur durch "
+"erneuten Reimport, nicht im Arbeitsbereich."
+msgstr ""
+"Requirement (REQ) — mirror of the source document. Changes only via a new "
+"re-import, not in the Workspace."
+
+msgid "Nur lesend (keine Bearbeitungsrechte)."
+msgstr "Read-only (no edit permission)."
+
+msgid ""
+"Aktuelle Revision wirklich löschen? Der jüngste Inhalts-Stand wird "
+"unwiderruflich entfernt und auf die vorige Revision zurückgerollt."
+msgstr ""
+"Really delete the current revision? The most recent content state is removed"
+" irreversibly and rolled back to the previous revision."
+
+msgid "Nur Admin/PM – jüngstes Inhalts-Edit zurückrollen"
+msgstr "Admin/PM only – roll back the most recent content edit"
+
+msgid "Aktuelle Revision löschen"
+msgstr "Delete current revision"
+
+msgid "Freigabe (Autor → Review ≠ Autor → Freigabe ≠ beide)"
+msgstr "Approval (author → review ≠ author → approval ≠ both)"
+
+msgid "Autor:"
+msgstr "Author:"
+
+msgid "Reviewt von:"
+msgstr "Reviewed by:"
+
+msgid "Freigegeben von:"
+msgstr "Approved by:"
+
+msgid "Notiz (optional)"
+msgstr "Note (optional)"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Endzustand."
+msgstr "Final state."
+
+msgid "Externes Audit"
+msgstr "External audit"
+
+msgid "Audit"
+msgstr "Audit"
+
+msgid "Finding / Befund …"
+msgstr "Finding …"
+
+msgid "Audit-Rückstufung: genau eine Stufe zurück"
+msgstr "Audit downgrade: exactly one level back"
+
+msgid "Referenzen"
+msgstr "References"
+
+msgid "intern"
+msgstr "internal"
+
+msgid "Referenz hinzufügen"
+msgstr "Add reference"
+
+msgid "entfernen"
+msgstr "remove"
+
+msgid "keine"
+msgstr "none"
+
+msgid "Normen & Regelwerke"
+msgstr "Standards & regulations"
+
+msgid "Im System – im Viewer öffnen"
+msgstr "In system – open in viewer"
+
+msgid "nicht im System"
+msgstr "not in system"
+
+msgid "bestätigt"
+msgstr "confirmed"
+
+msgid "Vorschlag"
+msgstr "proposal"
+
+msgid "keine Items"
+msgstr "no items"
+
+msgid "Neues Item"
+msgstr "New item"
+
+msgid "Mein Profil"
+msgstr "My profile"
+
+msgid "Login (Benutzername)"
+msgstr "Login (username)"
+
+msgid "Der Login-Name bleibt unverändert."
+msgstr "The login name remains unchanged."
+
+msgid "Vorname"
+msgstr "First name"
+
+msgid "Nachname"
+msgstr "Last name"
+
+msgid "E-Mail"
+msgstr "Email"
+
+msgid "Neues Passwort"
+msgstr "New password"
+
+msgid "leer lassen = unverändert"
+msgstr "leave empty = unchanged"
+
+msgid "Passwort wiederholen"
+msgstr "Repeat password"
+
+msgid "zur Kontrolle erneut eingeben"
+msgstr "re-enter to confirm"
+
+msgid "Beide Eingaben müssen übereinstimmen (Schutz vor Tippfehlern)."
+msgstr "Both entries must match (protection against typos)."
+
+msgid "Projekt bearbeiten"
+msgstr "Edit project"
+
+msgid "Neues Projekt"
+msgstr "New project"
+
+msgid "Sprachen des Projekts"
+msgstr "Project languages"
+
+#, python-format
+msgid ""
+"(Primärsprache: <strong>%(primary)s</strong>; Änderungen werden in die "
+"übrigen übersetzt)"
+msgstr ""
+"(Primary language: <strong>%(primary)s</strong>; changes are translated into"
+" the others)"
+
+msgid ""
+"Genau EINE Sprache ist <strong>Normativ</strong> = die Projektsprache\n"
+"        (maßgeblicher Wortlaut, wird NIE übersetzt). „Normativ\" auf eine andere Sprache setzen macht DIESE zur Projektsprache\n"
+"        (exklusiv). Alle übrigen sind <strong>informativ</strong> (übersetzbar)."
+msgstr ""
+"Exactly ONE language is <strong>normative</strong> = the project language\n"
+"        (the authoritative wording, NEVER translated). Setting “normative” to another language makes THAT the project language\n"
+"        (exclusive). All others are <strong>informative</strong> (translatable)."
+
+msgid "Primärsprache (immer normativ)"
+msgstr "Primary language (always normative)"
+
+msgid "informativ"
+msgstr "informative"
+
+msgid "Noch keine Sprache."
+msgstr "No language yet."
+
+msgid "Sprache tippen & wählen (de, en, fr, zh …)"
+msgstr "Type & select language (de, en, fr, zh …)"
+
+msgid "hinzufügen"
+msgstr "add"
+
+msgid ""
+"Jedes Projekt (Mandant) trennt WorkItems, Spezifikationen und Chats. Normen\n"
+"  (IEC 61508 u. a.) sind <strong>projektübergreifend geteilt</strong>."
+msgstr ""
+"Each project (tenant) separates work items, specifications and chats. Standards\n"
+"  (IEC 61508 etc.) are <strong>shared across projects</strong>."
+
+msgid "Projektname *"
+msgstr "Project name *"
+
+msgid "— Kunde (optional) —"
+msgstr "— Customer (optional) —"
+
+msgid "Kürzel"
+msgstr "Abbreviation"
+
+msgid "Beschreibung"
+msgstr "Description"
+
+msgid "Anlegen"
+msgstr "Create"
+
+msgid "Projekt"
+msgstr "Project"
+
+msgid "WorkItems"
+msgstr "Work items"
+
+msgid "Chats"
+msgstr "Chats"
+
+msgid "aktiv"
+msgstr "active"
+
+msgid "aktivieren"
+msgstr "activate"
+
+msgid "Noch keine Projekte."
+msgstr "No projects yet."
+
+msgid "Anmelden"
+msgstr "Sign in"
+
+msgid "Benutzername oder Passwort falsch."
+msgstr "Username or password incorrect."
+
+msgid "Benutzername"
+msgstr "Username"
+
+msgid "Passwort"
+msgstr "Password"
+
+msgid "Datenbank"
+msgstr "Database"
+
+msgid "Passwort vergessen?"
+msgstr "Forgot password?"
+
+msgid "Ihr Passwort wurde gesetzt."
+msgstr "Your password has been set."
+
+msgid "Jetzt anmelden"
+msgstr "Log in now"
+
+msgid "Neues Passwort vergeben"
+msgstr "Set a new password"
+
+msgid "Passwort speichern"
+msgstr "Save password"
+
+msgid ""
+"Der Link ist ungültig oder abgelaufen. Bitte fordern Sie einen neuen an."
+msgstr "The link is invalid or has expired. Please request a new one."
+
+msgid ""
+"Falls ein Konto mit dieser E-Mail existiert, wurde ein Link zum Zurücksetzen"
+" verschickt. Bitte prüfen Sie Ihr Postfach."
+msgstr ""
+"If an account with this email exists, a reset link has been sent. Please "
+"check your inbox."
+
+msgid "Zum Login"
+msgstr "To login"
+
+msgid ""
+"für Ihr ELISA-Konto wurde das Zurücksetzen des Passworts angefordert."
+msgstr "a password reset has been requested for your ELISA account."
+
+msgid ""
+"Bitte öffnen Sie den folgenden Link, um ein neues Passwort zu vergeben:"
+msgstr "Please open the following link to set a new password:"
+
+#, python-format
+msgid "Ihr Anmeldename: %(username)s"
+msgstr "Your login name: %(username)s"
+
+msgid "Wenn Sie das nicht waren, ignorieren Sie diese E-Mail."
+msgstr "If this wasn't you, please ignore this email."
+
+msgid "— ELISA"
+msgstr "— ELISA"
+
+msgid "Passwort zurücksetzen"
+msgstr "Reset password"
+
+msgid ""
+"Geben Sie Ihre E-Mail-Adresse ein. Sie erhalten einen Link zum Zurücksetzen."
+msgstr ""
+"Enter your email address. You will receive a link to reset your password."
+
+msgid "Link anfordern"
+msgstr "Request link"
+
+msgid "Zurück zum Login"
+msgstr "Back to login"
+
+msgid "Projektteam & Rollen"
+msgstr "Project team & roles"
+
+msgid "Mitarbeiter hinzufügen"
+msgstr "Add member"
+
+msgid "— Benutzer wählen —"
+msgstr "— Select user —"
+
+msgid "Hinzufügen"
+msgstr "Add"
+
+msgid "Mitarbeiter"
+msgstr "Member"
+
+msgid "Rolle"
+msgstr "Role"
+
+msgid "seit"
+msgstr "since"
+
+msgid "Noch keine Mitarbeiter im Projekt."
+msgstr "No members in the project yet."
+
+msgid "Neuer Benutzer"
+msgstr "New user"
+
+msgid "Vorname *"
+msgstr "First name *"
+
+msgid "Nachname *"
+msgstr "Last name *"
+
+msgid "Passwort *"
+msgstr "Password *"
+
+msgid "Admin-Rechte"
+msgstr "Admin rights"
+
+msgid ""
+"Anmeldename wird automatisch als <code>vorname.nachname</code> erzeugt."
+msgstr ""
+"Login name is generated automatically as <code>first.last</code>.The login "
+"name is generated automatically as <code>vorname.nachname</code>."
+
+msgid "Benutzer"
+msgstr "User"
+
+msgid "Name"
+msgstr "Name"
+
+msgid "Rollen (Projekte)"
+msgstr "Roles (projects)"
+
+msgid "Registriert"
+msgstr "Registered"
+
+msgid "Erste Anm."
+msgstr "First login"
+
+msgid "Letzte Anm."
+msgstr "Last login"
+
+msgid "inaktiv"
+msgstr "inactive"
+
+msgid "aktiv/inaktiv"
+msgstr "active/inactive"
+
+msgid "Passwort setzen"
+msgstr "Set password"
+
+msgid "Löschen"
+msgstr "Delete"
+
+msgid "Benutzer bearbeiten:"
+msgstr "Edit user:"
+
+msgid ""
+"Bei Namensänderung wird der Login <code>vorname.nachname</code> angeglichen."
+msgstr ""
+"When the name changes, the login <code>first.last</code> is adjusted "
+"accordingly."
+
+msgid ""
+"Hierarchischer V-Modell-Worktree. Links spezifizieren (REQ→SPEC→ARCH→MOD), rechts verifizieren. Items wählst du im Baum; Inhalt schreibt immer der Mensch, das LLM berät nur.\n"
+"\n"
+"Tastenkürzel (Fokus außerhalb von Eingabefeldern):\n"
+"  ALT ↑ / ↓        voriges / nächstes Geschwister\n"
+"  ALT ← / →        Elter / erstes Kind\n"
+"  ALT Bild↑ / Bild↓  voriges / nächstes Item (ganze Liste)\n"
+"  ALT ⌫ / Strg ALT ⌫   Sprung-Historie zurück / vorwärts\n"
+"  Strg +           neues Item (gleiche Ebene)\n"
+"  Strg ⇧ +         neues Subitem\n"
+"  Rechtsklick      Kontextmenü"
+msgstr ""
+"Hierarchical V-model worktree. Specify on the left (REQ→SPEC→ARCH→MOD), verify on the right. Pick items in the tree; content is always written by a human, the LLM only advises.\n"
+"\n"
+"Keyboard shortcuts (focus outside input fields):\n"
+"  ALT ↑ / ↓        previous / next sibling\n"
+"  ALT ← / →        parent / first child\n"
+"  ALT PgUp / PgDn  previous / next item (whole list)\n"
+"  ALT ⌫ / Ctrl ALT ⌫   navigation history back / forward\n"
+"  Ctrl +           new item (same level)\n"
+"  Ctrl ⇧ +         new sub-item\n"
+"  Right-click      context menu"
+
+msgid "Spezifikation"
+msgstr "Specification"
+
+msgid "Auf"
+msgstr "Open"
+
+msgid "Zu"
+msgstr "Close"
+
+msgid "Alles auf-/zuklappen"
+msgstr "Expand / collapse all"
+
+msgid "Verifikation"
+msgstr "Verification"
+
+msgid "Ein Item im Baum wählen."
+msgstr "Select an item in the tree."
+
+msgid "Item-Chat"
+msgstr "Item chat"
+
+msgid "Filtern …"
+msgstr "Filter …"
+
+msgid "Inhalt — WYSIWYG-Markdown-Editor (Mermaid-fähig), nur vom Menschen"
+msgstr "Content — WYSIWYG Markdown editor (Mermaid-capable), humans only"
+
+msgid "Jede Änderung wird in der Historie protokolliert."
+msgstr "Every change is recorded in the history."
+
+msgid "Neues Item (gleiche Ebene)"
+msgstr "New item (same level)"
+
+msgid "Neues Subitem"
+msgstr "New sub-item"
+
+#~ msgid "Inhalt (nur vom Menschen)…"
+#~ msgstr "Content (human only)…"
+
+#~ msgid "Leitet sich ab aus (oben)"
+#~ msgstr "Derived from (above)"
+
+#~ msgid "Verfeinert zu (unten)"
+#~ msgstr "Refined to (below)"

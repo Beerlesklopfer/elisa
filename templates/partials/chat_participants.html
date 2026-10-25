@@ -1,0 +1,12 @@
+{% load i18n %}{% comment %}Teilnehmer-Leiste mit Online-Status (who-is-online), in ALLEN Chat-Systemen verwendet.{% endcomment %}
+<div class="chat-participants small mb-2" data-online-url="{% url 'online-presence' %}">
+  <span class="text-muted me-1"><i class="fas fa-users me-1"></i>{% trans "Teilnehmer:" %}</span>
+  {% for p in participants %}
+  <button type="button" class="badge border chat-mention {% if p.kind == 'human' %}bg-primary-subtle text-primary-emphasis{% else %}bg-light text-dark{% endif %}"
+          data-handle="{{ p.handle }}" title="{{ p.label }} · {{ p.info }}{% if not p.online %} · {% trans 'offline' %}{% endif %}">
+    <span class="presence-dot {% if p.online %}on{% else %}off{% endif %}" data-handle="{{ p.handle }}"></span>
+    <i class="fas {% if p.kind == 'human' %}fa-user{% else %}{{ p.icon|default:'fa-robot' }}{% endif %} me-1"{% if p.kind != 'human' and p.color %} style="color:{{ p.color }}"{% endif %}></i>@{{ p.handle }}</button>
+  {% empty %}
+  <span class="text-muted fst-italic">{% trans "keine Teilnehmer (Projektmitglieder/LLM-Backends im Admin anlegen)" %}</span>
+  {% endfor %}
+</div>

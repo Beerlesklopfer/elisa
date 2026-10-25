@@ -1,0 +1,56 @@
+# Lokal gehostetes Ollama (Binary, GPU-Libs, Modelle) – nie committen
+.ollama/
+
+# Python venv
+.venv/
+venv/
+
+# Python-Artefakte
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Django / daphne – generierte & Laufzeit-Artefakte (nie committen)
+# Quell-Assets liegen in static/ (STATICFILES_DIRS) und BLEIBEN versioniert;
+# ignoriert wird nur das collectstatic-Ziel STATIC_ROOT (= DATA_DIR/staticfiles).
+staticfiles/
+media/
+db.sqlite3
+*.sqlite3
+*.sqlite3-journal
+*.log
+# Supervisor-Laufzeit (DATA_DIR; im Dev == BASE_DIR)
+supervisor.sock
+supervisor_status.json
+*.sock
+*.pid
+
+# RAG / Vektor-DB (lokal generiert)
+chroma/
+*.chroma
+rag/chroma_db/
+rag/index_progress.json
+rag/indexed_pdfs/
+
+# Eingehende Dateien & Build-Artefakte
+incoming/
+*.zip
+
+# Secrets / lokale Umgebung
+.env
+.env.*
+# DB-/Token-Exports (enthalten u. a. MCP-Bearer-Tokens!) – NIE committen
+exports/
+
+# Arbeits-/Scratch-Ordner & vertrauliche Kundendokumente (PEP/REQ/SDS …)
+tmp/
+
+# Editor / OS
+*.swp
+.DS_Store
+
+# MCP-Konfiguration mit Bearer-Tokens
+.mcp.json
+
+# Persönliche Claude-Code-Memory
+.claude/projects/

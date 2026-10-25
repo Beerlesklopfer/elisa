@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0"><i class="fas fa-folder-open me-2"></i>{% trans "Eingangsdokumente" %}</h1>
+  <span class="text-muted small">{% blocktrans with name=project.name %}Projekt: <strong>{{ name }}</strong>{% endblocktrans %}</span>
+</div>
+
+<p class="mb-2">{% blocktrans %}
+  Hier sammeln Sie alle Unterlagen, die der <strong>Kunde zum Projekt liefert</strong> —
+  vor allem den Ablaufplan <strong>PEP</strong> (wie das Produkt entwickelt wird) und
+  die <strong>Anforderungen (REQ)</strong> (was das Produkt können muss).
+{% endblocktrans %}</p>
+<div class="card bg-light border-0 mb-4">
+  <div class="card-body py-3">
+    <div class="fw-semibold mb-1"><i class="fas fa-list-ol me-1"></i>{% trans "So gehen Sie vor" %}</div>
+    <ol class="mb-2">
+      <li>{% blocktrans %}Datei wählen und die <strong>Art</strong> bestimmen (PEP, Anforderungen, Spezifikation …).{% endblocktrans %}</li>
+      <li>{% blocktrans %}<strong>Vertraulichkeit</strong> einstufen und ankreuzen, ob das Dokument <strong>sicherheitsrelevant</strong> ist.{% endblocktrans %}</li>
+      <li>{% blocktrans %}<strong>„Hochladen"</strong> klicken — das System liest den Inhalt automatisch ein, damit der Assistent später Fragen dazu beantworten kann.{% endblocktrans %}</li>
+    </ol>
+    <div class="small text-muted">
+      <i class="fas fa-lock me-1"></i>{% blocktrans %}PEP und Anforderungen werden so abgelegt, <strong>wie der Kunde sie geliefert hat</strong>, und hier nicht verändert. Inhaltliche Spezifikationen schreiben Sie im Tab <em>Arbeitsbereich</em>.{% endblocktrans %}
+    </div>
+  </div>
+</div>
+
+{% if messages %}{% for m in messages %}
+<div class="alert alert-{{ m.tags|default:'info' }} py-2">{{ m }}</div>
+{% endfor %}{% endif %}
+
+<div class="card mb-4">
+  <div class="card-header"><i class="fas fa-upload me-1"></i>{% trans "Dokument hochladen" %}</div>
+  <div class="card-body">
+    <form method="post" action="{% url 'doc-upload' %}" enctype="multipart/form-data" class="row g-2">
+      {% csrf_token %}
+      <div class="col-md-3">
+        <label class="form-label small mb-0">{% trans "Art" %}</label>
+        <select name="kind" class="form-select">
+          {% for val,label in kinds %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small mb-0">{% trans "Vertraulichkeit (Klassifizierung)" %}</label>
+        <select name="confidentiality" class="form-select">
+          {% for val,label in confidentialities %}<option value="{{ val }}" {% if val == 'INTERNAL' %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small mb-0">{% trans "Revision" %}</label>
+        <input name="revision" class="form-control" placeholder="{% trans 'z. B. V1.1.2' %}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label small mb-0">{% trans "Titel" %}</label>
+        <input name="title" class="form-control" placeholder="{% trans '(optional)' %}">
+      </div>
+      <div class="col-md-9 d-flex align-items-center gap-3">
+        <input type="file" name="file" class="form-control" required>
+        <div class="form-check text-nowrap">
+          <input class="form-check-input" type="checkbox" name="safety_relevant" id="sr">
+          <label class="form-check-label" for="sr">{% trans "sicherheitsrelevant" %}</label>
+        </div>
+      </div>
+      <div class="col-md-3 d-grid align-self-end"><button class="btn btn-dark">{% trans "Hochladen & indizieren" %}</button></div>
+    </form>
+  </div>
+</div>
+
+{% for code, docs in grouped.items %}
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between">
+    <span>
+      {% if code == 'PEP' %}<i class="fas fa-diagram-project me-1"></i>{% trans "PEP – Product Engineering Process" %}
+      {% elif code == 'REQ' %}<i class="fas fa-list-check me-1"></i>{% trans "REQ – Kundenanforderungen" %}
+      {% else %}<i class="fas fa-file me-1"></i>{% trans "Sonstige Dokumente" %}{% endif %}
+    </span>
+    {% if code == 'PEP' or code == 'REQ' %}<span class="badge bg-secondary">{% trans "statisch · MCP" %}</span>{% endif %}
+  </div>
+  <table class="table mb-0 align-middle">
+    <tbody>
+      {% for d in docs %}
+      <tr>
+        <td>
+          {% if d.original_name|slice:"-4:"|lower == ".pdf" %}
+          {# PDF: Klick → eingebetteter Viewer (springt zur Seite); Ctrl-Klick → Download #}
+          <a href="{% url 'doc-download' d.pk %}" class="doc-cite"
+             data-url="{% url 'doc-download' d.pk %}" data-title="{{ d }}" data-page="1">
+            <i class="fas fa-file-pdf text-danger me-1"></i>{{ d }}</a>
+          {% else %}
+          <a href="{% url 'doc-download' d.pk %}"><i class="fas fa-file-lines text-secondary me-1"></i>{{ d }}</a>
+          {% endif %}
+          {% if d.revision %}<span class="text-muted small">{{ d.revision }}</span>{% endif %}
+          <div>
+            <span class="badge bg-dark">{{ d.get_status_display }} · {% blocktrans with it=d.iteration %}Rev. {{ it }}{% endblocktrans %}</span>
+            {% if d.kind == 'NORM' %}<span class="badge bg-info text-dark">{% trans "Norm" %}</span>{% endif %}
+            <span class="badge bg-light text-dark border">{{ d.get_confidentiality_display }}</span>
+            {% if d.safety_relevant %}<span class="badge bg-danger">{% trans "sicherheitsrelevant" %}</span>{% endif %}
+            {% if d.is_static %}<span class="badge bg-secondary">{% trans "statisch" %}</span>{% endif %}
+            {% if d.indexed_chunks %}<span class="badge bg-success" title="{% trans 'im RAG-Index' %}">{% blocktrans with n=d.indexed_chunks %}indiziert · {{ n }}{% endblocktrans %}</span>
+            {% else %}<span class="badge bg-warning text-dark">{% trans "indiziert …" %}</span>{% endif %}
+          </div>
+        </td>
+        <td>
+          {% if d.allowed_next %}
+          <form method="post" action="{% url 'doc-transition' d.pk %}" class="d-flex gap-1" style="max-width:230px">
+            {% csrf_token %}
+            <select name="status" class="form-select form-select-sm">
+              {% for val,label in d.allowed_next %}<option value="{{ val }}">{% blocktrans with lbl=label %}→ {{ lbl }}{% endblocktrans %}</option>{% endfor %}
+            </select>
+            <button class="btn btn-sm btn-outline-dark">OK</button>
+          </form>
+          {% else %}<span class="text-muted small">{% trans "Endzustand" %}</span>{% endif %}
+        </td>
+        <td class="text-end">
+          <form method="post" action="{% url 'doc-delete' d.pk %}" class="d-inline"
+                onsubmit="return confirm('{% blocktrans with name=d %}„{{ name }}“ löschen?{% endblocktrans %}');">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash-can"></i></button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td class="text-muted text-center py-3">{% trans "Keine Dokumente." %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+{% endblock %}

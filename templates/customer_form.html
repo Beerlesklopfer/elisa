@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">
+    <i class="fas fa-building-user me-2"></i>{% if customer %}{% trans "Kunde bearbeiten" %}{% else %}{% trans "Neuer Kunde" %}{% endif %}
+  </h1>
+  <a href="{% url 'customers' %}" class="btn btn-sm btn-outline-secondary">
+    <i class="fas fa-arrow-left me-1"></i>{% trans "Zurück" %}
+  </a>
+</div>
+
+<form method="post" class="card">
+  {% csrf_token %}
+  <div class="card-body">
+    <h6 class="text-muted text-uppercase small">{% trans "Identität" %}</h6>
+    <div class="row g-3 mb-3">
+      <div class="col-md-5">{% include 'partials/_field.html' with field=form.name %}</div>
+      <div class="col-md-3">{% include 'partials/_field.html' with field=form.legal_form %}</div>
+      <div class="col-md-4">{% include 'partials/_field.html' with field=form.number %}</div>
+    </div>
+
+    <h6 class="text-muted text-uppercase small">{% trans "Anschrift (international)" %}</h6>
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">{% include 'partials/_field.html' with field=form.address_line1 %}</div>
+      <div class="col-md-6">{% include 'partials/_field.html' with field=form.address_line2 %}</div>
+      <div class="col-md-3">{% include 'partials/_field.html' with field=form.postal_code %}</div>
+      <div class="col-md-5">{% include 'partials/_field.html' with field=form.city %}</div>
+      <div class="col-md-2">{% include 'partials/_field.html' with field=form.country %}</div>
+      <div class="col-md-2">{% include 'partials/_field.html' with field=form.language %}</div>
+      <div class="col-md-12">{% include 'partials/_field.html' with field=form.region %}</div>
+    </div>
+
+    <h6 class="text-muted text-uppercase small">{% trans "Steuer / Recht" %}</h6>
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">{% include 'partials/_field.html' with field=form.vat_id %}</div>
+      <div class="col-md-6">{% include 'partials/_field.html' with field=form.registration_no %}</div>
+    </div>
+
+    <h6 class="text-muted text-uppercase small">{% trans "Kontakt" %}</h6>
+    <div class="row g-3 mb-3">
+      <div class="col-md-4">{% include 'partials/_field.html' with field=form.contact_person %}</div>
+      <div class="col-md-4">{% include 'partials/_field.html' with field=form.contact_email %}</div>
+      <div class="col-md-4">{% include 'partials/_field.html' with field=form.phone %}</div>
+      <div class="col-md-12">{% include 'partials/_field.html' with field=form.website %}</div>
+    </div>
+
+    <h6 class="text-muted text-uppercase small">{% trans "Notizen" %}</h6>
+    {% include 'partials/_field.html' with field=form.notes %}
+
+    {% if form.errors %}
+    <div class="alert alert-danger mt-3 mb-0">
+      {% for field, errs in form.errors.items %}<div>{{ field }}: {{ errs|join:", " }}</div>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-footer text-end">
+    <button class="btn btn-dark"><i class="fas fa-save me-1"></i>{% trans "Speichern" %}</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Bootstrap-Tooltips für die Feld-Beschreibungen (Hover über das Info-Icon).
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+    new bootstrap.Tooltip(el);
+  });
+</script>
+{% endblock %}

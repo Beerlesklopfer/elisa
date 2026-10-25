@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0"><i class="fas fa-book-open me-2"></i>{% trans "Normen (RAG)" %}</h1>
+  <span class="badge bg-secondary">{{ chunk_count }} Chunks im Index</span>
+</div>
+
+<div class="advisory-banner mb-3">
+  <i class="fas fa-circle-info me-1"></i>
+  {% trans "Norm-PDFs sind i. d. R. lizenzpflichtig — bitte nur lizenzierte Dokumente hochladen. Ollama erzeugt die Embeddings lokal; das Modell wird nicht trainiert." %}
+</div>
+
+{% if messages %}
+  {% for m in messages %}
+  <div class="alert alert-{{ m.tags|default:'info' }} py-2">{{ m }}</div>
+  {% endfor %}
+{% endif %}
+
+<div class="row g-3 mb-4">
+  <!-- Zu beschaffen: aus den Normverweisen abgeleitet (deterministisch) -->
+  <div class="col-md-6">
+    <div class="card h-100 border-danger">
+      <div class="card-header bg-danger-subtle d-flex justify-content-between">
+        <span><i class="fas fa-cart-shopping me-1"></i>{% trans "Zu beschaffen" %}</span>
+        <span class="badge bg-danger">{{ procurement|length }}</span>
+      </div>
+      <div class="card-body">
+        <p class="small text-muted mb-2">{% trans "In den vorhandenen Normen referenziert, aber nicht im System (Top 8 — vollständige Liste unten):" %}</p>
+        {% if procurement %}
+        <ul class="mb-0">
+          {% for p in procurement|slice:":8" %}
+          <li><strong>{{ p.standard }}</strong> <span class="text-muted small">({% blocktrans with count=p.count %}{{ count }}× referenziert{% endblocktrans %})</span></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted mb-0">{% trans "Index noch leer — Normen indexieren, dann erscheinen hier die Verweise." %}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Im System vorhanden -->
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between">
+        <span><i class="fas fa-check-double me-1"></i>{% trans "Im System vorhanden" %}</span>
+        <span class="badge bg-success">{{ indexed|length }}</span>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <tbody>
+            {% for i in indexed %}
+            <tr><td>
+                  <a href="{% url 'norms-download' %}?name={{ i.name|urlencode }}" title="{% trans 'herunterladen' %}">
+                    <i class="fas fa-file-pdf text-danger me-1"></i>{{ i.name }}
+                  </a>
+                </td><td class="text-end text-muted small">{% blocktrans with n=i.chunks %}{{ n }} Chunks{% endblocktrans %}</td></tr>
+            {% empty %}
+            <tr><td class="text-muted text-center py-3">{% trans "Noch keine Norm vollständig indexiert." %}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% comment %}Norm-Bezüge aus den menschlich gepflegten Spezifikationen (WorkItem-NormLinks) des aktiven Projekts — nur anzeigen, wenn vorhanden, damit hier nie fälschlich „alles vollständig" steht.{% endcomment %}
+{% if referenced %}
+<div class="card mb-4">
+  <div class="card-header"><i class="fas fa-link me-1"></i>{% trans "Aus den Spezifikationen referenziert (aktives Projekt)" %}</div>
+  <table class="table table-sm mb-0">
+    <thead><tr><th>{% trans "Norm" %}</th><th>{% trans "Items" %}</th><th>{% trans "Status" %}</th></tr></thead>
+    <tbody>
+      {% for r in referenced %}
+      <tr><td>{{ r.standard }}</td><td>{{ r.items }}</td>
+        <td>{% if r.available %}<span class="badge bg-success">{% trans "vorhanden" %}</span>{% else %}<span class="badge bg-danger">{% trans "fehlt" %}</span>{% endif %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<div class="card mb-4">
+  <div class="card-header"><i class="fas fa-upload me-1"></i>{% trans "Norm-PDF(s) hochladen" %}</div>
+  <div class="card-body">
+    <form method="post" action="{% url 'norms-upload' %}" enctype="multipart/form-data"
+          class="d-flex gap-2 align-items-center">
+      {% csrf_token %}
+      <input type="file" name="pdfs" accept="application/pdf" multiple
+             class="form-control" required>
+      <button class="btn btn-dark"><i class="fas fa-upload me-1"></i>{% trans "Hochladen" %}</button>
+    </form>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="fas fa-inbox me-1"></i>{% trans "Warteschlange (incoming/)" %} —
+      <span id="rag-status" class="text-muted small">{% if indexing %}{% trans "Indexierung läuft …" %}{% else %}{% trans "im Leerlauf" %}{% endif %}</span>
+    </span>
+    <form method="post" action="{% url 'norms-build' %}">
+      {% csrf_token %}
+      <button class="btn btn-sm btn-outline-dark" id="rag-build-all" {% if indexing %}disabled{% endif %}>
+        <i class="fas fa-database me-1"></i>{% trans "Alle indexieren" %}
+      </button>
+    </form>
+  </div>
+  <table class="table mb-0 align-middle">
+    <thead><tr><th>{% trans "Datei" %}</th><th>{% trans "Größe" %}</th><th style="width:38%">{% trans "Fortschritt" %}</th><th></th></tr></thead>
+    <tbody id="rag-queue">
+      {% for q in queue %}
+      <tr data-name="{{ q.name }}">
+        <td>{{ q.name }}</td>
+        <td class="text-nowrap">{{ q.size_mb }} MB</td>
+        <td>
+          <div class="progress" style="height:18px">
+            <div class="progress-bar {% if q.status == 'running' %}progress-bar-striped progress-bar-animated bg-dark{% elif q.status == 'partial' %}bg-warning{% else %}bg-secondary{% endif %} js-bar"
+                 role="progressbar" style="width: {{ q.percent }}%">{{ q.percent }}%</div>
+          </div>
+          <small class="text-muted js-pages">{% blocktrans with done=q.pages_done total=q.pages_total chunks=q.chunks %}{{ done }}/{{ total }} Seiten · {{ chunks }} Chunks{% endblocktrans %}</small>
+        </td>
+        <td class="text-end">
+          <form method="post" action="{% url 'norms-build' %}" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="only" value="{{ q.name }}">
+            <button class="btn btn-sm btn-outline-secondary" {% if indexing %}disabled{% endif %}>
+              <i class="fas fa-database me-1"></i>{% trans "indexieren" %}
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr id="rag-queue-empty"><td colspan="4" class="text-muted text-center py-4">{% trans "Warteschlange leer — oben hochladen." %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <i class="fas fa-database me-1"></i>{% trans "Indexierte Normen" %}
+    <span class="text-muted small">({% trans "aus incoming/ entfernt, im Index" %})</span>
+  </div>
+  <table class="table mb-0 align-middle">
+    <thead><tr><th>{% trans "Norm (Datei)" %}</th><th>{% trans "Chunks" %}</th><th>{% trans "Klassifizierung" %}</th><th>{% trans "Status" %}</th><th></th></tr></thead>
+    <tbody id="rag-indexed">
+      {% for i in indexed %}
+      <tr><td>
+            <a href="{% url 'norms-download' %}?name={{ i.name|urlencode }}"
+               class="norm-cite" data-name="{{ i.name }}" data-page="1"
+               title="{% trans 'Ansehen (Strg-Klick: Download)' %}">
+              <i class="fas fa-file-pdf text-danger me-1"></i>{{ i.name }}
+            </a>
+          </td><td>{{ i.chunks }}</td>
+          <td>
+            {% if i.kind == 'normative' %}<span class="badge bg-primary">{% trans "Normativ" %}</span>
+            {% elif i.kind == 'informative' %}<span class="badge bg-warning text-dark">{% trans "Informativ" %}</span>
+            {% else %}<span class="badge bg-light text-muted border">{% trans "unklassifiziert" %}</span>{% endif %}
+          </td>
+          <td><span class="badge bg-success">{% trans "indexiert" %}</span></td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-secondary norm-manage"
+                    data-bs-toggle="modal" data-bs-target="#normModal"
+                    data-name="{{ i.name }}" data-chunks="{{ i.chunks }}"
+                    data-pages="{{ i.pages }}" data-kind="{{ i.kind }}">
+              <i class="fas fa-gear me-1"></i>{% trans "verwalten" %}</button>
+          </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="text-muted text-center py-4">{% trans "Noch nichts vollständig indexiert." %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# ── RUD-Popup für eine indexierte Norm ──────────────────────────── #}
+<div class="modal fade" id="normModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-database me-2"></i><span id="nm-name"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        {# READ #}
+        <dl class="row mb-3 small">
+          <dt class="col-4">{% trans "Chunks" %}</dt><dd class="col-8" id="nm-chunks"></dd>
+          <dt class="col-4">{% trans "Seiten" %}</dt><dd class="col-8" id="nm-pages"></dd>
+          <dt class="col-4">{% trans "Datei" %}</dt><dd class="col-8">
+            <a id="nm-dl" href="#"><i class="fas fa-download me-1"></i>{% trans "herunterladen" %}</a></dd>
+        </dl>
+        {# UPDATE #}
+        <form method="post" action="{% url 'norms-rename' %}" class="mb-3">
+          {% csrf_token %}
+          <input type="hidden" name="name" id="nm-old">
+          <label class="form-label small mb-1">{% trans "Umbenennen" %}</label>
+          <div class="input-group input-group-sm">
+            <input name="new_name" id="nm-new" class="form-control" placeholder="{% trans 'neuer Dateiname …' %}" required>
+            <button class="btn btn-outline-primary">{% trans "Speichern" %}</button>
+          </div>
+        </form>
+        {# Klassifizierung #}
+        <form method="post" action="{% url 'norms-classify' %}">
+          {% csrf_token %}
+          <input type="hidden" name="name" id="nm-cls-name">
+          <label class="form-label small mb-1">{% trans "Klassifizierung" %}</label>
+          <div class="input-group input-group-sm">
+            <select name="classification" id="nm-class" class="form-select">
+              {% for val, label in norm_classes %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+            </select>
+            <button class="btn btn-outline-primary">{% trans "Setzen" %}</button>
+          </div>
+        </form>
+      </div>
+      {# DELETE #}
+      <div class="modal-footer">
+        <form method="post" action="{% url 'norms-forget' %}"
+              onsubmit="return confirm('Norm vergessen? Entfernt Chunks aus dem Index und die Datei.');">
+          {% csrf_token %}
+          <input type="hidden" name="name" id="nm-del">
+          <button class="btn btn-outline-danger btn-sm">
+            <i class="fas fa-trash-can me-1"></i>{% trans "vergessen (löschen)" %}</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('normModal').addEventListener('show.bs.modal', function (e) {
+  var b = e.relatedTarget, n = b.dataset.name;
+  document.getElementById('nm-name').textContent = n;
+  document.getElementById('nm-chunks').textContent = b.dataset.chunks;
+  document.getElementById('nm-pages').textContent = b.dataset.pages;
+  document.getElementById('nm-old').value = n;
+  document.getElementById('nm-del').value = n;
+  document.getElementById('nm-new').value = n;
+  document.getElementById('nm-cls-name').value = n;
+  document.getElementById('nm-class').value = b.dataset.kind || '';
+  document.getElementById('nm-dl').href = "{% url 'norms-download' %}?name=" + encodeURIComponent(n);
+});
+</script>
+
+<div class="card mt-4 border-danger">
+  <div class="card-header bg-danger-subtle d-flex justify-content-between align-items-center">
+    <span><i class="fas fa-diagram-project me-1"></i>{% trans "Beschaffungsbedarf aus Normverweisen" %}
+      <span class="text-muted small">({% trans "in den vorhandenen Normen referenziert, aber nicht im System" %})</span>
+    </span>
+    <span class="d-flex align-items-center gap-3">
+      <form method="get" class="form-check form-switch m-0" id="procFilter">
+        <input class="form-check-input" type="checkbox" role="switch" id="ignInf"
+               name="ignore_informative" value="1" onchange="document.getElementById('procFilter').submit()"
+               {% if ignore_informative %}checked{% endif %}>
+        <label class="form-check-label small" for="ignInf"
+               title="{% trans 'Technical Reports/Specifications und Guides ausblenden' %}">{% trans "informative ignorieren" %}</label>
+      </form>
+      <span class="badge bg-danger">{{ procurement|length }}</span>
+    </span>
+  </div>
+  <table class="table table-sm mb-0">
+    <thead><tr><th>{% trans "Referenzierte Norm" %}</th><th>{% trans "Verweise" %}</th></tr></thead>
+    <tbody>
+      {% for p in procurement %}
+      <tr><td>{{ p.standard }}</td><td>{{ p.count }}×</td></tr>
+      {% empty %}
+      <tr><td colspan="2" class="text-muted text-center py-3">{% trans "Keine offenen Normverweise (oder Index leer)." %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+// Live-Polling der RAG-Indexierung: aktualisiert Progressbars in der aktiven Zeile.
+(function () {
+  const url = "{% url 'norms-progress' %}";
+  async function poll() {
+    let data;
+    try { data = await (await fetch(url)).json(); } catch (e) { return schedule(true); }
+    document.getElementById("rag-status").textContent =
+      data.running ? "Indexierung läuft …" : "im Leerlauf";
+    // Warteschlangen-Zeilen aktualisieren
+    const seen = new Set();
+    (data.queue || []).forEach((q) => {
+      seen.add(q.name);
+      let row = document.querySelector(`#rag-queue tr[data-name="${CSS.escape(q.name)}"]`);
+      if (!row) return location.reload();   // neue Datei -> Seite neu laden
+      const bar = row.querySelector(".js-bar");
+      bar.style.width = q.percent + "%";
+      bar.textContent = q.percent + "%";
+      bar.className = "progress-bar js-bar " + (
+        q.status === "running" ? "progress-bar-striped progress-bar-animated bg-dark"
+        : q.status === "partial" ? "bg-warning" : "bg-secondary");
+      row.querySelector(".js-pages").textContent =
+        `${q.pages_done}/${q.pages_total} Seiten · ${q.chunks} Chunks`;
+    });
+    // Wenn eine Datei aus der Queue verschwand (fertig/archiviert) -> neu laden
+    const rows = document.querySelectorAll('#rag-queue tr[data-name]');
+    if (rows.length && [...rows].some((r) => !seen.has(r.dataset.name))) return location.reload();
+    schedule(data.running);
+  }
+  function schedule(active) { setTimeout(poll, active ? 2500 : 8000); }
+  poll();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,32 @@
+# =============================================================================
+# ELISA – Django-App (ASGI via daphne), hinter nginx
+#   Code:   /usr/share/elisa/
+#   Config: /etc/elisa/env
+#   Daten:  /var/lib/elisa/   (SQLite, media, staticfiles, incoming)
+# =============================================================================
+[Unit]
+Description=ELISA (Django ASGI)
+After=network.target elisa-ollama.service postgresql.service
+Wants=elisa-ollama.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/usr/share/elisa
+EnvironmentFile=/etc/elisa/env
+ExecStart=/usr/share/elisa/.venv/bin/daphne -b 127.0.0.1 -p 8088 elisa.asgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=on-failure
+RestartSec=5s
+KillMode=mixed
+
+# Code liegt unter /usr/share (lokal, www-data-lesbar) -> Sandboxing möglich.
+ProtectSystem=strict
+ReadWritePaths=/var/lib/elisa /var/log/elisa
+ProtectHome=true
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
