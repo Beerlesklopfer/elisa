@@ -41,26 +41,9 @@ def write_progress(data: dict) -> None:
         pass
 
 
-# ── Embeddings (Ollama) ────────────────────────────────────────────────────
+# ── Embeddings (Ollama oder Eliezer, siehe app/local_llm.py) ──────────────
 
-def _ollama_client():
-    import ollama
-    return ollama.Client(host=settings.OLLAMA_HOST, timeout=settings.OLLAMA_TIMEOUT)
-
-
-def embed_one(text: str):
-    """Ein Embedding (768) für einen Text, oder None bei Fehler."""
-    try:
-        return _ollama_client().embeddings(
-            model=settings.OLLAMA_EMBED_MODEL, prompt=text)["embedding"]
-    except Exception:
-        return None
-
-
-def embed_many(texts):
-    """Embeddings für eine Chunk-Liste (Batch)."""
-    return _ollama_client().embed(
-        model=settings.OLLAMA_EMBED_MODEL, input=list(texts))["embeddings"]
+from app.local_llm import embed_one, embed_many  # noqa: E402,F401
 
 
 def make_uid(*parts) -> str:

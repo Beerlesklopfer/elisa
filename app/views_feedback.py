@@ -49,7 +49,7 @@ def _team_online() -> bool:
 
 def _ollama_toasts(draft: str, neighbours: list, role_ctx: str) -> list:
     """Notnagel-Hinweise vom lokalen Ollama – in der Persona des V-Schritts."""
-    import ollama
+    from app import local_llm
     context = "\n".join(f"[{n.get('id')}] {n.get('body','')}" for n in neighbours)
     user_msg = f"Nachbar-Items:\n{context}\n\nZu pruefender Text:\n{draft}"
     messages = [{"role": "system", "content": FEEDBACK_SYSTEM}]
@@ -57,15 +57,12 @@ def _ollama_toasts(draft: str, neighbours: list, role_ctx: str) -> list:
         messages.append({"role": "system", "content": role_ctx})
     messages.append({"role": "user", "content": user_msg})
     try:
-        client = ollama.Client(host=settings.OLLAMA_HOST, timeout=settings.OLLAMA_TIMEOUT)
-        resp = client.chat(model=settings.OLLAMA_CHAT_MODEL, messages=messages,
-                           format="json")
-        toasts = json.loads(resp["message"]["content"]).get("toasts", [])
+        toasts = json.loads(local_llm.chat(messages, json_mode=True)).get("toasts", [])
     except Exception:
         toasts = []
     # Notnagel klar kennzeichnen (lokal/unsicher).
     return [{"type": "notice", "severity": "warn",
-             "message": "⚠ Lokaler Notnagel (Ollama) – kein Reviewer verbunden. "
+             "message": f"⚠ Lokaler Notnagel ({local_llm.backend_label()}) – kein Reviewer verbunden. "
                         "Hinweise unsicher, bitte selbst prüfen."}] + toasts
 
 
@@ -115,7 +112,7 @@ def writing_feedback(request):
     req.toasts = toasts
     req.source = "ollama"
     req.status = FeedbackStatus.ANSWERED
-    req.answered_by = settings.OLLAMA_CHAT_MODEL
+    req.answered_by = settings.LOCAL_CHAT_MODEL
     req.answered_at = timezone.now()
     req.save()
     return JsonResponse({"request_id": req.id, "pending": False,
@@ -141,7 +138,7 @@ def feedback_poll(request):
         req.toasts = toasts
         req.source = "ollama"
         req.status = FeedbackStatus.ANSWERED
-        req.answered_by = settings.OLLAMA_CHAT_MODEL
+        req.answered_by = settings.LOCAL_CHAT_MODEL
         req.answered_at = timezone.now()
         req.save()
         return JsonResponse({"ready": True, "toasts": toasts, "source": "ollama"})

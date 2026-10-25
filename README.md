@@ -26,6 +26,23 @@ bereitet vor, prüft und schlägt vor.
 > Arbeitskontext für die Weiterentwicklung (inkl. der „nicht verhandelbaren
 > Regeln") enthält [`CLAUDE.md`](CLAUDE.md).
 
+## Lokale Modelle: Ollama oder Eliezer
+
+Chat, Embeddings und Notnagel-Hinweise laufen über ein lokales Modell. Standard
+ist Ollama; mit `LOCAL_LLM_BACKEND=eliezer` übernimmt
+[Eliezer](https://github.com/Beerlesklopfer/eliezer) (GPU-Modellmanager,
+OpenAI-kompatibel). Konfiguration über Umgebungsvariablen:
+
+```
+LOCAL_LLM_BACKEND=eliezer
+ELIEZER_BASE_URL=http://127.0.0.1:1234
+ELIEZER_API_KEY=sk-…            # nur Umgebung/Env-Datei, nie ins Repo
+ELIEZER_CHAT_MODEL=<model-key>  # Key aus Eliezers Allowlist
+ELIEZER_EMBED_MODEL=<model-key> # 768-dimensional (Embedding-Spalte)
+```
+
+Das Modell berät nur; verbindlich wird nichts ohne menschliche Freigabe.
+
 ## Worum es geht
 
 Sicherheitsgerichtete Spezifikation muss **prüfbar und verantwortbar** sein.

@@ -40,5 +40,5 @@ def branding(request):
     """Stellt Markendaten & Navigation für base.html bereit."""
     return {
         "company": {"product": "ELISA"},
-        "ollama_chat_model": settings.OLLAMA_CHAT_MODEL,
+        "ollama_chat_model": settings.LOCAL_CHAT_MODEL,
     }

@@ -19,6 +19,12 @@ elisa (0.3.0) unstable; urgency=medium
   * Leitbild „Herr, öffne ihm die Augen!" (2 Kön 6,17) in README und
     CLAUDE.md: ELISA macht in der Angstdomäne Functional Safety sichtbar, was
     verborgen ist.
+  * Eliezer-Anbindung (GPU-Modellmanager, OpenAI-Dialekt): neues Modul
+    app/local_llm.py mit Umschalter LOCAL_LLM_BACKEND=ollama|eliezer für
+    Embeddings (rag_service), RAG-Chat (views_chat) und Notnagel-Toasts
+    (views_feedback). Einstellungen ELIEZER_BASE_URL, ELIEZER_API_KEY (nur
+    Umgebung), ELIEZER_CHAT_MODEL, ELIEZER_EMBED_MODEL, ELIEZER_TIMEOUT.
+    Default bleibt ollama; Provenienz (llm_model) folgt LOCAL_CHAT_MODEL.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

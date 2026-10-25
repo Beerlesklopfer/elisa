@@ -287,12 +287,11 @@ def chat_send(request, pk):
         history.append({"role": role, "content": m.content})
 
     try:
-        import ollama
-        client = ollama.Client(host=settings.OLLAMA_HOST, timeout=settings.OLLAMA_TIMEOUT)
-        resp = client.chat(model=settings.OLLAMA_CHAT_MODEL, messages=history)
-        answer = resp["message"]["content"]
+        from app import local_llm
+        answer = local_llm.chat(history)
     except Exception as exc:
-        answer = f"(Ollama nicht erreichbar: {exc})"
+        from app import local_llm
+        answer = f"({local_llm.backend_label()} nicht erreichbar: {exc})"
 
     # Zitierte Quellen dedupen (je Datei der erste Treffer).
     seen = {}
@@ -305,7 +304,7 @@ def chat_send(request, pk):
     # 4) Assistenten-Antwort mit Provenienz speichern (nie Quelle der Wahrheit).
     assistant_msg = ChatMessage.objects.create(
         session=session, role=ChatRole.ASSISTANT, content=answer,
-        generated_by_llm=True, llm_model=settings.OLLAMA_CHAT_MODEL,
+        generated_by_llm=True, llm_model=settings.LOCAL_CHAT_MODEL,
         author_label=settings.RAG_PERSONA_NAME,     # „Wendelin" statt „llama3.1"
         cited_sources=cited,
     )

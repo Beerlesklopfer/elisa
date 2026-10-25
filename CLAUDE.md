@@ -123,6 +123,18 @@ bewusst **eingeschränkt**:
 Der Toast-Vertrag bleibt unverändert: es werden NUR Toasts geliefert, nie
 Inhalt; verbindlich wird etwas erst durch menschlichen Klick.
 
+### Lokale Inferenz: Ollama oder Eliezer
+
+`app/local_llm.py` kapselt Chat und Embeddings der lokalen Inferenz.
+`LOCAL_LLM_BACKEND=eliezer` leitet sie an **Eliezer** (GPU-Modellmanager,
+OpenAI-kompatibel: `/v1/chat/completions`, `/v1/embeddings`) statt an Ollama.
+Rollenteilung und Regeln bleiben unverändert (beratend, Toasts/Vorschläge,
+nichts Verbindliches). Konfiguration: `ELIEZER_BASE_URL`, `ELIEZER_API_KEY`
+(nur Umgebung, nie im Repo), `ELIEZER_CHAT_MODEL`, `ELIEZER_EMBED_MODEL`;
+die Modell-Keys müssen auf Eliezers Allowlist stehen. Achtung: die
+Embedding-Spalte ist 768-dimensional – ein anderes Embedding-Modell erfordert
+Neuindexierung (`manage.py index_project_docs`) und ggf. Migration.
+
 ## Toast-Vertrag (LLM-Ausgabe)
 
 Der Feedback-Endpoint erwartet vom LLM ausschließlich JSON dieser Form:

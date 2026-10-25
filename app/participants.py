@@ -52,7 +52,7 @@ def _host_is_local(base_url):
     if not host:
         return False
 
-    # Die konfigurierte lokale Inferenz (settings.OLLAMA_HOST) ist per Definition
+    # Die konfigurierte lokale Inferenz (settings.LOCAL_LLM_HOST) ist per Definition
     # lokal – auch wenn sie über einen LAN-Hostnamen (GPU-Server) läuft.
     try:
         from django.conf import settings

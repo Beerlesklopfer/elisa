@@ -6,7 +6,7 @@ Quell-Checkout (Entwicklung) komplett unter BASE_DIR; ein Debian-Paket würde
 Code nach /usr/share/elisa und Konfig/Daten/Logs nach FHS-Pfade legen.
 
 Quelle der Wahrheit ist die relationale DB (siehe CLAUDE.md). Das LLM
-(Ollama) läuft beratend daneben; sein Host ist nur eine Adresse.
+(Ollama oder Eliezer) läuft beratend daneben; sein Host ist nur eine Adresse.
 """
 
 import os
@@ -180,6 +180,22 @@ RAG_PERSONA_NAME = os.getenv("RAG_PERSONA_NAME", "Wendelin")
 # CPU-Ollama ist langsam → großzügiger Client-Timeout (Sekunden), sonst brechen
 # Generierungen ab. Über die Umgebung anpassbar.
 OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "300"))
+
+# ── Lokale Inferenz: Ollama ODER Eliezer (GPU-Modellmanager, OpenAI-Dialekt) ─
+# Umschalter für Chat/Embeddings/Notnagel-Toasts. Beratend wie bisher; nichts
+# Verbindliches (CLAUDE.md). Eliezer: Modell-Keys stehen auf dessen Allowlist.
+LOCAL_LLM_BACKEND = os.getenv("LOCAL_LLM_BACKEND", "ollama").strip().lower()
+ELIEZER_BASE_URL = os.getenv("ELIEZER_BASE_URL", "http://127.0.0.1:1234")
+ELIEZER_API_KEY = os.getenv("ELIEZER_API_KEY", "")   # nur aus der Umgebung, nie im Repo
+ELIEZER_CHAT_MODEL = os.getenv("ELIEZER_CHAT_MODEL", "")
+ELIEZER_EMBED_MODEL = os.getenv("ELIEZER_EMBED_MODEL", "")
+ELIEZER_TIMEOUT = int(os.getenv("ELIEZER_TIMEOUT", "300"))
+if LOCAL_LLM_BACKEND == "eliezer":
+    LOCAL_CHAT_MODEL, LOCAL_EMBED_MODEL = ELIEZER_CHAT_MODEL, ELIEZER_EMBED_MODEL
+    LOCAL_LLM_HOST = ELIEZER_BASE_URL
+else:
+    LOCAL_CHAT_MODEL, LOCAL_EMBED_MODEL = OLLAMA_CHAT_MODEL, OLLAMA_EMBED_MODEL
+    LOCAL_LLM_HOST = OLLAMA_HOST
 
 # ── Incoming-Ablage (bewusst über das Dateisystem erreichbar) ─────────────
 # Ablageordner für Norm-PDFs: kann auf eine Netzwerkfreigabe (Samba/NFS) zeigen,
