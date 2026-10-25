@@ -16,6 +16,9 @@ elisa (0.3.0) unstable; urgency=medium
     CSS-Variablen --elisa-*, Setting ELISA_REFERENCE_DOCX. Die Word-Vorlage
     docs_templates/elisa-reference.docx ist nicht mehr enthalten und muss für
     die Dokumentgenerierung bereitgestellt werden.
+  * Leitbild „Herr, öffne ihm die Augen!" (2 Kön 6,17) in README und
+    CLAUDE.md: ELISA macht in der Angstdomäne Functional Safety sichtbar, was
+    verborgen ist.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

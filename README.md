@@ -1,5 +1,15 @@
 # ELISA
 
+> *„Herr, öffne ihm die Augen, dass er sieht!"* — 2 Kön 6,17
+
+Funktionale Sicherheit ist für viele Firmen eine Angstdomäne: Was nicht
+sichtbar ist, macht Angst — die ungeprüfte Lücke, die verwaiste Anforderung,
+der fehlende Nachweis. **ELISA macht sichtbar, was verborgen ist.** Der Name
+erinnert an Elisa, der nicht herrschte, sondern beriet: Er öffnete dem Diener
+die Augen für das, was schon da war. Genau so arbeitet das Werkzeug — es zeigt
+Zusammenhänge, Lücken und Widersprüche; entscheiden und verantworten bleibt
+beim Menschen.
+
 **ELISA unterstützt Ingenieurinnen und Ingenieure dabei, das gesamte
 V-Modell sauber und nachvollziehbar zu durchlaufen** — von der Anforderung über
 Spezifikation, Architektur und Modulentwurf bis zu den zugehörigen Teststufen
