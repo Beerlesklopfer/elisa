@@ -99,7 +99,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",    # Static im Container ohne nginx
     "app.nocache_middleware.NoCacheHTMLMiddleware",   # HTML revalidieren → ?v=-Asset-Busting greift sofort
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",   # UI-Sprache je Request (i18n)
@@ -257,6 +256,11 @@ LOCALE_PATHS = [BASE_DIR / "locale"]
 USE_TZ = True
 
 # ── Statische & Medien-Dateien ────────────────────────────────────────────
+# Optional: Static ohne vorgeschalteten nginx ausliefern (Standard: nginx liefert
+# STATIC_ROOT aus). ELISA_SERVE_STATIC=true aktiviert WhiteNoise.
+if _env_bool("ELISA_SERVE_STATIC", "False"):
+    MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
+
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = DATA_DIR / "staticfiles"

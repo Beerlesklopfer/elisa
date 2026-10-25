@@ -45,7 +45,9 @@ Static beim Start), `mcp` (MCP-SSE, Port 8765) und `worker` (Supervisor). Daten
 (media, Static, incoming) liegen im Volume `data`, die Datenbank in `pgdata`; die Konfiguration wird
 als `/etc/elisa/env` schreibgeschützt eingehängt. Wer Eliezer extern betreibt, lässt den Dienst weg und setzt die URL; er läuft dann auf dem
 GPU-Host (`ELIEZER_BASE_URL`). Für die GPU zusätzlich `-f compose.gpu.yaml`. Der Dienst läuft rootless als UID 10001 ohne
-Capabilities. `deploy.sh` und die systemd-Units bleiben als Alternative ohne
+Capabilities. Static-Dateien liefert normalerweise der vorgeschaltete nginx aus
+(`elisa.nginx.conf`); ohne nginx schaltet `ELISA_SERVE_STATIC=true` WhiteNoise ein.
+`deploy.sh` und die systemd-Units bleiben als Alternative ohne
 Container bestehen.
 
 ## Lokale Modelle: Ollama oder Eliezer

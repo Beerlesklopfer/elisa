@@ -33,7 +33,7 @@ elisa (0.3.0) unstable; urgency=medium
   * Auslieferung als Podman-Image: Containerfile, compose.yaml,
     compose.podman.yaml, packaging/container-entrypoint.sh (web|mcp|worker),
     .env.example (fehlte bisher, deploy.sh verwies darauf), .containerignore;
-    WhiteNoise für Static; elisa.env in .gitignore.
+    WhiteNoise für Static nur optional (ELISA_SERVE_STATIC=true, sonst nginx); elisa.env in .gitignore.
   * compose.yaml bindet Eliezer ein (Dienst "eliezer", Build aus ../eliezer,
     ELISA → http://eliezer:1234); compose.gpu.yaml reicht die AMD-GPU durch.
     PostgreSQL mit pgvector als Dienst "db"; django.contrib.postgres in
