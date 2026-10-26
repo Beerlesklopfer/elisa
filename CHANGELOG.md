@@ -108,6 +108,9 @@ elisa (0.3.0) unstable; urgency=medium
     persönlichen Chats der Mitglieder (nur Eigentümer, Datum, Anzahl – ohne
     Inhalt) und dürfen jeden Chat des Projekts löschen (Item-Chats nicht).
     Kopieren-Button an jeder Nachricht (kopiert den Rohtext).
+  * MCP: neues Lese-Tool list_chats (Projekt-Chats, optional persönliche) und
+    get_chat(session_id, after_id) zum fortlaufenden Mitlesen – z. B. durch
+    Claude Code über einen READ-Token.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

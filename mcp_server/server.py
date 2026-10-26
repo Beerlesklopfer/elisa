@@ -1175,16 +1175,46 @@ def list_my_chat_mentions(project_key: str, handle: str) -> list:
 
 
 @mcp.tool()
-def get_chat(session_id: int) -> list:
-    """Liest eine Chat-Session (Projekt-/RAG-Chat) – Verlauf zum Antworten. Nutze
-    dies, nachdem list_my_chat_mentions dich zu einer Session geführt hat."""
+def list_chats(project_key: str, include_personal: bool = False, limit: int = 30) -> list:
+    """MITLESEN: listet die Chats eines Projekts (neueste zuerst) mit Session-ID,
+    Titel, letzter Nachricht und Zeit – dann mit get_chat(session_id, after_id)
+    lesen. Standard: nur die GETEILTEN Projekt-Chats. `include_personal=true` nimmt
+    auch die persönlichen RAG-Chats der Mitglieder hinzu (datenschutzrelevant:
+    nur mit Grund und Berechtigung verwenden). Nur lesend."""
+    from app.models import ChatSession
+    proj = Project.objects.filter(key=project_key).first()
+    if not proj:
+        return []
+    qs = ChatSession.objects.filter(project=proj, related_item__isnull=True)
+    if not include_personal:
+        qs = qs.filter(shared=True)
+    out = []
+    for s in qs.select_related("owner").prefetch_related("messages").order_by("-updated_at")[:max(1, min(limit, 200))]:
+        msgs = list(s.messages.all())
+        last = msgs[-1] if msgs else None
+        out.append({"session_id": s.id, "title": s.title or "", "shared": s.shared,
+                    "owner": (s.owner.get_username() if s.owner_id else ""),
+                    "messages": len(msgs),
+                    "last_id": last.id if last else 0,
+                    "last_sender": _sender_handle(last) if last else "",
+                    "last_message": (last.content or "")[:300] if last else "",
+                    "updated_at": s.updated_at.isoformat()})
+    return out
+
+
+@mcp.tool()
+def get_chat(session_id: int, after_id: int = 0) -> list:
+    """Liest eine Chat-Session (Projekt-/RAG-Chat) – Verlauf zum Antworten oder
+    Mitlesen. `after_id` = nur Nachrichten NACH dieser ID (für fortlaufendes
+    Mitlesen: zuletzt gesehene ID merken). Nutze dies, nachdem
+    list_my_chat_mentions oder list_chats dich zu einer Session geführt hat."""
     from app.models import ChatSession
     s = ChatSession.objects.filter(id=session_id).first()
     if not s:
         return []
     return [{"id": m.id, "role": m.role, "sender": m.sender_label,
              "sender_handle": _sender_handle(m), "content": m.content}
-            for m in s.messages.all()]
+            for m in s.messages.filter(id__gt=after_id)]
 
 
 @mcp.tool()
