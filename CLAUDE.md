@@ -15,6 +15,11 @@ Stack: Django (deterministischer Kern + DB) und ein lokales LLM über Ollama
 (beratend, danebenlaufend). Norm-Bezug über ein RAG (Retrieval-Augmented
 Generation), nicht über Fine-Tuning – die Modellgewichte werden nie trainiert.
 
+**Name:** ELISA = **E**ngineering **L**ifecycle **I**nsight for **S**afety
+**A**rgumentation – Einblick in den gesamten Lebenszyklus, damit die
+Sicherheitsargumentation (Safety Case nach IEC 61508) nachvollziehbar wird.
+Die Argumentation selbst führt der Mensch.
+
 **Slogan:** „ELISA – Macht das Unsichtbare sichtbar.“ Er begegnet der
 Überforderung durch Norm- und Nachweisfülle: Struktur und Sichtbarkeit statt
 Unübersichtlichkeit.

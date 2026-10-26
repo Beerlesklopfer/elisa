@@ -1,5 +1,7 @@
 # ELISA
 
+**E**ngineering **L**ifecycle **I**nsight for **S**afety **A**rgumentation
+
 **ELISA – Macht das Unsichtbare sichtbar.**
 
 > *„Herr, öffne ihm die Augen, dass er sieht!"* — 2 Kön 6,17

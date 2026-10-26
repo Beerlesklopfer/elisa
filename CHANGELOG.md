@@ -38,6 +38,8 @@ elisa (0.3.0) unstable; urgency=medium
     ELISA → http://eliezer:1234); compose.gpu.yaml reicht die AMD-GPU durch.
     PostgreSQL mit pgvector als Dienst "db"; django.contrib.postgres in
     INSTALLED_APPS (HnswIndex-Systemcheck).
+  * Akronym festgelegt: ELISA = Engineering Lifecycle Insight for Safety
+    Argumentation (README, CLAUDE.md, Login-Seite).
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.
