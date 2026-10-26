@@ -1070,7 +1070,7 @@ def list_my_mentions(project_key: str, handle: str) -> list:
             out.append({"identifier": s.related_item.identifier,
                         "last_message": (msgs[-1].content or "")[:300],
                         "last_sender": _sender_handle(msgs[-1]),
-                        "last_sender_name": msgs[-1].sender_label})
+                        "last_sender_name": msgs[-1].sender_label()})
     return out
 
 
@@ -1170,7 +1170,7 @@ def list_my_chat_mentions(project_key: str, handle: str) -> list:
         out.append({"session_id": s.id, "title": s.title or "",
                     "last_message": (last.content or "")[:300],
                     "last_sender": _sender_handle(last),
-                    "last_sender_name": last.sender_label})
+                    "last_sender_name": last.sender_label()})
     return out
 
 
@@ -1212,7 +1212,7 @@ def get_chat(session_id: int, after_id: int = 0) -> list:
     s = ChatSession.objects.filter(id=session_id).first()
     if not s:
         return []
-    return [{"id": m.id, "role": m.role, "sender": m.sender_label,
+    return [{"id": m.id, "role": m.role, "sender": m.sender_label(),
              "sender_handle": _sender_handle(m), "content": m.content}
             for m in s.messages.filter(id__gt=after_id)]
 
@@ -1240,7 +1240,7 @@ def get_item_chat(project_key: str, identifier: str) -> list:
     w = proj.work_items.filter(identifier=identifier).first() if proj else None
     if not w:
         return []
-    return [{"id": m.id, "role": m.role, "sender": m.sender_label,
+    return [{"id": m.id, "role": m.role, "sender": m.sender_label(),
              "sender_handle": _sender_handle(m), "content": m.content,
              "generated_by_llm": m.generated_by_llm}
             for m in _owner_less_item_chat(w).messages.all()]

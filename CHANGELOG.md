@@ -118,6 +118,9 @@ elisa (0.3.0) unstable; urgency=medium
   * Chat: einzelne Nachrichten löschbar (Papierkorb an der Nachricht; Admin
     jede, Eigentümer im persönlichen Chat jede, im Projekt-Chat PL jede und
     Mitglieder ihre eigenen; Item-Chats ausgenommen).
+  * Fix: MCP get_chat/get_item_chat/list_*_mentions lieferten bei "sender" die
+    Methoden-Repräsentation statt des Absendernamens (sender_label wurde nicht
+    aufgerufen).
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.
