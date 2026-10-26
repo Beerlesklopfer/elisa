@@ -273,7 +273,8 @@ async def _chat_once(session, args, proj):
             chat = _tool_rows(await session.call_tool("get_chat", {"session_id": sid}))
         except Exception:
             chat = []
-        system = ((args.persona or CHAT_SYSTEM.format(handle="@" + args.handle))
+        system = ((args.chat_persona or args.persona
+                   or CHAT_SYSTEM.format(handle="@" + args.handle))
                   + "\n\n" + CHAT_MODE_RULES)
         last_sender = mn.get("last_sender") or ""
         last_name = mn.get("last_sender_name") or ""
@@ -509,6 +510,7 @@ def main():
     ap.add_argument("--api-key", default="")
     ap.add_argument("--socket", default="")
     ap.add_argument("--persona", default="")     # System-Prompt (z. B. Esra); leer = generisch
+    ap.add_argument("--chat-persona", default="")  # kurze Persona nur für den Chat (optional)
     ap.add_argument("--system", action="store_true")  # projektübergreifend (alle Projekte)
     ap.add_argument("--interval", type=float, default=5.0)
     args = ap.parse_args()

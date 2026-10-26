@@ -80,6 +80,24 @@ def _url_scope(handle, token_scope):
     return vp["code"].lower() if vp else token_scope
 
 
+def _chat_persona_for(handle, scope):
+    """KURZE Persona für den Chat: die V-Schritt-Rollenbeschreibungen verlangen
+    Spezifikationen/Items und überstimmten kleine Modelle (Noah schrieb auf „Hi" ein
+    Pflichtenheft). Im Chat bekommt die Persona nur Name, Akronym, Schritt und die
+    Titelzeile der Rolle; der volle Prompt bleibt für Toasts/Editor."""
+    from app.models import LLMRoleDescription
+    from app.personas import vmodel_persona, plain
+    vp = vmodel_persona(handle)
+    if not vp:
+        return ""
+    rd = LLMRoleDescription.objects.filter(role=vp["code"]).first()
+    head = ((rd.description if rd else "").strip().splitlines() or [""])[0].strip("* #")
+    return (f"Du bist {vp['name'].upper()} — {plain(vp['acronym'])} — die Persona des "
+            f"V-Schritts „{vp['step']}“ ({vp['code']}). Rolle: {head}. Im Chat beantwortest "
+            f"du Fragen zu diesem Schritt kurz und sachlich und stellst dich auf Wunsch vor. "
+            f"Du schreibst im Chat keine Spezifikationen.")
+
+
 def _load_backends():
     """Aktive WorkerBackends als self-contained dicts (für Subprozess-Args)."""
     from app.models import WorkerBackend
@@ -97,6 +115,7 @@ def _load_backends():
             "llm_base": b.effective_base_url or "", "api_key": b.effective_api_key or "",
             "handle": b.effective_handle,
             "persona": _persona_for(b.effective_handle, t.scope_slug),
+            "chat_persona": _chat_persona_for(b.effective_handle, t.scope_slug),
             "system": bool(getattr(t, "system", False)),
         })
     return out
@@ -108,6 +127,8 @@ async def _spawn(b):
             "--token", b["token"], "--handle", b["handle"], "--provider", b["provider"],
             "--model", b["model"], "--llm-base", b["llm_base"], "--api-key", b["api_key"],
             "--persona", b.get("persona", ""), "--socket", str(settings.SUPERVISOR_SOCKET)]
+    if b.get("chat_persona"):
+        args += ["--chat-persona", b["chat_persona"]]
     if b.get("system"):
         args.append("--system")
     print(f"[supervisor] starte {b['name']} ({b['handle']} @ {b['project']}/{b['scope']})",

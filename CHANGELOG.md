@@ -148,6 +148,9 @@ elisa (0.3.0) unstable; urgency=medium
     angesprochene Persona, bis der Mensch jemand anderen anspricht (@all zählt
     einmalig); Chip „Schreibt mit: @…“ über dem Eingabefeld. Gleiche Regel im
     RAG-Chat-Server und im MCP (list_my_chat_mentions).
+  * Chat-Persona gekürzt: V-Schritt-Personas bekommen im Chat nur Name, Akronym,
+    Schritt und die Titelzeile ihrer Rolle (--chat-persona); der volle Prompt
+    bleibt für Toasts/Editor. Verhindert erfundene Pflichtenhefte bei „Hi".
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.
