@@ -30,25 +30,25 @@ SYSTEM_PERSONAS = [
 
 # V-Modell-Personas: je Schritt eine Persona (code = Phase/VModelRole-Wert).
 VMODEL_PERSONAS = [
-    {"code": "REQ", "name": "Mose", "step": _("Anforderungen"),
+    {"code": "REQ", "name": "Mose", "handle": "mose", "step": _("Anforderungen"),
      "acronym": "**M**andatory **O**bligations, **S**tated **E**xplicitly"},
-    {"code": "SPEC", "name": "Noah", "step": _("Systementwurf"),
+    {"code": "SPEC", "name": "Noah", "handle": "noah", "step": _("Systementwurf"),
      "acronym": "**N**ormalize **O**bligations **A**nd **H**azards"},
-    {"code": "ARCH", "name": "Salomo", "step": _("Architektur"),
+    {"code": "ARCH", "name": "Salomo", "handle": "salomo", "step": _("Architektur"),
      "acronym": "**S**tructure, **A**llocation, **L**ayering, **O**verview of "
                 "**M**odules, **O**ptimized"},
-    {"code": "MOD", "name": "Hiram", "step": _("Modulentwurf"),
+    {"code": "MOD", "name": "Hiram", "handle": "hiram", "step": _("Modulentwurf"),
      "acronym": "**H**ierarchical **I**mplementation **R**ules for **A**lgorithms "
                 "& **M**odules"},
-    {"code": "MODTEST", "name": "Gideon", "step": _("Modultest"),
+    {"code": "MODTEST", "name": "Gideon", "handle": "gideon", "step": _("Modultest"),
      "acronym": "**G**uarded **I**nputs, **D**ata **E**xercised **O**n "
                 "**N**ominal and fault cases"},
-    {"code": "INTTEST", "name": "Josua", "step": _("Integrationstest"),
+    {"code": "INTTEST", "name": "Josua", "handle": "josua", "step": _("Integrationstest"),
      "acronym": "**J**oin **O**ne **S**ubsystem, **U**nderstand **A**ll interfaces"},
-    {"code": "SYSTEST", "name": "Daniel", "step": _("Systemtest"),
+    {"code": "SYSTEST", "name": "Daniel", "handle": "daniel", "step": _("Systemtest"),
      "acronym": "**D**emonstrate **A**ll **N**ominal **I**nterfaces and edge cases, "
                 "**L**ive"},
-    {"code": "ACCTEST", "name": "Thomas", "step": _("Abnahme"),
+    {"code": "ACCTEST", "name": "Thomas", "handle": "thomas", "step": _("Abnahme"),
      "acronym": "**T**rust only **H**ands-on **O**bservation, **M**easured "
                 "**A**cceptance, **S**ign-off"},
 ]
@@ -64,3 +64,14 @@ def rag_persona(name):
     """Eintrag des RAG-Chat-Assistenten, wenn er den Standardnamen trägt."""
     p = SYSTEM_PERSONAS[0]
     return p if (name or "").strip().lower() == p["name"].lower() else None
+
+
+def vmodel_persona(handle):
+    """V-Schritt-Persona zu einem @-Handle (mose/noah/…) oder None."""
+    handle = (handle or "").lower()
+    return next((p for p in VMODEL_PERSONAS if p["handle"] == handle), None)
+
+
+def plain(text):
+    """Akronym ohne Markdown-Fettung (für Prompts)."""
+    return str(text).replace("**", "")

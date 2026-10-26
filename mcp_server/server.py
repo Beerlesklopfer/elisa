@@ -1278,7 +1278,11 @@ def post_item_chat(project_key: str, identifier: str, message: str,
 
 # ── Bearer-Token-Auth (SSE) ────────────────────────────────────────────────
 
-VALID_SCOPES = {"all", "req", "spec", "arch", "mod"}
+# Die Teststufen sind KEINE Token-Scope-Dimension, wohl aber ein URL-Scope: die
+# V-Schritt-Personas (Gideon … Thomas) verbinden sich mit ALL-System-Tokens auf
+# …/<projekt>/<teststufe>/mcp und bekommen nur Anfragen ihrer Phase.
+VALID_SCOPES = {"all", "req", "spec", "arch", "mod",
+                "modtest", "inttest", "systest", "acctest"}
 
 # Tools, die den Datenbestand verändern -> nur mit access=WRITE erlaubt.
 WRITE_TOOLS = {"set_document_status", "propose_requirement", "update_requirement",
@@ -1288,7 +1292,9 @@ WRITE_TOOLS = {"set_document_status", "propose_requirement", "update_requirement
                "post_chat", "create_outline_item", "delete_revision"}
 
 # V-Stufen je Scope-Slug (req/spec/arch/mod). ALL deckt alle ab.
-SCOPE_PHASES = {"req": "REQ", "spec": "SPEC", "arch": "ARCH", "mod": "MOD"}
+SCOPE_PHASES = {"req": "REQ", "spec": "SPEC", "arch": "ARCH", "mod": "MOD",
+                "modtest": "MODTEST", "inttest": "INTTEST", "systest": "SYSTEST",
+                "acctest": "ACCTEST"}
 
 
 async def _buffer_body(receive):

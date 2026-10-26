@@ -239,7 +239,7 @@ NATHAN_PERSONA = (
 )
 
 
-def _ensure_system_persona(handle, name, model="", persona="", iec=""):
+def _ensure_system_persona(handle, name, model="", persona="", iec="", scope="ALL"):
     """EINE GLOBALE, geschützte System-Persona (projektübergreifend): ein SYSTEM-
     Token (auf dem Standard-Projekt für die SSE-Bindung, aber OHNE Projekt-Schranke)
     + ein WorkerBackend. Die Projekt-Schranke ist für die eingebauten Personas
@@ -253,7 +253,7 @@ def _ensure_system_persona(handle, name, model="", persona="", iec=""):
     except Exception:
         return
     tok, _ = MCPToken.objects.get_or_create(
-        name=name, defaults={"project": standard, "scope": "ALL", "access": "WRITE",
+        name=name, defaults={"project": standard, "scope": scope, "access": "WRITE",
                              "system": True, "token": get_random_string(43)})
     if not tok.system:
         tok.system = True
@@ -304,6 +304,19 @@ def ensure_esra(sender, **kwargs):
     _ensure_system_persona("esra", "Esra (System)", persona=ESRA_PERSONA)
 
 
+def ensure_vmodel_personas(sender, **kwargs):
+    """post_migrate: je V-Schritt EINE globale Persona (Mose … Thomas). Der Token-
+    Scope ist bei der linken Seite die Phase (REQ/SPEC/ARCH/MOD), bei den Teststufen
+    ALL (die Teststufen sind keine Token-Scope-Dimension); den URL-Scope bestimmt der
+    Supervisor. Der Prompt kommt aus der Rollenbeschreibung des Schritts."""
+    from app.models import MCPToken
+    from app.personas import VMODEL_PERSONAS
+    left = {v for v, _ in MCPToken.SCOPE_CHOICES}
+    for p in VMODEL_PERSONAS:
+        _ensure_system_persona(p["handle"], f"{p['name']} (System)",
+                               scope=p["code"] if p["code"] in left else "ALL")
+
+
 def ensure_lukas(sender, **kwargs):
     """post_migrate: EINE globale Lukas-Persona (RAG-Assistent, alle Projekte)."""
     _ensure_system_persona("lukas", "Lukas (System)", persona=LUKAS_PERSONA)
@@ -349,6 +362,7 @@ class AppConfig(DjangoAppConfig):
         post_migrate.connect(ensure_llm_roles, sender=self)
         post_migrate.connect(ensure_esra, sender=self)
         post_migrate.connect(ensure_lukas, sender=self)
+        post_migrate.connect(ensure_vmodel_personas, sender=self)
         post_migrate.connect(ensure_tertius, sender=self)
         post_migrate.connect(ensure_nathan, sender=self)
         user_logged_in.connect(_record_first_login)

@@ -58,9 +58,23 @@ def _persona_for(handle, scope):
                               NATHAN_PERSONA)
         return {"lukas": LUKAS_PERSONA, "esra": ESRA_PERSONA, "tertius": TRANSLATOR_PERSONA,
                 "nathan": NATHAN_PERSONA}[handle]
-    role = (scope or "").upper()
+    from app.personas import vmodel_persona, plain
+    vp = vmodel_persona(handle)
+    role = vp["code"] if vp else (scope or "").upper()
     obj = LLMRoleDescription.objects.filter(role=role).first() if role and role != "ALL" else None
-    return obj.description if obj else ""
+    text = obj.description if obj else ""
+    if vp:      # V-Schritt-Persona: Name + Akronym voranstellen
+        text = (f"Du bist {vp['name'].upper()} — {plain(vp['acronym'])} — die Persona des "
+                f"V-Schritts „{vp['step']}“ ({vp['code']}).\n" + text)
+    return text
+
+
+def _url_scope(handle, token_scope):
+    """URL-Scope des Workers: V-Schritt-Personas verbinden sich auf ihrer Phase
+    (auch die Teststufen), alle anderen auf dem Scope ihres Tokens."""
+    from app.personas import vmodel_persona
+    vp = vmodel_persona(handle)
+    return vp["code"].lower() if vp else token_scope
 
 
 def _load_backends():
@@ -74,7 +88,8 @@ def _load_backends():
         out.append({
             "id": b.id, "name": b.name,
             "mcp_base": b.effective_mcp_base or settings.MCP_PUBLIC_BASE,
-            "project": t.project.key, "scope": t.scope_slug, "token": t.token,
+            "project": t.project.key, "scope": _url_scope(b.effective_handle, t.scope_slug),
+            "token": t.token,
             "provider": _worker_provider(b.provider), "model": b.effective_model or "",
             "llm_base": b.effective_base_url or "", "api_key": b.effective_api_key or "",
             "handle": b.effective_handle,

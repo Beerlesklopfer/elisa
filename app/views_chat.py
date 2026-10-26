@@ -140,8 +140,11 @@ def _welcome_intro_text(project):
                      f"{p['role']}{state}")
     lines += ["", _("**V-Modell-Personas (je Schritt):**")]
     for p in VMODEL_PERSONAS:
-        lines.append(f"- **{p['name']}** — {p['step']} ({p['code']}): {p['acronym']}")
-    known = {p["handle"] for p in SYSTEM_PERSONAS if p["handle"]}
+        state = "" if p["handle"] in connected else " " + _("*(derzeit nicht verbunden)*")
+        lines.append(f"- **{p['name']}** (@{p['handle']}) — {p['step']} ({p['code']}): "
+                     f"{p['acronym']}{state}")
+    known = {p["handle"] for p in SYSTEM_PERSONAS if p["handle"]} | \
+        {p["handle"] for p in VMODEL_PERSONAS}
     others = [p for h, p in connected.items() if h not in known]
     if others:
         lines += ["", _("**Weitere verbundene LLMs:**")]

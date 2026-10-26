@@ -125,7 +125,9 @@ bewusst **eingeschränkt**:
   `FeedbackRequest` an → Team holt ihn per `next_feedback_request` **in der
   Persona des jeweiligen V-Schritts** (`LLMRoleDescription` + Projektbeschreibung)
   → liefert Toasts via `submit_feedback` → Editor pollt `/api/feedback-poll/`.
-- **Jeder der 8 V-Schritte hat eine Persona** (`LLMRoleDescription`). Das, die
+- **Jeder der 8 V-Schritte hat eine Persona** (`LLMRoleDescription`), benannt und als
+  System-Persona angelegt (`app/personas.py`: Mose, Noah, Salomo, Hiram, Gideon,
+  Josua, Daniel, Thomas; Handle = Kleinname, URL-Scope = Phase). Das, die
   strikte Zyklus-Reihenfolge (kein Überspringen) und die menschliche Freigabe
   verhindern „Vorpreschen" und generisches Halluzinieren.
 

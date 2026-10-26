@@ -175,18 +175,18 @@ stellen sie sich so vor.
 | **Tertius** (`@tertius`) | **T**ranslate **E**xactly, **R**etain **T**erms, **I**nvariants, **U**nchanged **S**tructure | Übersetzer – informativ, die Quellsprache bleibt maßgeblich (der Schreiber des Römerbriefs, Röm 16,22) |
 | **Nathan** (`@nathan`) | **N**onconformities **A**udited against **T**raceability, **H**azards **A**nd **N**orms | Externes Audit – prüft kritisch von außen (der Prophet vor David, 2 Sam 12) |
 
-**V-Modell-Schritte**
+**V-Modell-Schritte** – jede ist eine eigene System-Persona (Token + Backend, projektübergreifend); sie bekommt nur Anfragen und Erwähnungen ihrer Phase und arbeitet mit der Rollenbeschreibung des Schritts.
 
 | Persona | Schritt | Akronym |
 |---|---|---|
-| **Mose** | Anforderungen (REQ) | **M**andatory **O**bligations, **S**tated **E**xplicitly |
-| **Noah** | Systementwurf (SPEC) | **N**ormalize **O**bligations **A**nd **H**azards |
-| **Salomo** | Architektur (ARCH) | **S**tructure, **A**llocation, **L**ayering, **O**verview of **M**odules, **O**ptimized |
-| **Hiram** | Modulentwurf (MOD) | **H**ierarchical **I**mplementation **R**ules for **A**lgorithms & **M**odules |
-| **Gideon** | Modultest (MODTEST) | **G**uarded **I**nputs, **D**ata **E**xercised **O**n **N**ominal and fault cases |
-| **Josua** | Integrationstest (INTTEST) | **J**oin **O**ne **S**ubsystem, **U**nderstand **A**ll interfaces |
-| **Daniel** | Systemtest (SYSTEST) | **D**emonstrate **A**ll **N**ominal **I**nterfaces and edge cases, **L**ive |
-| **Thomas** | Abnahme (ACCTEST) | **T**rust only **H**ands-on **O**bservation, **M**easured **A**cceptance, **S**ign-off |
+| **Mose** (`@mose`) | Anforderungen (REQ) | **M**andatory **O**bligations, **S**tated **E**xplicitly |
+| **Noah** (`@noah`) | Systementwurf (SPEC) | **N**ormalize **O**bligations **A**nd **H**azards |
+| **Salomo** (`@salomo`) | Architektur (ARCH) | **S**tructure, **A**llocation, **L**ayering, **O**verview of **M**odules, **O**ptimized |
+| **Hiram** (`@hiram`) | Modulentwurf (MOD) | **H**ierarchical **I**mplementation **R**ules for **A**lgorithms & **M**odules |
+| **Gideon** (`@gideon`) | Modultest (MODTEST) | **G**uarded **I**nputs, **D**ata **E**xercised **O**n **N**ominal and fault cases |
+| **Josua** (`@josua`) | Integrationstest (INTTEST) | **J**oin **O**ne **S**ubsystem, **U**nderstand **A**ll interfaces |
+| **Daniel** (`@daniel`) | Systemtest (SYSTEST) | **D**emonstrate **A**ll **N**ominal **I**nterfaces and edge cases, **L**ive |
+| **Thomas** (`@thomas`) | Abnahme (ACCTEST) | **T**rust only **H**ands-on **O**bservation, **M**easured **A**cceptance, **S**ign-off |
 
 Die Personas können **lokal** (auf eigener Infrastruktur) oder **extern** (über
 einen Cloud-Anbieter wie Claude oder ChatGPT) laufen. Sie wissen voneinander,
