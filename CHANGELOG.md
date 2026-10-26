@@ -52,6 +52,10 @@ elisa (0.3.0) unstable; urgency=medium
   * Fix: mcp auf <2 gepinnt (mcp 2.x entfernt mcp.server.fastmcp, der
     MCP-Container lief in eine Absturzschleife).
   * CSRF-Defaults um die Proxy-Origins (localhost:8080) erweitert.
+  * Fix: Startseite warf 500 (KeyError MODTEST): die linke V-Seite zeigt nur
+    die vier spezifizierenden Phasen (views.home), nicht alle acht.
+  * Hinweis: nginx löst web/mcp beim Start auf – nach dem Neuerstellen dieser
+    Container den Dienst "proxy" neu starten (sonst 502).
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

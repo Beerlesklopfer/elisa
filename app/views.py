@@ -72,7 +72,7 @@ def home(request):
                 "color": PHASE_COLORS[phase.value]}
 
     vmodel = {
-        "left": [left_node(p) for p in Phase],
+        "left": [left_node(p) for p, _ in VERIFIES],
         # label = normativer Testname; vs = die Ebene, die er verifiziert.
         "right": [right_node(phase, role) for phase, role in VERIFIES],
     }

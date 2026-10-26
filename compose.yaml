@@ -57,6 +57,7 @@ services:
       - db
     ports:
       - "127.0.0.1:${ELISA_PORT:-8088}:8088"
+  # Nach dem Neuerstellen von web/mcp den proxy neu starten (nginx löst Namen beim Start auf).
   proxy:
     image: docker.io/nginxinc/nginx-unprivileged:stable-alpine
     volumes:
