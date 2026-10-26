@@ -40,6 +40,12 @@ elisa (0.3.0) unstable; urgency=medium
     INSTALLED_APPS (HnswIndex-Systemcheck).
   * Akronym festgelegt: ELISA = Engineering Lifecycle Insight for Safety
     Argumentation (README, CLAUDE.md, Login-Seite).
+  * Metapaket elisa-stack (packaging/build-deb.sh): rootless Podman als
+    www-data via Quadlet, Linger (Container laufen ohne Anmeldung), preinst
+    holt install-as-www-data.sh von GitHub (Commit-SHA + SHA256) und baut die
+    Images als www-data; postinst legt /etc/elisa/env an und rendert
+    packaging/nginx/elisa-proxy.conf nach sites-available/<host.domain>.conf
+    (+ sites-enabled).
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

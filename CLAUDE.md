@@ -152,6 +152,15 @@ nur über `elisa.env` (aus `.env.example`, nie committen), eingehängt als
 `/etc/elisa/env`. Static liefert nginx; WhiteNoise nur optional (`ELISA_SERVE_STATIC=true`). `deploy.sh`/systemd bleiben als
 Alternative.
 
+### Metapaket `elisa-stack`
+
+Server-Installation per .deb (`packaging/build-deb.sh`): Podman rootless als
+`www-data` (Quadlet unter `/etc/containers/systemd/users/33/`, Linger), nginx als
+Proxy mit `/etc/nginx/sites-available/<host.domain>.conf` (+ `sites-enabled`).
+Das preinst lädt `packaging/install-as-www-data.sh` von GitHub per Commit-SHA und
+prüft die eingebaute SHA256 – ausgeführt wird es nur als `www-data`, nie als
+root. Beim Ändern dieses Skripts: committen, pushen, Paket neu bauen.
+
 ## Toast-Vertrag (LLM-Ausgabe)
 
 Der Feedback-Endpoint erwartet vom LLM ausschließlich JSON dieser Form:

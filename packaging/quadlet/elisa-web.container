@@ -1,0 +1,26 @@
+[Unit]
+Description=ELISA Web (daphne)
+Requires=elisa-db.service
+After=elisa-db.service
+
+[Container]
+Image=localhost/elisa:stack
+ContainerName=web
+Exec=web
+Network=elisa.network
+UserNS=keep-id:uid=10001,gid=10001
+EnvironmentFile=/etc/elisa/env
+Environment=LOCAL_LLM_BACKEND=eliezer
+Environment=ELIEZER_BASE_URL=http://eliezer:1234
+Volume=/etc/elisa/env:/etc/elisa/env:ro
+Volume=/var/lib/elisa/data:/var/lib/elisa
+Tmpfs=/tmp:mode=1777
+DropCapability=ALL
+NoNewPrivileges=true
+PublishPort=127.0.0.1:8088:8088
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

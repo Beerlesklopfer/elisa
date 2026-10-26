@@ -52,6 +52,32 @@ Capabilities. Static-Dateien liefert normalerweise der vorgeschaltete nginx aus
 `deploy.sh` und die systemd-Units bleiben als Alternative ohne
 Container bestehen.
 
+## Installation als Metapaket (`elisa-stack`)
+
+Für Debian-Server gibt es das Metapaket `elisa-stack`, das den Podman-Stack
+**rootless als `www-data`** betreibt (Quadlet-Units unter
+`/etc/containers/systemd/users/33/`) und nginx als Proxy einrichtet:
+
+```bash
+packaging/build-deb.sh           # baut dist/elisa-stack_<version>_all.deb
+sudo ELISA_DOMAIN=elisa.firma.de apt install ./dist/elisa-stack_*_all.deb
+```
+
+- **preinst:** richtet subuid/subgid, HOME (`/var/lib/elisa/home`) und *Linger*
+  für `www-data` ein (die Container laufen ohne angemeldeten Benutzer), lädt
+  `packaging/install-as-www-data.sh` von GitHub, prüft die im Paket
+  festgelegte SHA256 (Download per Commit-SHA) und führt es **als `www-data`**
+  aus: ELISA und Eliezer holen und die Images bauen. Das Repo muss dafür
+  öffentlich sein.
+- **postinst:** legt `/etc/elisa/env` einmalig mit Zufallswerten an, schreibt die
+  Domain nach `/etc/elisa/stack.conf` und rendert
+  `packaging/nginx/elisa-proxy.conf` nach `/etc/nginx/sites-available/<host.domain>.conf`
+  (Link in `sites-enabled`, dann `nginx -t` und reload). Die Domain kommt aus
+  `ELISA_DOMAIN`, sonst `hostname -f`. Danach startet es die Dienste.
+- Eliezer extern betreiben: vor der Installation in `/etc/elisa/stack.conf`
+  `ELISA_SKIP_ELIEZER=1` setzen und `ELIEZER_BASE_URL` in `/etc/elisa/env`.
+- GPU (AMD): Drop-in `elisa-eliezer.container.d/gpu.conf` mit `AddDevice=`.
+
 ## Lokale Modelle: Ollama oder Eliezer
 
 Chat, Embeddings und Notnagel-Hinweise laufen über ein lokales Modell. Standard

@@ -1,0 +1,56 @@
+#!/bin/sh
+set -e
+WWW_UID=$(id -u www-data)
+SHARE=/usr/share/elisa-stack
+CONF=/etc/elisa/stack.conf
+
+userctl() {
+    runuser -u www-data -- env HOME=/var/lib/elisa/home XDG_RUNTIME_DIR="/run/user/$WWW_UID" \
+        DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$WWW_UID/bus" systemctl --user "$@"
+}
+
+case "$1" in
+configure)
+    install -d /etc/elisa
+
+    # Domain (Name der nginx-Konfiguration: <host.domain>.conf)
+    PREV=""
+    [ -f "$CONF" ] && PREV=$(sed -n 's/^ELISA_DOMAIN=//p' "$CONF" | tr -d '"')
+    DOMAIN="${ELISA_DOMAIN:-$PREV}"
+    [ -n "$DOMAIN" ] || DOMAIN=$(hostname -f 2>/dev/null || hostname)
+    if [ -f "$CONF" ] && grep -q '^ELISA_DOMAIN=' "$CONF"; then
+        sed -i "s|^ELISA_DOMAIN=.*|ELISA_DOMAIN=\"$DOMAIN\"|" "$CONF"
+    else
+        echo "ELISA_DOMAIN=\"$DOMAIN\"" >> "$CONF"
+    fi
+
+    # Konfiguration einmalig mit Zufallswerten anlegen (nie überschreiben).
+    if [ ! -f /etc/elisa/env ]; then
+        cp "$SHARE/elisa.env.example" /etc/elisa/env
+        SECRET=$(openssl rand -base64 48 | tr -d '\n=/+')
+        DBPW=$(openssl rand -base64 24 | tr -d '\n=/+')
+        sed -i "s|^DJANGO_SECRET_KEY=.*|DJANGO_SECRET_KEY=$SECRET|; s|^DB_PASSWORD=.*|DB_PASSWORD=$DBPW|; s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$DBPW|; s|^DJANGO_ALLOWED_HOSTS=.*|DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,$DOMAIN|; s|^# DJANGO_CSRF_TRUSTED_ORIGINS=.*|DJANGO_CSRF_TRUSTED_ORIGINS=http://$DOMAIN,https://$DOMAIN|" /etc/elisa/env
+    fi
+    chown root:www-data /etc/elisa/env; chmod 640 /etc/elisa/env
+
+    # nginx: Konfiguration heißt <host.domain>.conf
+    if [ -n "$PREV" ] && [ "$PREV" != "$DOMAIN" ]; then
+        rm -f "/etc/nginx/sites-enabled/$PREV.conf" "/etc/nginx/sites-available/$PREV.conf"
+    fi
+    sed "s|__SERVER_NAME__|$DOMAIN|g" "$SHARE/elisa-proxy.conf" > "/etc/nginx/sites-available/$DOMAIN.conf"
+    ln -sf "/etc/nginx/sites-available/$DOMAIN.conf" "/etc/nginx/sites-enabled/$DOMAIN.conf"
+    if nginx -t >/dev/null 2>&1; then
+        systemctl reload nginx 2>/dev/null || systemctl restart nginx 2>/dev/null || true
+    else
+        echo "WARNUNG: nginx -t schlägt fehl – bitte /etc/nginx/sites-available/$DOMAIN.conf prüfen." >&2
+    fi
+
+    # Quadlet-Units (liegen unter /etc/containers/systemd/users/<uid>/) laden und starten
+    userctl daemon-reload
+    for u in elisa-db elisa-eliezer elisa-mcp elisa-web elisa-worker; do
+        userctl start "$u.service" || echo "WARNUNG: $u konnte nicht gestartet werden (journalctl --user -u $u als www-data)." >&2
+    done
+    echo "ELISA läuft unter http://$DOMAIN/  (Konfiguration: /etc/elisa/env, Domain: $CONF)"
+    ;;
+esac
+exit 0

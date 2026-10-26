@@ -1,0 +1,16 @@
+[Unit]
+Description=ELISA PostgreSQL (pgvector)
+
+[Container]
+Image=docker.io/pgvector/pgvector:pg16
+ContainerName=db
+Network=elisa.network
+EnvironmentFile=/etc/elisa/env
+Volume=elisa-pgdata:/var/lib/postgresql/data
+Volume=/usr/share/elisa-stack/initdb:/docker-entrypoint-initdb.d:ro
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

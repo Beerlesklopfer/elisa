@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+case "$1" in
+remove|purge)
+    DOMAIN=$(sed -n 's/^ELISA_DOMAIN=//p' /etc/elisa/stack.conf 2>/dev/null | tr -d '"')
+    [ -n "$DOMAIN" ] && rm -f "/etc/nginx/sites-enabled/$DOMAIN.conf" "/etc/nginx/sites-available/$DOMAIN.conf"
+    systemctl reload nginx 2>/dev/null || true ;;
+esac
+if [ "$1" = purge ]; then
+    rm -f /etc/elisa/env /etc/elisa/stack.conf
+    # Daten (/var/lib/elisa, Volumes) und das Linger von www-data bleiben bewusst erhalten.
+fi
+exit 0

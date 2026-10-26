@@ -55,3 +55,4 @@ tmp/
 # Persönliche Claude-Code-Memory
 .claude/projects/
 elisa.env
+dist/

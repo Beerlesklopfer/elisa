@@ -1,0 +1,24 @@
+[Unit]
+Description=Eliezer (Modellmanager, Partner von ELISA)
+
+[Container]
+Image=localhost/eliezer:stack
+ContainerName=eliezer
+Network=elisa.network
+UserNS=keep-id:uid=10001,gid=10001
+Volume=/var/lib/elisa/eliezer/config.toml:/etc/eliezer/config.toml:ro
+Volume=/var/lib/elisa/models:/var/lib/eliezer/models
+Volume=elisa-eliezer-state:/var/lib/eliezer
+Tmpfs=/run:mode=1777
+Tmpfs=/tmp:mode=1777
+ReadOnly=true
+DropCapability=ALL
+NoNewPrivileges=true
+# GPU (AMD): Drop-in elisa-eliezer.container.d/gpu.conf mit AddDevice=/dev/dri und /dev/kfd
+
+[Service]
+Restart=always
+TimeoutStopSec=40
+
+[Install]
+WantedBy=default.target

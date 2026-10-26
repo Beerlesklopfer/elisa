@@ -1,0 +1,40 @@
+#!/bin/sh
+set -e
+SCRIPT_URL="@SCRIPT_URL@"
+SCRIPT_SHA256="@SCRIPT_SHA256@"
+WWW_UID=$(id -u www-data 2>/dev/null) || { echo "Benutzer www-data fehlt" >&2; exit 1; }
+BASE=/var/lib/elisa
+
+case "$1" in
+install|upgrade)
+    install -d -o www-data -g www-data "$BASE" "$BASE/home" "$BASE/src" "$BASE/data" "$BASE/models" "$BASE/eliezer"
+
+    # Rootless Podman braucht subuid/subgid und ein beschreibbares HOME.
+    for f in /etc/subuid /etc/subgid; do
+        grep -q '^www-data:' "$f" 2>/dev/null && continue
+        start=$(awk -F: 'BEGIN{m=100000} {e=$2+$3; if(e>m)m=e} END{print m}' "$f" 2>/dev/null || echo 100000)
+        [ -n "$start" ] || start=100000
+        if [ "$f" = /etc/subuid ]; then usermod --add-subuids "$start-$((start+65535))" www-data
+        else usermod --add-subgids "$start-$((start+65535))" www-data; fi
+    done
+    [ "$(getent passwd www-data | cut -d: -f6)" = "$BASE/home" ] || usermod -d "$BASE/home" www-data
+
+    # Linger: die Container laufen ohne angemeldeten Benutzer.
+    loginctl enable-linger www-data
+    systemctl start "user@$WWW_UID.service"
+    i=0; while [ ! -d "/run/user/$WWW_UID" ] && [ $i -lt 20 ]; do sleep 1; i=$((i+1)); done
+
+    # Installationsskript von GitHub: nur mit passender SHA256, nur als www-data.
+    tmp=$(mktemp -d); chown www-data "$tmp"
+    curl -fsSL "$SCRIPT_URL" -o "$tmp/install.sh"
+    echo "$SCRIPT_SHA256  $tmp/install.sh" | sha256sum -c - >/dev/null \
+        || { echo "Prüfsumme des Installationsskripts stimmt nicht – Abbruch." >&2; rm -rf "$tmp"; exit 1; }
+    chmod 755 "$tmp/install.sh"
+    [ -f /etc/elisa/stack.conf ] && . /etc/elisa/stack.conf || true
+    runuser -u www-data -- env HOME="$BASE/home" XDG_RUNTIME_DIR="/run/user/$WWW_UID" \
+        ELISA_REF="${ELISA_REF:-}" ELIEZER_REF="${ELIEZER_REF:-}" ELISA_SKIP_ELIEZER="${ELISA_SKIP_ELIEZER:-0}" \
+        sh -c 'for v in ELISA_REF ELIEZER_REF; do eval "[ -n \"\$$v\" ] || unset $v"; done; exec sh "$0"' "$tmp/install.sh"
+    rm -rf "$tmp"
+    ;;
+esac
+exit 0

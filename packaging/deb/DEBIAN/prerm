@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+WWW_UID=$(id -u www-data 2>/dev/null || echo 33)
+case "$1" in
+remove|upgrade|deconfigure)
+    for u in elisa-worker elisa-web elisa-mcp elisa-eliezer elisa-db; do
+        runuser -u www-data -- env HOME=/var/lib/elisa/home XDG_RUNTIME_DIR="/run/user/$WWW_UID" \
+            DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$WWW_UID/bus" systemctl --user stop "$u.service" 2>/dev/null || true
+    done ;;
+esac
+exit 0

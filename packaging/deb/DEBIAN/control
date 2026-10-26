@@ -1,0 +1,13 @@
+Package: elisa-stack
+Version: @VERSION@
+Section: metapackages
+Priority: optional
+Architecture: all
+Maintainer: Jörg Bernau <Joerg.Bernau@onesimus.io>
+Pre-Depends: podman (>= 5.0), uidmap, passt | slirp4netns, libpam-systemd, dbus-user-session, curl, ca-certificates, git, openssl, util-linux
+Depends: nginx
+Description: ELISA - Engineering Lifecycle Insight for Safety Argumentation
+ Metapaket: richtet den ELISA-Podman-Stack (web, mcp, worker, db, eliezer) als
+ rootless Quadlet-Dienste des Benutzers www-data ein und konfiguriert nginx als
+ Reverse-Proxy. Das preinst holt ein per Prüfsumme festgelegtes Installations-
+ skript von GitHub und baut die Images als www-data.
