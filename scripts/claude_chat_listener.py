@@ -66,11 +66,11 @@ def main():
     ap.add_argument("--include-backlog", action="store_true",
                     help="auch bereits offene Ansprachen beim Start melden")
     args = ap.parse_args()
-    url, token = load_conn(args)
-    seen, first = set(), not args.include_backlog
+    seen, first, fails = set(), not args.include_backlog, 0
     print(f"[listener] @{args.handle} in '{args.project}' – warte auf Aufträge …", flush=True)
     while True:
         try:
+            url, token = load_conn(args)          # jedes Mal neu lesen (URL/Token können wechseln)
             rows = call(url, token, "list_my_chat_mentions",
                         {"project_key": args.project, "handle": args.handle})
             for r in rows:
@@ -83,9 +83,11 @@ def main():
                 text = (r.get("last_message") or "").replace("\n", " ")[:240]
                 print(f"CHAT-AUFTRAG session={r.get('session_id')} msg={r.get('last_id')} "
                       f"von={r.get('last_sender') or '?'}: {text}", flush=True)
-            first = False
+            first, fails = False, 0
         except (urllib.error.URLError, OSError, ValueError, KeyError) as exc:
-            print(f"[listener] Verbindungsproblem: {exc}", file=sys.stderr, flush=True)
+            fails += 1
+            if fails == 6:                       # erst nach 6 Fehlversuchen in Folge melden
+                print(f"[listener] Verbindungsproblem: {exc}", flush=True)
         time.sleep(args.interval)
 
 
