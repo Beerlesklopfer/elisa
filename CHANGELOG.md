@@ -151,6 +151,10 @@ elisa (0.3.0) unstable; urgency=medium
   * Chat-Persona gekürzt: V-Schritt-Personas bekommen im Chat nur Name, Akronym,
     Schritt und die Titelzeile ihrer Rolle (--chat-persona); der volle Prompt
     bleibt für Toasts/Editor. Verhindert erfundene Pflichtenhefte bei „Hi".
+  * Arbeitsaufträge aus dem Chat: MCP-Tools add_norm_from_url (SSRF-/Allowlist-
+    geschützt, MCP_NORM_HOSTS), build_norm_index, norm_index_status; Listener
+    scripts/claude_chat_listener.py meldet @claude-Ansprachen (Monitor in Claude Code).
+    Im Container liegen incoming/ und indexed_pdfs/ jetzt im Daten-Volume (FHS-Defaults).
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

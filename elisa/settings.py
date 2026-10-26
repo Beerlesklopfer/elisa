@@ -212,7 +212,8 @@ MCP_SSE_ENABLED = _env_bool("MCP_SSE_ENABLED", "True")
 # sodass Mitarbeiter Dateien direkt per Dateisystem ablegen. Wird vom RAG-Index
 # (manage.py build_rag_index) und der Normen-Seite gelesen.
 from pathlib import Path as _Path  # noqa: E402
-INCOMING_DIR = _Path(os.getenv("ELISA_INCOMING_DIR", str(BASE_DIR / "incoming")))
+INCOMING_DIR = _Path(os.getenv("ELISA_INCOMING_DIR", str(
+    (DATA_DIR / "incoming") if FHS_MODE else (BASE_DIR / "incoming"))))
 try:
     INCOMING_DIR.mkdir(parents=True, exist_ok=True)
 except OSError:
@@ -228,7 +229,15 @@ MCP_PUBLIC_BASE = os.getenv("MCP_PUBLIC_BASE", "http://127.0.0.1:8765")
 # Archiv für indexierte (aus incoming entfernte) Norm-PDFs. Im Produktivbetrieb
 # (Code unter /usr/share, read-only) auf /var/lib zeigen lassen.
 RAG_ARCHIVE_DIR = _Path(os.getenv(
-    "ELISA_ARCHIVE_DIR", str(BASE_DIR / "rag" / "indexed_pdfs")))
+    "ELISA_ARCHIVE_DIR", str((DATA_DIR / "indexed_pdfs") if FHS_MODE
+                              else (BASE_DIR / "rag" / "indexed_pdfs"))))
+# Hosts, von denen ein angeschlossenes LLM Normen laden darf (MCP: add_norm_from_url).
+# "*" erlaubt jeden ÖFFENTLICHEN https-Host. Nur frei lizenzierte Quellen eintragen.
+MCP_NORM_HOSTS = [h.strip().lower() for h in os.getenv(
+    "MCP_NORM_HOSTS",
+    "eur-lex.europa.eu,publications.europa.eu,publikationen.dguv.de,www.dguv.de,"
+    "dguv.de,standards.nasa.gov,swehb.nasa.gov,soma.larc.nasa.gov,ntrs.nasa.gov,"
+    "www.baua.de").split(",") if h.strip()]
 
 # ── Dokumentgenerierung (Markdown → Word, ELISA-Design) ────────────────────
 PANDOC_BIN = os.getenv("PANDOC_BIN", "pandoc")

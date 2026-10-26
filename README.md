@@ -88,6 +88,16 @@ Shell). Mit **@all** sprichst du alle Teilnehmer an (Menschen und Personas); die
 @-Liste schlägt `@all` mit vor. Personas stoßen sich damit nicht gegenseitig an:
 `@all` zählt nur in Nachrichten von Menschen.
 
+## Claude Code als angeschlossenes LLM (Arbeitsaufträge aus dem Chat)
+
+Ein angeschlossenes LLM führt Aufträge aus dem Chat selbst aus: Schreibst du
+`@claude …`, wird die Ansprache über `scripts/claude_chat_listener.py` (per Monitor in
+Claude Code) gemeldet; das LLM liest mit `get_chat`, arbeitet mit den MCP-Tools und
+antwortet mit `post_chat(reply_to=…)`. Für Normen gibt es `add_norm_from_url` (nur https,
+Host-Allowlist `MCP_NORM_HOSTS`, nur öffentliche Adressen, max. 80 MB, nur PDFs, kein
+Überschreiben, Quelle + SHA256 als `<datei>.source.json`), `build_norm_index` und
+`norm_index_status`. Es dürfen nur frei lizenzierte Dokumente geladen werden.
+
 ## MCP-Transport
 
 Der MCP-Server spricht **Streamable HTTP** (`…/<projekt>/<scope>/mcp`, aktueller
