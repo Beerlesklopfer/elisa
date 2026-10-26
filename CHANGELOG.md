@@ -85,6 +85,11 @@ elisa (0.3.0) unstable; urgency=medium
     Wendelin -> Lukas, Salinar -> Esra). Die menschliche Projektrolle
     "Auditor" bleibt. Achtung: MCP-Clients mit Handle/Token-Namen der alten
     Personas müssen angepasst werden.
+  * MCP: Streamable HTTP (…/<projekt>/<scope>/mcp) als Standard-Transport; der
+    veraltete SSE-Transport ist per MCP_SSE_ENABLED=false abschaltbar (410).
+    Worker nutzt Streamable HTTP (MCP_CLIENT_TRANSPORT=sse für SSE); Admin-
+    Verbindungs-JSON und Plugin-Bundle folgen dem Schalter. Scope-/Schreib-
+    Prüfung gilt für beide Transporte.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

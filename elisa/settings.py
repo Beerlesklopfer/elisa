@@ -201,6 +201,12 @@ else:
     LOCAL_CHAT_MODEL, LOCAL_EMBED_MODEL = OLLAMA_CHAT_MODEL, OLLAMA_EMBED_MODEL
     LOCAL_LLM_HOST = OLLAMA_HOST
 
+# ── MCP-Transport ─────────────────────────────────────────────────────────
+# Streamable HTTP (…/<projekt>/<scope>/mcp) ist der aktuelle MCP-Transport und
+# immer aktiv. Der ältere SSE-Transport (…/sse, …/messages/) gilt als veraltet
+# und lässt sich abschalten: MCP_SSE_ENABLED=false.
+MCP_SSE_ENABLED = _env_bool("MCP_SSE_ENABLED", "True")
+
 # ── Incoming-Ablage (bewusst über das Dateisystem erreichbar) ─────────────
 # Ablageordner für Norm-PDFs: kann auf eine Netzwerkfreigabe (Samba/NFS) zeigen,
 # sodass Mitarbeiter Dateien direkt per Dateisystem ablegen. Wird vom RAG-Index

@@ -274,13 +274,15 @@ class MCPTokenAdmin(JSONExchangeAdmin, admin.ModelAdmin):
         if not obj.token:
             return "— Token wird beim Speichern erzeugt; danach erscheint hier das vollständige JSON —"
         # Projekt + V-Modell-Scope sind Teil der URL: <base>/<projekt>/<scope>/sse
-        sse_url = f"{self.MCP_BASE}/{obj.url_path}/sse"
+        from django.conf import settings as dj
+        sse = dj.MCP_SSE_ENABLED     # SSE (veraltet) nur, solange nicht abgeschaltet
+        sse_url = f"{self.MCP_BASE}/{obj.url_path}/" + ("sse" if sse else "mcp")
         server_name = (f"{obj.project.key}-{obj.scope_slug}"
                        if obj.project_id else f"elisa-{obj.scope_slug}")
         config = {
             "mcpServers": {
                 server_name: {
-                    "type": "sse",
+                    "type": "sse" if sse else "http",
                     "url": sse_url,
                     "headers": {"Authorization": f"Bearer {obj.token}"},
                 }

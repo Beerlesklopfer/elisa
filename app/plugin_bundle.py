@@ -31,7 +31,9 @@ def _meta(token):
     persona = (llm_roles.context_for(project=proj, role=role) if role
                else (f"PROJEKT: {proj.name}\n{(proj.description or '').strip()}"
                      if proj else ""))
-    return name, short_desc, persona, f"{mcp_base()}/{token.url_path}/sse"
+    from django.conf import settings
+    endpoint = "sse" if settings.MCP_SSE_ENABLED else "mcp"
+    return name, short_desc, persona, f"{mcp_base()}/{token.url_path}/{endpoint}"
 
 
 def mcpb(token):

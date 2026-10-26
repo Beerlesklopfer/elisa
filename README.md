@@ -44,7 +44,7 @@ podman compose -f compose.yaml -f compose.podman.yaml up -d --build
 Sechs Dienste: `proxy` (nginx, Port 8080: liefert `/static/` und leitet `/` und `/mcp/` weiter;
 hier öffnest du ELISA), `eliezer` (Modellmanager, aus `../eliezer` gebaut; ELISAs
 Partner, erreichbar als `http://eliezer:1234`), `db` (PostgreSQL mit pgvector) sowie `web` (daphne, Port 8088, migriert und sammelt
-Static beim Start), `mcp` (MCP-SSE, Port 8765) und `worker` (Supervisor). Daten
+Static beim Start), `mcp` (MCP-Server, Port 8765) und `worker` (Supervisor). Daten
 (media, Static, incoming) liegen im Volume `data`, die Datenbank in `pgdata`; die Konfiguration wird
 als `/etc/elisa/env` schreibgeschützt eingehängt. Läuft Eliezer schon auf dem Host, startest du zusätzlich mit `-f compose.host-eliezer.yaml`
 und lässt den Dienst `eliezer` weg. Wer Eliezer extern betreibt, lässt den Dienst weg und setzt die URL; er läuft dann auf dem
@@ -79,6 +79,15 @@ sudo ELISA_DOMAIN=elisa.firma.de apt install ./dist/elisa-stack_*_all.deb
 - Eliezer extern betreiben: vor der Installation in `/etc/elisa/stack.conf`
   `ELISA_SKIP_ELIEZER=1` setzen und `ELIEZER_BASE_URL` in `/etc/elisa/env`.
 - GPU (AMD): Drop-in `elisa-eliezer.container.d/gpu.conf` mit `AddDevice=`.
+
+## MCP-Transport
+
+Der MCP-Server spricht **Streamable HTTP** (`…/<projekt>/<scope>/mcp`, aktueller
+Standard, immer aktiv). Der ältere **SSE-Transport** (`…/sse`, `…/messages/`) gilt
+als veraltet und lässt sich abschalten: `MCP_SSE_ENABLED=false` in `elisa.env`.
+Dann antworten `/sse` und `/messages/` mit `410`, und die im Admin erzeugte
+Client-Konfiguration verwendet `"type": "http"` mit der `/mcp`-URL. Der
+mitgelieferte Worker nutzt Streamable HTTP (`MCP_CLIENT_TRANSPORT=sse` erzwingt SSE).
 
 ## Lokale Modelle: Ollama oder Eliezer
 

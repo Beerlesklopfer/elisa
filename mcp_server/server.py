@@ -1,15 +1,19 @@
 """
-MCP-Server (SSE-Transport, Bearer-Token-Auth) für ELISA.
+MCP-Server (Streamable HTTP + optional SSE, Bearer-Token-Auth) für ELISA.
 
 Stellt die statischen, kundengelieferten Dokumente je Projekt READ-ONLY bereit
 (PEP – Product Engineering Process, REQ – Kundenanforderungen). Verbindet sich
-ein MCP-Client (z. B. Claude Desktop) per SSE, muss er einen gültigen
-Bearer-Token mitschicken (Verwaltung im Django-Admin: „MCP tokens").
+ein MCP-Client (z. B. Claude Desktop), muss er einen gültigen Bearer-Token
+mitschicken (Verwaltung im Django-Admin: „MCP tokens").
+
+Transporte (Pfad: /<projekt>/<scope>/…):
+    mcp                 Streamable HTTP (aktueller Standard, immer aktiv)
+    sse + messages/     SSE (veraltet) – abschaltbar mit MCP_SSE_ENABLED=false
 
 Start:
-    python -m mcp_server.server            # lauscht auf 0.0.0.0:8765/sse
+    python -m mcp_server.server            # lauscht auf 0.0.0.0:8765
 Konfig (env):
-    MCP_HOST (default 0.0.0.0), MCP_PORT (default 8765)
+    MCP_HOST (default 0.0.0.0), MCP_PORT (default 8765), MCP_SSE_ENABLED (true)
 """
 import asyncio
 import json
@@ -1512,13 +1516,13 @@ class BearerASGIMiddleware:
             await send({"type": "http.response.start", "status": 200,
                         "headers": [(b"content-type", b"application/json")]})
             await send({"type": "http.response.body",
-                        "body": b'{"status":"ok","transport":"sse"}'})
+                        "body": _health_body()})
             return
 
-        # Pfad: /<projekt>/<scope>/<rest>   (rest = sse | messages/…)
+        # Pfad: /<projekt>/<scope>/<rest>   (rest = mcp | sse | messages/…)
         parts = path.lstrip("/").split("/", 2)
         if len(parts) < 2:
-            return await self._deny(send, 404, "Pfad erwartet /<projekt>/<scope>/sse")
+            return await self._deny(send, 404, "Pfad erwartet /<projekt>/<scope>/mcp")
         url_project, url_scope = parts[0], parts[1].lower()
         rest = "/" + (parts[2] if len(parts) > 2 else "")
         if url_scope not in VALID_SCOPES:
@@ -1602,7 +1606,7 @@ class BearerASGIMiddleware:
         # Tool-Aufrufe (JSON-RPC-POST an .../messages/) gegen den Token sperren:
         #   1. READ-Token darf keine Schreib-Tools aufrufen.
         #   2. project_key/Phase müssen zum Token passen (ALL darf alles).
-        if scope.get("method") == "POST" and rest.startswith("/messages"):
+        if scope.get("method") == "POST" and rest.startswith(("/messages", "/mcp")):
             body, msgs = await _buffer_body(receive)
             if tok.access != "WRITE" and _is_write_call(body):
                 return await self._deny(
@@ -1624,9 +1628,44 @@ class BearerASGIMiddleware:
         await self.app(scope, receive, send)
 
 
+def _sse_enabled() -> bool:
+    from django.conf import settings
+    return bool(getattr(settings, "MCP_SSE_ENABLED", True))
+
+
+def _health_body() -> bytes:
+    transports = ["streamable-http"] + (["sse"] if _sse_enabled() else [])
+    return json.dumps({"status": "ok", "transports": transports}).encode()
+
+
+class _Transports:
+    """Verteilt auf die Transporte: /mcp = Streamable HTTP (immer), /sse und
+    /messages/ = SSE (veraltet, per MCP_SSE_ENABLED abschaltbar). Der Lifespan
+    (Session-Manager) gehört der Streamable-HTTP-App."""
+
+    def __init__(self, sse_app, http_app, sse_enabled):
+        self.sse_app, self.http_app, self.sse_enabled = sse_app, http_app, sse_enabled
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "lifespan":
+            return await self.http_app(scope, receive, send)
+        if scope.get("path", "").startswith(("/sse", "/messages")):
+            if not self.sse_enabled:
+                body = json.dumps({"error": "SSE-Transport ist deaktiviert "
+                                   "(MCP_SSE_ENABLED=false) – bitte Streamable HTTP "
+                                   "unter /<projekt>/<scope>/mcp verwenden."}).encode()
+                await send({"type": "http.response.start", "status": 410,
+                            "headers": [(b"content-type", b"application/json")]})
+                await send({"type": "http.response.body", "body": body})
+                return
+            return await self.sse_app(scope, receive, send)
+        return await self.http_app(scope, receive, send)
+
+
 def build_app():
-    """Starlette-SSE-App mit Bearer-Token-Schutz (ASGI-Middleware)."""
-    return BearerASGIMiddleware(mcp.sse_app())
+    """ASGI-App mit Bearer-Token-Schutz: Streamable HTTP plus (optional) SSE."""
+    return BearerASGIMiddleware(_Transports(
+        mcp.sse_app(), mcp.streamable_http_app(), _sse_enabled()))
 
 
 app = build_app()
@@ -1636,5 +1675,7 @@ if __name__ == "__main__":
     import uvicorn
     host = os.getenv("MCP_HOST", "0.0.0.0")
     port = int(os.getenv("MCP_PORT", "8765"))
-    print(f"MCP-SSE-Server: http://{host}:{port}/sse  (Bearer-Token erforderlich)")
+    print(f"MCP-Server: http://{host}:{port}/<projekt>/<scope>/mcp"
+          + ("  (+ SSE …/sse, veraltet)" if _sse_enabled() else "")
+          + "  (Bearer-Token erforderlich)")
     uvicorn.run(app, host=host, port=port)

@@ -3,7 +3,7 @@
 MCP-Client-Worker — provider-agnostische Brücke LLM ↔ Anwendung.
 
 PRIMÄRKANAL = MCP-Chat: der Worker verbindet sich als echter MCP-CLIENT (MCP-SDK,
-SSE-Transport) zum ELISA-MCP-Server (…/<projekt>/<scope>/sse, Bearer-Token)
+SSE-Transport) zum ELISA-MCP-Server (…/<projekt>/<scope>/mcp bzw. …/sse, Bearer-Token)
 und erledigt seine Arbeit über die MCP-Tools:
   list_my_mentions → get_item_chat / get_workitem → post_item_chat
 Das LLM (Claude / OpenAI-kompatibel / Ollama) ist nur ein Textgenerator.
@@ -19,6 +19,7 @@ Start (i. d. R. vom Supervisor gespawnt):
 """
 import argparse
 import asyncio
+import contextlib
 import json
 import os
 import sys
@@ -428,16 +429,30 @@ async def _projects(session, args):
     return keys or [args.project]
 
 
+@contextlib.asynccontextmanager
+async def _transport(use_sse, url, headers):
+    """Verbindung zum MCP-Server: Streamable HTTP (Standard) oder SSE (veraltet)."""
+    if use_sse:
+        from mcp.client.sse import sse_client
+        async with sse_client(url, headers=headers) as (read, write):
+            yield read, write
+    else:
+        from mcp.client.streamable_http import streamablehttp_client
+        async with streamablehttp_client(url, headers=headers) as (read, write, _):
+            yield read, write
+
+
 async def _mcp_loop(args, inbox):
     from mcp import ClientSession
-    from mcp.client.sse import sse_client
-    url = f"{args.mcp_base.rstrip('/')}/{args.project}/{args.scope}/sse"
+    use_sse = args.transport == "sse"
+    url = (f"{args.mcp_base.rstrip('/')}/{args.project}/{args.scope}/"
+           + ("sse" if use_sse else "mcp"))
     # Direkter on-box-Client (localhost) → KEIN nginx-/mcp-Präfix: leerer
     # X-Forwarded-Prefix weist den Server an, den messages-Pfad ohne /mcp zu bauen.
     headers = {"Authorization": f"Bearer {args.token}", "X-Forwarded-Prefix": ""}
     while True:
         try:
-            async with sse_client(url, headers=headers) as (read, write):
+            async with _transport(use_sse, url, headers) as (read, write):
                 async with ClientSession(read, write) as session:
                     await session.initialize()
                     print(f"[worker {args.handle}] MCP verbunden: {url}"
@@ -465,6 +480,9 @@ async def _amain(args):
 def main():
     ap = argparse.ArgumentParser(description="ELISA MCP-Client-Worker")
     ap.add_argument("--mcp-base", default=os.getenv("MCP_PUBLIC_BASE", "http://127.0.0.1:8765"))
+    ap.add_argument("--transport", choices=["http", "sse"],
+                    default=os.getenv("MCP_CLIENT_TRANSPORT", "http"),
+                    help="MCP-Transport: http = Streamable HTTP (Standard), sse = veraltet")
     ap.add_argument("--project", required=True)
     ap.add_argument("--scope", default="all")
     ap.add_argument("--token", required=True)
