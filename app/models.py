@@ -794,7 +794,26 @@ class WorkerBackend(models.Model):
 
     @property
     def effective_base_url(self) -> str:
-        return self.base_url or self.PROVIDER_DEFAULTS.get(self.provider, ("", "", ""))[1]
+        """Leer = Anbieter-Default; Eliezer/Ollama folgen der konfigurierten
+        Umgebung (im Container zeigt 127.0.0.1 sonst auf den Container selbst)."""
+        if self.base_url:
+            return self.base_url
+        from django.conf import settings
+        if self.provider == "ELIEZER":
+            return settings.ELIEZER_BASE_URL.rstrip("/") + "/v1"
+        if self.provider == "OLLAMA":
+            return settings.OLLAMA_HOST.rstrip("/") + "/v1"
+        return self.PROVIDER_DEFAULTS.get(self.provider, ("", "", ""))[1]
+
+    @property
+    def effective_api_key(self) -> str:
+        """Eigener Key, sonst der Eliezer-Key aus der Umgebung (nie im Repo)."""
+        if self.api_key:
+            return self.api_key
+        if self.provider == "ELIEZER":
+            from django.conf import settings
+            return settings.ELIEZER_API_KEY
+        return ""
 
     @property
     def effective_model(self) -> str:

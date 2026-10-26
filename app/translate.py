@@ -25,7 +25,7 @@ def translate_text(text, target_language_name):
     provider = be.provider if be else "OLLAMA"
     model = (be.model if be and be.model else "thinkverse/towerinstruct")
     base_url = (be.effective_base_url if be else settings.OLLAMA_HOST)
-    api_key = be.api_key if be else ""
+    api_key = be.effective_api_key if be else ""
     user = (f"Übersetze den folgenden Text vollständig und treu nach "
             f"{target_language_name}. Gib NUR die Übersetzung aus:\n\n{text}")
     try:

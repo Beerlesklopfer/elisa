@@ -75,7 +75,7 @@ def _load_backends():
             "mcp_base": b.effective_mcp_base or settings.MCP_PUBLIC_BASE,
             "project": t.project.key, "scope": t.scope_slug, "token": t.token,
             "provider": _worker_provider(b.provider), "model": b.effective_model or "",
-            "llm_base": b.effective_base_url or "", "api_key": b.api_key or "",
+            "llm_base": b.effective_base_url or "", "api_key": b.effective_api_key or "",
             "handle": b.effective_handle,
             "persona": _persona_for(b.effective_handle, t.scope_slug),
             "system": bool(getattr(t, "system", False)),

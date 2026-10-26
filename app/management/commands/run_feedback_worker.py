@@ -61,7 +61,7 @@ class Command(BaseCommand):
             params = dict(base=b.effective_mcp_base, project=t.project.key,
                           scope=t.scope_slug, token=t.token, backend=b.protocol,
                           model=b.effective_model, llm_base=b.effective_base_url,
-                          api_key=b.api_key, handles=handles,
+                          api_key=b.effective_api_key, handles=handles,
                           sender="@" + (handles[0] if handles else "llm"))
             th = threading.Thread(target=worker.run, kwargs=params,
                                   name=b.name, daemon=True)

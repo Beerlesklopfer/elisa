@@ -737,7 +737,8 @@ def _fetch_provider_models(obj):
     base = (obj.effective_base_url or "").rstrip("/")
     if not base:
         raise ValueError("Keine Base-URL gesetzt.")
-    headers = {"Authorization": f"Bearer {obj.api_key}"} if obj.api_key else {}
+    key = obj.effective_api_key
+    headers = {"Authorization": f"Bearer {key}"} if key else {}
     r = httpx.get(base + "/models", headers=headers, timeout=15)
     r.raise_for_status()
     data = r.json()

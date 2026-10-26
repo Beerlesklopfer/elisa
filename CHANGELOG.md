@@ -90,6 +90,9 @@ elisa (0.3.0) unstable; urgency=medium
     Worker nutzt Streamable HTTP (MCP_CLIENT_TRANSPORT=sse für SSE); Admin-
     Verbindungs-JSON und Plugin-Bundle folgen dem Schalter. Scope-/Schreib-
     Prüfung gilt für beide Transporte.
+  * Fix: Worker-Backend "Eliezer (lokal)" ("Modelle abrufen" → Connection
+    refused im Container): leere Base-URL folgt jetzt ELIEZER_BASE_URL (bzw.
+    OLLAMA_HOST), ein leerer API-Key dem ELIEZER_API_KEY der Umgebung.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.
