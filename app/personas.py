@@ -6,48 +6,49 @@ Reine Darstellung (Vorstellung im Chat, Anzeigenamen). Die technischen Handles
 bleiben davon unberührt. Die Personas beraten nur – verbindlich wird nichts ohne
 menschliche Freigabe (CLAUDE.md).
 """
+from django.utils.translation import gettext_lazy as _
 
 # System-Personas: handle = @-Handle im Chat (None = der RAG-Chat selbst).
 SYSTEM_PERSONAS = [
     {"name": "Lukas", "handle": None,
      "acronym": "**L**ookup **U**nderlying **K**nowledge, **A**nswer **S**ourced",
-     "role": "RAG-Chat – beantwortet Fragen geerdet an Normen und Projektdokumenten "
-             "(„alles von Anfang an sorgfältig erforscht“, Lk 1,3)"},
+     "role": _("RAG-Chat – beantwortet Fragen geerdet an Normen und Projektdokumenten "
+             "(„alles von Anfang an sorgfältig erforscht“, Lk 1,3)")},
     {"name": "Esra", "handle": "esra",
      "acronym": "**E**xtract **S**tandards, **R**eference-**A**nchored",
-     "role": "Normenrecherche – findet die passenden Normen (der Schriftgelehrte, Esra 7)"},
+     "role": _("Normenrecherche – findet die passenden Normen (der Schriftgelehrte, Esra 7)")},
     {"name": "Tertius", "handle": "dragoman",
      "acronym": "**T**ranslate **E**xactly, **R**etain **T**erms, **I**nvariants, "
                 "**U**nchanged **S**tructure",
-     "role": "Übersetzer – informativ, die Quellsprache bleibt maßgeblich "
-             "(der Schreiber des Römerbriefs, Röm 16,22)"},
+     "role": _("Übersetzer – informativ, die Quellsprache bleibt maßgeblich "
+             "(der Schreiber des Römerbriefs, Röm 16,22)")},
     {"name": "Nathan", "handle": "auditor",
      "acronym": "**N**onconformities **A**udited against **T**raceability, "
                 "**H**azards **A**nd **N**orms",
-     "role": "Externes Audit – prüft kritisch von außen (der Prophet vor David, 2 Sam 12)"},
+     "role": _("Externes Audit – prüft kritisch von außen (der Prophet vor David, 2 Sam 12)")},
 ]
 
 # V-Modell-Personas: je Schritt eine Persona (code = Phase/VModelRole-Wert).
 VMODEL_PERSONAS = [
-    {"code": "REQ", "name": "Mose", "step": "Anforderungen",
+    {"code": "REQ", "name": "Mose", "step": _("Anforderungen"),
      "acronym": "**M**andatory **O**bligations, **S**tated **E**xplicitly"},
-    {"code": "SPEC", "name": "Noah", "step": "Systementwurf",
+    {"code": "SPEC", "name": "Noah", "step": _("Systementwurf"),
      "acronym": "**N**ormalize **O**bligations **A**nd **H**azards"},
-    {"code": "ARCH", "name": "Salomo", "step": "Architektur",
+    {"code": "ARCH", "name": "Salomo", "step": _("Architektur"),
      "acronym": "**S**tructure, **A**llocation, **L**ayering, **O**verview of "
                 "**M**odules, **O**ptimized"},
-    {"code": "MOD", "name": "Hiram", "step": "Modulentwurf",
+    {"code": "MOD", "name": "Hiram", "step": _("Modulentwurf"),
      "acronym": "**H**ierarchical **I**mplementation **R**ules for **A**lgorithms "
                 "& **M**odules"},
-    {"code": "MODTEST", "name": "Gideon", "step": "Modultest",
+    {"code": "MODTEST", "name": "Gideon", "step": _("Modultest"),
      "acronym": "**G**uarded **I**nputs, **D**ata **E**xercised **O**n "
                 "**N**ominal and fault cases"},
-    {"code": "INTTEST", "name": "Josua", "step": "Integrationstest",
+    {"code": "INTTEST", "name": "Josua", "step": _("Integrationstest"),
      "acronym": "**J**oin **O**ne **S**ubsystem, **U**nderstand **A**ll interfaces"},
-    {"code": "SYSTEST", "name": "Daniel", "step": "Systemtest",
+    {"code": "SYSTEST", "name": "Daniel", "step": _("Systemtest"),
      "acronym": "**D**emonstrate **A**ll **N**ominal **I**nterfaces and edge cases, "
                 "**L**ive"},
-    {"code": "ACCTEST", "name": "Thomas", "step": "Abnahme",
+    {"code": "ACCTEST", "name": "Thomas", "step": _("Abnahme"),
      "acronym": "**T**rust only **H**ands-on **O**bservation, **M**easured "
                 "**A**cceptance, **S**ign-off"},
 ]

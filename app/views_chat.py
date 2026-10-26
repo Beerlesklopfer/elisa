@@ -105,36 +105,38 @@ _PERSONA_BLURB = {
 def _welcome_intro_text(project):
     """Begrüßung eines NEUEN RAG-Chats: Lukas stellt sich und alle Personas mit
     ihrem Akronym vor (mit kurzer Aufgaben-Erklärung), damit man weiß, wen man
-    per @-Handle wofür adressiert."""
+    per @-Handle wofür adressiert. Sprache = Sprache der anlegenden Person; die
+    Akronyme bleiben englisch (international einheitlich)."""
+    from django.utils.translation import gettext as _
     from app.participants import chat_participants
     from app.personas import SYSTEM_PERSONAS, VMODEL_PERSONAS, rag_persona
     rag = settings.RAG_PERSONA_NAME
     me = rag_persona(rag)
-    lines = [f"Willkommen! Ich bin **{rag}**"
-             + (f" — {me['acronym']}" if me else "")
-             + ", dein RAG-gestützter Norm-Assistent (IEC 61508). Stell deine Frage "
-             "zu den Normen — ich antworte geerdet an den vorhandenen Dokumenten und "
-             "bin nie Quelle der Wahrheit.",
-             "", "**System-Personas (per @-Handle ansprechbar):**"]
+    lines = [_("Willkommen! Ich bin **%(name)s**%(acronym)s, dein RAG-gestützter "
+               "Norm-Assistent (IEC 61508). Stell deine Frage zu den Normen — ich "
+               "antworte geerdet an den vorhandenen Dokumenten und bin nie Quelle "
+               "der Wahrheit.") % {"name": rag,
+                                   "acronym": f" — {me['acronym']}" if me else ""},
+             "", _("**System-Personas (per @-Handle ansprechbar):**")]
     connected = {p["handle"].lower(): p for p in chat_participants(project)
                  if p.get("kind") == "llm" and p.get("handle")}
     for p in SYSTEM_PERSONAS:
         if not p["handle"]:
             continue
-        state = "" if p["handle"] in connected else " *(derzeit nicht verbunden)*"
+        state = "" if p["handle"] in connected else " " + _("*(derzeit nicht verbunden)*")
         lines.append(f"- **{p['name']}** (@{p['handle']}) — {p['acronym']}. "
                      f"{p['role']}{state}")
-    lines += ["", "**V-Modell-Personas (je Schritt):**"]
+    lines += ["", _("**V-Modell-Personas (je Schritt):**")]
     for p in VMODEL_PERSONAS:
         lines.append(f"- **{p['name']}** — {p['step']} ({p['code']}): {p['acronym']}")
     known = {p["handle"] for p in SYSTEM_PERSONAS if p["handle"]}
     others = [p for h, p in connected.items() if h not in known]
     if others:
-        lines += ["", "**Weitere verbundene LLMs:**"]
+        lines += ["", _("**Weitere verbundene LLMs:**")]
     for p in others:
         label = (p.get("label") or "").strip()
         prov = (p.get("provider") or "").title()
-        blurb = ("beratendes LLM" + (f" ({prov})" if prov else "")
+        blurb = (_("beratendes LLM") + (f" ({prov})" if prov else "")
                  + (f" – {label}" if label else "") + ".")
         lines.append(f"- **@{p['handle']}** — {blurb}")
     return "\n".join(lines)

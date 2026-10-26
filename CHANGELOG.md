@@ -73,7 +73,9 @@ elisa (0.3.0) unstable; urgency=medium
     (RAG-Chat, vorher Wendelin), Esra, Tertius (@dragoman), Nathan (@auditor)
     sowie je V-Schritt Mose, Noah, Salomo, Hiram, Gideon, Josua, Daniel,
     Thomas. Der Chat stellt beim Anlegen alle Personas mit Akronym vor; die
-    technischen Handles bleiben unverändert.
+    technischen Handles bleiben unverändert. Lokalisiert (gettext de/en):
+    Vorstellung und Rollentexte folgen der Sprache der anlegenden Person, die
+    Akronyme bleiben englisch.
   * Corporate Identity neu: Nachtblau (#1b2a41), Bernstein (#b45f06), warmes
     Papierweiß – die frühere Farbwelt war auf SALZ abgestimmt; Verweise auf
     CrystalKey entfernt.

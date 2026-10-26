@@ -1128,3 +1128,57 @@ msgstr "Making the invisible visible."
 
 msgid "Admin"
 msgstr "Admin"
+
+msgid "RAG-Chat – beantwortet Fragen geerdet an Normen und Projektdokumenten („alles von Anfang an sorgfältig erforscht“, Lk 1,3)"
+msgstr "RAG chat – answers questions grounded in standards and project documents (\"investigated everything carefully from the beginning\", Luke 1:3)"
+
+msgid "Normenrecherche – findet die passenden Normen (der Schriftgelehrte, Esra 7)"
+msgstr "Standards research – finds the matching standards (the scribe, Ezra 7)"
+
+msgid "Übersetzer – informativ, die Quellsprache bleibt maßgeblich (der Schreiber des Römerbriefs, Röm 16,22)"
+msgstr "Translator – informative only, the source language remains authoritative (the scribe of the Letter to the Romans, Rom 16:22)"
+
+msgid "Externes Audit – prüft kritisch von außen (der Prophet vor David, 2 Sam 12)"
+msgstr "External audit – reviews critically from the outside (the prophet before David, 2 Sam 12)"
+
+msgid "Anforderungen"
+msgstr "Requirements"
+
+msgid "Systementwurf"
+msgstr "System design"
+
+msgid "Architektur"
+msgstr "Architecture"
+
+msgid "Modulentwurf"
+msgstr "Module design"
+
+msgid "Modultest"
+msgstr "Module test"
+
+msgid "Integrationstest"
+msgstr "Integration test"
+
+msgid "Systemtest"
+msgstr "System test"
+
+msgid "Abnahme"
+msgstr "Acceptance"
+
+msgid "Willkommen! Ich bin **%(name)s**%(acronym)s, dein RAG-gestützter Norm-Assistent (IEC 61508). Stell deine Frage zu den Normen — ich antworte geerdet an den vorhandenen Dokumenten und bin nie Quelle der Wahrheit."
+msgstr "Welcome! I am **%(name)s**%(acronym)s, your RAG-based standards assistant (IEC 61508). Ask your question about the standards — I answer grounded in the available documents and I am never a source of truth."
+
+msgid "**System-Personas (per @-Handle ansprechbar):**"
+msgstr "**System personas (address them by @handle):**"
+
+msgid "*(derzeit nicht verbunden)*"
+msgstr "*(not connected at the moment)*"
+
+msgid "**V-Modell-Personas (je Schritt):**"
+msgstr "**V-model personas (one per step):**"
+
+msgid "**Weitere verbundene LLMs:**"
+msgstr "**Other connected LLMs:**"
+
+msgid "beratendes LLM"
+msgstr "advisory LLM"
