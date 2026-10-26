@@ -95,6 +95,8 @@ elisa (0.3.0) unstable; urgency=medium
     OLLAMA_HOST), ein leerer API-Key dem ELIEZER_API_KEY der Umgebung.
   * Fix: MCP-Middleware (Body-Replay) rief sich bei Streamable HTTP rekursiv selbst
     auf (RecursionError); ruft jetzt das ursprüngliche receive.
+  * "Modelle abrufen" beim Provider Eliezer listet nur Sprachmodelle (Typ llm
+    aus /api/v1/models), keine Embedding-/Bildmodelle.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

@@ -739,6 +739,20 @@ def _fetch_provider_models(obj):
         raise ValueError("Keine Base-URL gesetzt.")
     key = obj.effective_api_key
     headers = {"Authorization": f"Bearer {key}"} if key else {}
+    if obj.provider == "ELIEZER":
+        # Eliezers Verwaltungsliste kennt den Typ: nur Sprachmodelle (llm) anbieten,
+        # keine Embedding-/Bild-/Musikmodelle. Fällt sonst auf /v1/models zurück.
+        root = base[:-3] if base.endswith("/v1") else base
+        try:
+            r = httpx.get(root + "/api/v1/models", headers=headers, timeout=15)
+            r.raise_for_status()
+            items = r.json().get("models") or r.json().get("data") or []
+            keys = [m.get("key") for m in items
+                    if isinstance(m, dict) and m.get("type") == "llm" and m.get("key")]
+            if keys:
+                return keys
+        except Exception:
+            pass
     r = httpx.get(base + "/models", headers=headers, timeout=15)
     r.raise_for_status()
     data = r.json()
