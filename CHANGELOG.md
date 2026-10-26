@@ -161,6 +161,8 @@ elisa (0.3.0) unstable; urgency=medium
   * MCP-Tools zum Laden von Normen heißen englisch „standards" (EN: Norm = standard):
     add_standard_from_url, build_standard_index, standard_index_status. Die älteren
     Lese-Tools (list_norms, search_norms, …) behalten ihre Namen.
+  * Fix: add_standard_from_url blockierte die Event-Loop des MCP-Servers (langer
+    EUR-Lex-Download → Health-Check/Clients brachen ab); läuft jetzt im Thread.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.
