@@ -250,6 +250,13 @@ def _ensure_system_persona(handle, name, model="", persona="", iec=""):
                 "token": tok, "active": True}
     if model:
         defaults["model"] = model
+    from django.conf import settings as dj
+    if dj.LOCAL_LLM_BACKEND == "eliezer":
+        # Lokale Inferenz läuft über Eliezer (OpenAI-Dialekt, Modell-Keys der Allowlist).
+        defaults.update(provider="ELIEZER", api_key=dj.ELIEZER_API_KEY,
+                        base_url=dj.ELIEZER_BASE_URL.rstrip("/") + "/v1",
+                        model=(dj.ELIEZER_TRANSLATE_MODEL or dj.ELIEZER_CHAT_MODEL)
+                        if handle == "dragoman" else dj.ELIEZER_CHAT_MODEL)
     WorkerBackend.objects.get_or_create(name=name, defaults=defaults)
     # Eine globale Instanz reicht → alte per-Projekt-/Vorgänger-Endpunkte desselben
     # Handles ENTFERNEN (samt verwaistem Token), nicht nur deaktivieren.

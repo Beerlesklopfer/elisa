@@ -14,7 +14,7 @@ from .presence import is_online, PRESENCE_TTL
 
 # Provider → kurzes @-Handle.
 _PROVIDER_HANDLE = {"CLAUDE": "claude", "OPENAI": "chatgpt", "DEEPSEEK": "deepseek",
-                    "OLLAMA": "ollama", "LMSTUDIO": "lmstudio", "CUSTOM": "llm"}
+                    "OLLAMA": "ollama", "LMSTUDIO": "lmstudio", "ELIEZER": "eliezer", "CUSTOM": "llm"}
 
 # Provider → (FontAwesome-Icon, Markenfarbe) – damit man im Chat sofort sieht,
 # WELCHER Anbieter dahintersteckt (repräsentativ, nicht die geschützten Logos).
@@ -24,6 +24,7 @@ PROVIDER_GLYPH = {
     "DEEPSEEK": ("fa-water",        "#4d6bfe"),
     "OLLAMA":   ("fa-horse-head",   "#5a5a5a"),   # Lama
     "LMSTUDIO": ("fa-flask",        "#7048e8"),
+    "ELIEZER":  ("fa-handshake",    "#2f7d6d"),   # Eliezer, der Vermittler
     "CUSTOM":   ("fa-robot",        "#6c757d"),
 }
 
@@ -36,7 +37,7 @@ def _glyph(provider):
 # Lokalität: läuft die Persona auf EIGENER Infrastruktur (lokal) oder über einen
 # externen Cloud-Dienst (extern)? Zweck: eine LOKALE Persona soll eine EXTERNE
 # erkennen, um sie um eine externe Verifikation/Zweitmeinung zu bitten.
-LOCAL_PROVIDERS = {"OLLAMA", "LMSTUDIO"}
+LOCAL_PROVIDERS = {"OLLAMA", "LMSTUDIO", "ELIEZER"}
 EXTERNAL_PROVIDERS = {"CLAUDE", "OPENAI", "DEEPSEEK", "ANTHROPIC"}
 
 

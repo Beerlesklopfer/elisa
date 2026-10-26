@@ -62,6 +62,10 @@ elisa (0.3.0) unstable; urgency=medium
     Migration 0051 benennt Modell, Rollenbeschreibung, Token und Backend um
     (Token-Wert bleibt). Achtung: MCP-Clients, die die alten Tool-Namen
     verwenden, müssen angepasst werden.
+  * Neuer Provider "Eliezer (lokal)" für Worker-Backends (OpenAI-Dialekt,
+    Default-URL http://127.0.0.1:1234/v1, Key aus `eliezer --new-key`);
+    Migration 0052. Neu angelegte System-Personas nutzen ihn automatisch, wenn
+    LOCAL_LLM_BACKEND=eliezer gesetzt ist.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

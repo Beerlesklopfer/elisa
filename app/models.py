@@ -739,6 +739,7 @@ class WorkerBackend(models.Model):
         DEEPSEEK = "DEEPSEEK", "DeepSeek"
         OLLAMA = "OLLAMA", "Ollama (lokal)"
         LMSTUDIO = "LMSTUDIO", "LM Studio (lokal)"
+        ELIEZER = "ELIEZER", "Eliezer (lokal)"
         CUSTOM = "CUSTOM", "OpenAI-kompatibel (custom)"
 
     # (Protokoll, Default-Base-URL, Default-Modell) je Anbieter.
@@ -748,6 +749,7 @@ class WorkerBackend(models.Model):
         "DEEPSEEK": ("openai", "https://api.deepseek.com/v1", "deepseek-chat"),
         "OLLAMA":   ("openai", "http://127.0.0.1:11434/v1",   "llama3.1"),
         "LMSTUDIO": ("openai", "http://localhost:1234/v1",    "local-model"),
+        "ELIEZER":  ("openai", "http://127.0.0.1:1234/v1",    ""),
         "CUSTOM":   ("openai", "",                            ""),
     }
 
@@ -758,9 +760,9 @@ class WorkerBackend(models.Model):
     model = models.CharField(max_length=128, blank=True,
                              help_text="Leer = Anbieter-Default (z. B. claude-haiku-4-5).")
     base_url = models.CharField("Base-URL", max_length=255, blank=True,
-                                help_text="Leer = Anbieter-Default. Für Ollama/LM Studio/DeepSeek/custom.")
+                                help_text="Leer = Anbieter-Default. Für Ollama/LM Studio/Eliezer/DeepSeek/custom.")
     api_key = models.CharField("API-Key", max_length=255, blank=True,
-                               help_text="Geheim. Claude: ANTHROPIC-Key. Lokale (Ollama/LM Studio): beliebig.")
+                               help_text="Geheim. Claude: ANTHROPIC-Key. Eliezer: sk-… aus `eliezer --new-key`. Ollama/LM Studio: beliebig.")
     token = models.ForeignKey(MCPToken, on_delete=models.PROTECT,
                               related_name="worker_backends",
                               help_text="WRITE-Token → bindet Projekt + V-Schritt (Scope).")
