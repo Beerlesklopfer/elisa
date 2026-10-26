@@ -97,6 +97,7 @@ def _render_chat(request, active, sessions):
         "participants": chat_participants(get_active_project(request)),
         "mention_token": f"@{me}" if me else "",
         "can_new_project_chat": is_pm_or_admin(request.user),
+        "can_delete_all": _can_delete_all(request.user, active),
     })
 
 
@@ -206,6 +207,39 @@ def chat_delete(request, pk):
     else:
         _editable_session(request, pk).delete()
     return redirect("chat")
+
+
+@login_required
+@require_POST
+def chat_message_delete(request, pk):
+    """Einzelne Chat-Nachricht löschen. Rechte: Administratoren jede Nachricht des
+    Projekts; im persönlichen Chat der Eigentümer jede; im geteilten Projekt-Chat
+    Projektleitung jede, Mitglieder nur ihre eigenen. Item-Chats bleiben tabu."""
+    msg = get_object_or_404(ChatMessage.objects.select_related("session"), pk=pk,
+                            session__project=get_active_project(request),
+                            session__related_item__isnull=True)
+    if not _can_delete_message(request.user, msg):
+        raise Http404()
+    msg.delete()
+    return JsonResponse({"ok": True})
+
+
+def _can_delete_all(user, session):
+    """Darf der Nutzer in dieser Session JEDE Nachricht löschen?"""
+    if session is None:
+        return False
+    if is_admin(user):
+        return True
+    if session.shared:
+        return is_pm_or_admin(user)
+    return session.owner_id == user.id
+
+
+def _can_delete_message(user, msg):
+    s = msg.session
+    if _can_delete_all(user, s):
+        return True
+    return bool(s.shared and msg.author_id and msg.author_id == user.id)
 
 
 @login_required

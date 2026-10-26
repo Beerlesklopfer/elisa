@@ -1194,3 +1194,9 @@ msgstr "messages"
 
 msgid "Kopieren"
 msgstr "Copy"
+
+msgid "Nachricht löschen"
+msgstr "Delete message"
+
+msgid "Diese Nachricht löschen?"
+msgstr "Delete this message?"

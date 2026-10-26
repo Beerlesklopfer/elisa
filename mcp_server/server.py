@@ -1318,6 +1318,25 @@ def _is_write_call(body: bytes) -> bool:
     return False
 
 
+def _foreign_object_id(args: dict, project_id: int) -> bool:
+    """True, wenn eine ID in den Tool-Argumenten auf ein Objekt eines ANDEREN
+    Projekts zeigt (unbekannte IDs bleiben dem Tool überlassen: „nicht gefunden")."""
+    from app.models import ChatSession, EsraTask, FeedbackRequest
+    checks = (("session_id", ChatSession), ("task_id", EsraTask),
+              ("request_id", FeedbackRequest), ("doc_id", ProjectDocument))
+    for name, model in checks:
+        val = args.get(name)
+        if val is None:
+            continue
+        try:
+            owner = model.objects.filter(pk=int(val)).values_list("project_id", flat=True).first()
+        except (TypeError, ValueError):
+            return True
+        if owner is not None and owner != project_id:
+            return True
+    return False
+
+
 def _scope_violation(body: bytes, tok) -> str | None:
     """Sperrt Tool-Aufrufe auf das Projekt + (außer ALL) die V-Stufe des Tokens.
     Liefert eine Fehlermeldung oder None, wenn alles erlaubt ist."""
@@ -1337,6 +1356,10 @@ def _scope_violation(body: bytes, tok) -> str | None:
         pk = args.get("project_key")
         if pk and proj_key and pk != proj_key:
             return f"Token ist auf Projekt '{proj_key}' gesperrt, nicht '{pk}'."
+        # Tools, die Objekte per ID ansprechen (ohne project_key), dürfen nicht über
+        # die Projektgrenze greifen: die ID muss zu einem Objekt des Token-Projekts gehören.
+        if tok.project_id and _foreign_object_id(args, tok.project_id):
+            return "Das Objekt gehört zu einem anderen Projekt als der Token."
         if allowed_phase:
             phase = (args.get("phase") or "").upper()
             ident = (args.get("identifier") or "").upper()

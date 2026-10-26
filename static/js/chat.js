@@ -143,6 +143,34 @@
     b.innerHTML = '<i class="fas fa-copy"></i>';
     sd.appendChild(b);
   }
+  // ── Einzelne Nachricht löschen: Button für eigene Nachrichten bzw. – mit Recht
+  //    (data-can-delete-all) – für alle; der Server prüft das Recht erneut. ──
+  function ensureDelete(msg) {
+    if (!msg || msg.querySelector(".chat-del") || !msg.dataset.mid) return;
+    if (!(history.dataset.canDeleteAll || msg.dataset.mine)) return;
+    const sd = msg.querySelector(".sender");
+    if (!sd) return;
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chat-del btn btn-sm btn-link p-0 ms-2 text-danger";
+    b.title = history.dataset.deleteLabel || "Löschen";
+    b.innerHTML = '<i class="fas fa-trash-can"></i>';
+    sd.appendChild(b);
+  }
+  history.addEventListener("click", async function (e) {
+    const btn = e.target.closest(".chat-del");
+    if (!btn) return;
+    e.preventDefault();
+    const msg = btn.closest(".chat-msg");
+    if (!msg || !msg.dataset.mid) return;
+    if (!window.confirm(history.dataset.deleteConfirm || "Diese Nachricht löschen?")) return;
+    try {
+      const res = await fetch(history.dataset.deleteUrl.replace("/0/", "/" + msg.dataset.mid + "/"),
+                              { method: "POST", headers: { "X-CSRFToken": getCookie("csrftoken") } });
+      if (res.ok) msg.remove();
+    } catch (err) { /* Netzfehler: nichts ändern */ }
+  });
+
   async function copyText(text) {
     try { await navigator.clipboard.writeText(text); return true; }
     catch (e) {
@@ -205,6 +233,7 @@
     }
     history.appendChild(wrap);
     if (content) ensureCopy(wrap);
+    if (role === "user") wrap.dataset.mine = "1";      // optimistisch: meine eigene Nachricht
     history.scrollTop = history.scrollHeight;
     return wrap;
   }
@@ -263,14 +292,14 @@
             if (userBubble) userBubble.remove();
           } else {
             seen.add(data.user.id);
-            if (userBubble) userBubble.dataset.mid = data.user.id;
+            if (userBubble) { userBubble.dataset.mid = data.user.id; ensureDelete(userBubble); }
           }
           lastId = Math.max(lastId, data.user.id);
         }
         if (data.assistant) {
           const aw = addMessage("assistant", data.assistant.content, data.assistant.sources,
                                 data.assistant.sender || "Assistent");
-          if (data.assistant.id) { aw.dataset.mid = data.assistant.id; seen.add(data.assistant.id); }
+          if (data.assistant.id) { aw.dataset.mid = data.assistant.id; seen.add(data.assistant.id); ensureDelete(aw); }
           lastId = Math.max(lastId, data.assistant.id || 0);
         }
         // assistant === null → @-erwähnte Personas antworten asynchron (per Poll).
@@ -311,7 +340,7 @@
           lastId = Math.max(lastId, m.id || 0);
           if (m.id && seen.has(m.id)) return;          // schon gerendert (z. B. optimistisch)
           const w = addMessage(m.role, m.content, m.sources, m.sender);
-          if (m.id) { w.dataset.mid = m.id; seen.add(m.id); }
+          if (m.id) { w.dataset.mid = m.id; seen.add(m.id); ensureDelete(w); }
         });
         if (Date.now() < waitUntil) waitBubble = makeWaitBubble();  // unten weiter warten
       }
@@ -333,7 +362,7 @@
     });
   }
   applyProviderIcons();
-  history.querySelectorAll(".chat-msg").forEach(ensureCopy);
+  history.querySelectorAll(".chat-msg").forEach(function (m) { ensureCopy(m); ensureDelete(m); });
 
   sendBtn.addEventListener("click", send);
   input.addEventListener("keydown", (e) => {

@@ -84,10 +84,12 @@
     {% include "partials/chat_participants.html" %}
     {% if session %}
     <div class="chat-history" id="chat-history" data-send-url="{% url 'chat-send' session.pk %}"
-         data-copy-label="{% trans 'Kopieren' %}" data-poll-url="{% url 'chat-poll' session.pk %}" data-last-id="{{ messages.last.id|default:0 }}"
+         data-copy-label="{% trans 'Kopieren' %}" data-delete-url="{% url 'chat-message-delete' 0 %}"
+         data-delete-label="{% trans 'Nachricht löschen' %}" data-delete-confirm="{% trans 'Diese Nachricht löschen?' %}"
+         data-can-delete-all="{% if can_delete_all %}1{% endif %}" data-poll-url="{% url 'chat-poll' session.pk %}" data-last-id="{{ messages.last.id|default:0 }}"
          data-me="{{ request.user.get_full_name|default:request.user.username }}">
       {% for m in messages %}
-      <div class="chat-msg {{ m.role|lower }}{% if mention_token and mention_token in m.content %} msg-tome{% endif %}"{% if m.role == 'USER' and m.author_id == request.user.id %} data-mine="1"{% endif %} data-raw="{{ m.content }}">
+      <div class="chat-msg {{ m.role|lower }}{% if mention_token and mention_token in m.content %} msg-tome{% endif %}" data-mid="{{ m.id }}"{% if m.role == 'USER' and m.author_id == request.user.id %} data-mine="1"{% endif %} data-raw="{{ m.content }}">
         <div class="sender small text-muted mb-1"><i class="fas {% if m.role == 'USER' %}fa-user{% elif m.role == 'ASSISTANT' %}{% if m.llm_model %}fa-worm text-success{% else %}fa-robot{% endif %}{% else %}fa-gear{% endif %} me-1"></i>{{ m.sender_label }}</div>
         <div class="bubble">{{ m.content|chat_render }}</div>
         {% if m.cited_sources %}

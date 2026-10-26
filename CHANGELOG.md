@@ -111,6 +111,13 @@ elisa (0.3.0) unstable; urgency=medium
   * MCP: neues Lese-Tool list_chats (Projekt-Chats, optional persönliche) und
     get_chat(session_id, after_id) zum fortlaufenden Mitlesen – z. B. durch
     Claude Code über einen READ-Token.
+  * Sicherheit (MCP): Tool-Aufrufe mit Objekt-IDs ohne project_key (session_id,
+    task_id, request_id, doc_id) werden gegen das Projekt des Tokens geprüft –
+    ein Token von Projekt A kann keine Chats/Aufgaben/Dokumente von Projekt B
+    mehr lesen oder ändern (System-Personas ausgenommen wie bisher).
+  * Chat: einzelne Nachrichten löschbar (Papierkorb an der Nachricht; Admin
+    jede, Eigentümer im persönlichen Chat jede, im Projekt-Chat PL jede und
+    Mitglieder ihre eigenen; Item-Chats ausgenommen).
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

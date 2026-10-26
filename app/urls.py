@@ -86,6 +86,8 @@ urlpatterns = [
     path("chat/<int:pk>/send/", views_chat.chat_send, name="chat-send"),
     path("chat/<int:pk>/poll/", views_chat.chat_poll, name="chat-poll"),
     path("chat/<int:pk>/delete/", views_chat.chat_delete, name="chat-delete"),
+    path("chat/message/<int:pk>/delete/", views_chat.chat_message_delete,
+         name="chat-message-delete"),
     path("chat/<int:pk>/rename/", views_chat.chat_rename, name="chat-rename"),
 
     # Beratendes Live-Feedback (Editor)
