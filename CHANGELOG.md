@@ -128,6 +128,10 @@ elisa (0.3.0) unstable; urgency=medium
     URL-Scope ihrer Phase (neu: modtest/inttest/systest/acctest als URL-Scope; die
     Teststufen bleiben keine Token-Scope-Dimension) und stellt ihrem Prompt Name
     und Akronym voran. Die Chat-Vorstellung nennt Handles und Verbindungsstatus.
+  * Fix: Chat rendert jetzt Markdown (Fett, Listen, Zitate, Code, Tabellen) – auch
+    Persona-Antworten und die Begrüßung; sicher bereinigt (bleach, kein rohes
+    HTML), Mentions/Norm-Links bleiben, der Server liefert das HTML an Poll und
+    Senden mit.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

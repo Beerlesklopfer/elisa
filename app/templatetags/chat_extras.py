@@ -62,11 +62,50 @@ def glyph_map_json(participants):
     return mark_safe(json.dumps(m))
 
 
+_MD_TAGS = ["p", "br", "strong", "em", "b", "i", "code", "pre", "blockquote",
+            "ul", "ol", "li", "h1", "h2", "h3", "h4", "hr", "a", "table", "thead",
+            "tbody", "tr", "th", "td", "del"]
+_MD_ATTRS = {"a": ["href", "title"]}
+_TAG_SPLIT = re.compile(r"(<[^>]+>)")
+
+
+def _markdown_html(text):
+    """Markdown → bereinigtes HTML. Rohes HTML aus dem Text wird NICHT durchgelassen
+    (bleach mit fester Tag-/Attribut-Liste, nur http/https/mailto-Links)."""
+    import bleach
+    import markdown
+    html = markdown.markdown(text or "", extensions=["extra", "sane_lists", "nl2br"])
+    return bleach.clean(html, tags=_MD_TAGS, attributes=_MD_ATTRS,
+                        protocols=["http", "https", "mailto"], strip=True)
+
+
 @register.filter
-def chat_render(text):
-    """Chat-Nachricht rendern: @mentions als Chips + Norm-Referenzen (VORHANDEN →
-    Quellen-Link, FEHLEND → rot-fett). HTML-sicher."""
+def chat_render_plain(text):
+    """Wie chat_render, aber OHNE Markdown (für Zeilen mit white-space:pre-wrap,
+    z. B. den Item-Chat): escapen, @mentions als Chips, Norm-Referenzen."""
     out = escape(text or "")
     out = _MENTION.sub(r'<span class="mention">\1</span>', out)
-    out = _link_norms(out)
-    return mark_safe(out)
+    return mark_safe(_link_norms(out))
+
+
+@register.filter
+def chat_render(text):
+    """Chat-Nachricht rendern: Markdown (sicher bereinigt), dazu @mentions als Chips
+    und Norm-Referenzen (VORHANDEN → Quellen-Link, FEHLEND → rot-fett). Mentions und
+    Norm-Referenzen wirken nur auf Text, nicht in Tags/Code-Blöcken."""
+    html = _markdown_html(text)
+    out, in_code = [], 0
+    for part in _TAG_SPLIT.split(html):
+        if part.startswith("<"):
+            low = part.lower()
+            if low.startswith(("<code", "<pre")):
+                in_code += 1
+            elif low.startswith(("</code", "</pre")):
+                in_code = max(0, in_code - 1)
+            out.append(part)
+        elif in_code or not part:
+            out.append(part)
+        else:
+            seg = _MENTION.sub(r'<span class="mention">\1</span>', part)
+            out.append(_link_norms(seg))
+    return mark_safe("".join(out))

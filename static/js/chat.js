@@ -195,7 +195,7 @@
     setTimeout(function () { ico.className = "fas fa-copy"; }, 1200);
   });
 
-  function addMessage(role, content, sources, sender) {
+  function addMessage(role, content, sources, sender, html) {
     const wrap = document.createElement("div");
     wrap.className = "chat-msg " + role;
     wrap.dataset.raw = content || "";
@@ -212,7 +212,7 @@
     }
     const bubble = document.createElement("div");
     bubble.className = "bubble";
-    bubble.innerHTML = withMentions(content);
+    bubble.innerHTML = html || withMentions(content);   // html = serverseitig gerendertes Markdown
     tintBubble(bubble, sender, role);
     wrap.appendChild(bubble);
     if (sources && sources.length) {
@@ -292,13 +292,17 @@
             if (userBubble) userBubble.remove();
           } else {
             seen.add(data.user.id);
-            if (userBubble) { userBubble.dataset.mid = data.user.id; ensureDelete(userBubble); }
+            if (userBubble) {
+              userBubble.dataset.mid = data.user.id; ensureDelete(userBubble);
+              const ub = userBubble.querySelector(".bubble");       // Markdown wie auf dem Server
+              if (ub && data.user.html) ub.innerHTML = data.user.html;
+            }
           }
           lastId = Math.max(lastId, data.user.id);
         }
         if (data.assistant) {
           const aw = addMessage("assistant", data.assistant.content, data.assistant.sources,
-                                data.assistant.sender || "Assistent");
+                                data.assistant.sender || "Assistent", data.assistant.html);
           if (data.assistant.id) { aw.dataset.mid = data.assistant.id; seen.add(data.assistant.id); ensureDelete(aw); }
           lastId = Math.max(lastId, data.assistant.id || 0);
         }
@@ -339,7 +343,7 @@
         msgs.forEach(function (m) {
           lastId = Math.max(lastId, m.id || 0);
           if (m.id && seen.has(m.id)) return;          // schon gerendert (z. B. optimistisch)
-          const w = addMessage(m.role, m.content, m.sources, m.sender);
+          const w = addMessage(m.role, m.content, m.sources, m.sender, m.html);
           if (m.id) { w.dataset.mid = m.id; seen.add(m.id); ensureDelete(w); }
         });
         if (Date.now() < waitUntil) waitBubble = makeWaitBubble();  // unten weiter warten

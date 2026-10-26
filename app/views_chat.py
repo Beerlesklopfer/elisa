@@ -25,6 +25,7 @@ from .models import ChatSession, ChatMessage, ChatRole
 from .projects import get_active_project, is_project_member
 from .permissions import pm_or_admin_required, is_pm_or_admin, is_admin
 from . import rag_service
+from .templatetags.chat_extras import chat_render
 
 CHAT_SYSTEM = """Du bist ein beratender Assistent für funktionale Sicherheit
 nach IEC 61508. Du gibst Auskünfte und Einschätzungen, geerdet am
@@ -297,7 +298,8 @@ def chat_send(request, pk):
         handles.add("all")          # @all = alle Teilnehmer
         if mentioned & handles:
             session.save(update_fields=["updated_at"])
-            return JsonResponse({"user": {"id": user_msg.id, "content": user_msg.content},
+            return JsonResponse({"user": {"id": user_msg.id, "content": user_msg.content,
+                                          "html": str(chat_render(user_msg.content))},
                                  "assistant": None})
 
     # 2) Kontext via RAG: Normen (global) + Projektdokumente (projekt-skopiert).
@@ -379,10 +381,12 @@ def chat_send(request, pk):
     session.save(update_fields=["updated_at"])
 
     return JsonResponse({
-        "user": {"id": user_msg.id, "content": user_msg.content},
+        "user": {"id": user_msg.id, "content": user_msg.content,
+                 "html": str(chat_render(user_msg.content))},
         "assistant": {
             "id": assistant_msg.id,
             "content": assistant_msg.content,
+            "html": str(chat_render(assistant_msg.content)),
             "model": assistant_msg.llm_model,
             "sender": assistant_msg.sender_label(),
             "sources": cited,
@@ -399,7 +403,9 @@ def chat_poll(request, pk):
         after = int(request.GET.get("after") or 0)
     except ValueError:
         after = 0
+    from app.templatetags.chat_extras import chat_render
     out = [{"id": m.id, "role": m.role.lower(), "content": m.content,
+            "html": str(chat_render(m.content)),
             "sender": m.sender_label(), "sources": m.cited_sources or []}
            for m in session.messages.filter(id__gt=after).order_by("id")]
     return JsonResponse({"messages": out})

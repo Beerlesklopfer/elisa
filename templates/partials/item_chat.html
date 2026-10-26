@@ -10,7 +10,7 @@
     <div class="mb-2 p-1{% if mention_token and mention_token in m.content %} msg-tome{% endif %}">
       <span class="badge {% if m.role == 'ASSISTANT' %}bg-info text-dark{% elif m.role == 'SYSTEM' %}bg-secondary{% else %}bg-primary{% endif %}"
             title="{{ m.get_role_display }}"><i class="fas {% if m.role == 'USER' %}fa-user{% elif m.role == 'ASSISTANT' %}fa-robot{% else %}fa-gear{% endif %} me-1"></i>{{ m.sender_label }}</span>
-      <span style="white-space:pre-wrap">{{ m.content|chat_render }}</span>
+      <span style="white-space:pre-wrap">{{ m.content|chat_render_plain }}</span>
     </div>
     {% empty %}<div class="text-muted">{% trans "Noch keine Nachrichten – alle Projektbeteiligten (inkl. LLM) schreiben hier. Sprich ein LLM per @handle direkt an." %}</div>{% endfor %}
     {% for h in awaiting %}
