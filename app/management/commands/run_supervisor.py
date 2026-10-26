@@ -51,9 +51,12 @@ def _persona_for(handle, scope):
     sys_role = {"lukas": "LUKAS", "esra": "ESRA", "tertius": "TERTIUS",
                 "nathan": "NATHAN"}.get(handle)
     if sys_role:
+        from app.personas import system_persona, plain
+        sp = system_persona(handle)
+        intro = (f"Du bist {sp['name'].upper()} — {plain(sp['acronym'])}.\n" if sp else "")
         rd = LLMRoleDescription.objects.filter(role=sys_role).first()
         if rd and rd.description:
-            return rd.description
+            return intro + rd.description
         from app.apps import (LUKAS_PERSONA, ESRA_PERSONA, TRANSLATOR_PERSONA,
                               NATHAN_PERSONA)
         return {"lukas": LUKAS_PERSONA, "esra": ESRA_PERSONA, "tertius": TRANSLATOR_PERSONA,

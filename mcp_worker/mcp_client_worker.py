@@ -31,6 +31,19 @@ CHAT_SYSTEM = (
 )
 
 
+# Gilt zusätzlich zur Persona, wenn sie im CHAT antwortet (nicht im Editor/Toast):
+# Rollenbeschreibungen der V-Schritte verlangen Spezifikationen/Items – im Chat
+# führte das bei einer bloßen Begrüßung zu erfundenen Pflichtenheften.
+CHAT_MODE_RULES = (
+    "CHAT-MODUS (hat Vorrang vor allem Obigen): Du antwortest in einem Chat, nicht im "
+    "Editor. Beantworte NUR, was die letzte Nachricht fragt – kurz, höchstens 5 Sätze, "
+    "ohne Überschriften oder Tabellen. Erzeuge KEINE Spezifikation, Anforderungen, Items, "
+    "Tabellen oder Traceability-Verweise, außer sie werden ausdrücklich verlangt, und "
+    "erfinde nie Identifier, Handles, Normstellen oder Zahlen. Bei Begrüßung oder "
+    "Smalltalk: stelle dich in 1–2 Sätzen mit Namen und Aufgabe vor und frage, wobei du "
+    "helfen kannst. Weißt du etwas nicht, sag es."
+)
+
 # ── LLM (provider-agnostisch) ───────────────────────────────────────────────
 def _llm_text(provider, model, base_url, api_key, system, user):
     api_key = (api_key or "").strip()        # Whitespace/Umbruch aus Copy-Paste raus
@@ -162,7 +175,8 @@ async def _poll_once(session, args, proj):
                 "get_workitem", {"project_key": proj, "identifier": ident})) or {}
         except Exception:
             chat, item = [], {}
-        system = args.persona or CHAT_SYSTEM.format(handle="@" + args.handle)
+        system = ((args.persona or CHAT_SYSTEM.format(handle="@" + args.handle))
+                  + "\n\n" + CHAT_MODE_RULES)
         last_sender = mn.get("last_sender") or ""
         last_name = mn.get("last_sender_name") or ""
         who = (f"{last_sender} ({last_name})" if last_sender and last_name
@@ -259,7 +273,8 @@ async def _chat_once(session, args, proj):
             chat = _tool_rows(await session.call_tool("get_chat", {"session_id": sid}))
         except Exception:
             chat = []
-        system = args.persona or CHAT_SYSTEM.format(handle="@" + args.handle)
+        system = ((args.persona or CHAT_SYSTEM.format(handle="@" + args.handle))
+                  + "\n\n" + CHAT_MODE_RULES)
         last_sender = mn.get("last_sender") or ""
         last_name = mn.get("last_sender_name") or ""
         who = (f"{last_sender} ({last_name})" if last_sender and last_name

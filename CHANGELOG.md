@@ -134,6 +134,11 @@ elisa (0.3.0) unstable; urgency=medium
     Senden mit.
   * MCP: Streamable HTTP ist standardmäßig stateless (MCP_STATELESS=true) – Clients
     überleben einen Neustart des Servers (kein "Session not found" mehr).
+  * Fix: Persona-Antworten im Chat – Noah schrieb auf „@all Hi" ein erfundenes
+    Pflichtenheft. Der Worker hängt im Chat jetzt CHAT_MODE_RULES an (kurz,
+    nur die gestellte Frage, keine Spezifikation/Items/Identifier ohne
+    Auftrag, bei Smalltalk kurze Vorstellung); die System-Personas kennen Name und
+    Akronym im Prompt.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.
