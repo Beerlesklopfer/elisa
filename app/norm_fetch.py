@@ -67,19 +67,35 @@ def _cellar(url, language):
     if m:
         url, lang = f"https://publications.europa.eu/resource/celex/{m.group(2)}", (lang or m.group(1).lower())
     if urlparse(url).hostname == "publications.europa.eu" and "/resource/celex/" in url:
-        return url, {"Accept": "application/pdf;type=pdfa2a",
-                     "Accept-Language": _LANG3.get(lang, lang) or "eng"}
-    return url, {}
+        return url, [{"Accept": acc, "Accept-Language": _LANG3.get(lang, lang) or "eng"}
+                     # neuere Rechtsakte als PDF/A-2a, ältere nur als einfaches PDF
+                     for acc in ("application/pdf;type=pdfa2a", "application/pdf")]
+    return url, [{}]
 
 
 def fetch_pdf(url, name="", requested_by="", language=""):
     """Lädt ein PDF nach INCOMING_DIR. Liefert {file, bytes, sha256, source_url}.
     `language`: Sprache für EU-Rechtsakte (de/en/…), sonst aus der EUR-Lex-URL."""
-    cur, extra = _cellar(url, language)
+    cur, variants = _cellar(url, language)
+    last = None
+    for extra in variants:
+        try:
+            return _download(url, cur, extra, name, requested_by)
+        except FetchError as exc:
+            last = exc
+            if "HTTP 404" not in str(exc):
+                raise
+    raise last
+
+
+def _download(url, cur, extra, name, requested_by):
     with httpx.Client(timeout=60, follow_redirects=False,
                       headers={"User-Agent": "ELISA-norm-fetch/1.0"}) as cl:
         for _hop in range(MAX_HOPS + 1):
             p = urlparse(cur)
+            if p.scheme == "http" and p.hostname and p.hostname.lower() in settings.MCP_NORM_HOSTS:
+                cur = cur.replace("http://", "https://", 1)      # Cellar leitet auf http um
+                p = urlparse(cur)
             if p.scheme != "https" or not p.hostname:
                 raise FetchError("Nur https-URLs sind erlaubt.")
             _check_host(p.hostname)
