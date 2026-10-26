@@ -155,6 +155,9 @@ elisa (0.3.0) unstable; urgency=medium
     geschützt, MCP_NORM_HOSTS), build_norm_index, norm_index_status; Listener
     scripts/claude_chat_listener.py meldet @claude-Ansprachen (Monitor in Claude Code).
     Im Container liegen incoming/ und indexed_pdfs/ jetzt im Daten-Volume (FHS-Defaults).
+  * add_norm_from_url wartet bei EUR-Lex länger auf die PDF-Erzeugung (HTTP 202,
+    bis ~60 s); norm_index_status blendet pypdf-Warnungen aus; fonttools in den
+    Requirements (vollständige Schrift-Dekodierung beim Textauszug).
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

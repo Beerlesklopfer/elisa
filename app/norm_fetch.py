@@ -63,10 +63,10 @@ def fetch_pdf(url, name="", requested_by=""):
             if p.scheme != "https" or not p.hostname:
                 raise FetchError("Nur https-URLs sind erlaubt.")
             _check_host(p.hostname)
-            for attempt in range(6):            # EUR-Lex liefert zunächst 202 (wird erzeugt)
+            for attempt in range(13):           # EUR-Lex liefert zunächst 202 (PDF wird erzeugt)
                 with cl.stream("GET", cur) as r:
-                    if r.status_code == 202 and attempt < 5:
-                        time.sleep(3)
+                    if r.status_code == 202 and attempt < 12:
+                        time.sleep(5)
                         continue
                     if r.is_redirect:
                         cur = str(r.url.join(r.headers["location"]))
@@ -130,7 +130,9 @@ def index_running():
 def index_status(tail_lines=6):
     lines = []
     try:
-        lines = (Path(settings.DATA_DIR) / "rag_index.log").read_text(errors="replace").splitlines()[-tail_lines:]
+        raw = (Path(settings.DATA_DIR) / "rag_index.log").read_text(errors="replace").splitlines()
+        # pypdf-Warnungen (fontTools) und Überlanges ausblenden – nur Fortschritt zeigen
+        lines = [ln[:200] for ln in raw if "fontTools" not in ln][-tail_lines:]
     except OSError:
         pass
     return {"running": index_running(), "log_tail": lines}
