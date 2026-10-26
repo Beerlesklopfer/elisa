@@ -66,9 +66,9 @@ elisa (0.3.0) unstable; urgency=medium
     Default-URL http://127.0.0.1:1234/v1, Key aus `eliezer --new-key`);
     Migration 0052. Neu angelegte System-Personas nutzen ihn automatisch, wenn
     LOCAL_LLM_BACKEND=eliezer gesetzt ist.
-  * Navigation: eigener Menüpunkt "Admin" (Verweis auf /admin/) für berechtigte
-    Administratoren (is_staff oder Superuser); der Eintrag im Projektmenü
-    entfällt.
+  * Navigation: Eintrag "Admin" (Verweis auf /admin/) im Profil-Pulldown für
+    berechtigte Administratoren (is_staff oder Superuser); nicht mehr im
+    Projektmenü oder als eigener Menüpunkt.
   * Personas mit biblischen Namen und Akronymen (app/personas.py): Lukas
     (RAG-Chat, vorher Wendelin), Esra, Tertius (@dragoman), Nathan (@auditor)
     sowie je V-Schritt Mose, Noah, Salomo, Hiram, Gideon, Josua, Daniel,
