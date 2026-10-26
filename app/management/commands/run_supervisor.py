@@ -47,16 +47,16 @@ def _persona_for(handle, scope):
     Persona (LLMRoleDescription) passend zum Token-Scope; ALL/unbekannt = leer."""
     from app.models import LLMRoleDescription
     # System-Personas: Prompt aus der ADMIN-editierbaren Rollenbeschreibung
-    # (role = ESRA/DRAGOMAN/AUDITOR); Konstante nur als Fallback.
-    sys_role = {"esra": "ESRA", "dragoman": "DRAGOMAN",
-                "auditor": "AUDITOR"}.get(handle)
+    # (role = ESRA/TERTIUS/NATHAN); Konstante nur als Fallback.
+    sys_role = {"esra": "ESRA", "tertius": "TERTIUS",
+                "nathan": "NATHAN"}.get(handle)
     if sys_role:
         rd = LLMRoleDescription.objects.filter(role=sys_role).first()
         if rd and rd.description:
             return rd.description
-        from app.apps import ESRA_PERSONA, TRANSLATOR_PERSONA, AUDITOR_PERSONA
-        return {"esra": ESRA_PERSONA, "dragoman": TRANSLATOR_PERSONA,
-                "auditor": AUDITOR_PERSONA}[handle]
+        from app.apps import ESRA_PERSONA, TRANSLATOR_PERSONA, NATHAN_PERSONA
+        return {"esra": ESRA_PERSONA, "tertius": TRANSLATOR_PERSONA,
+                "nathan": NATHAN_PERSONA}[handle]
     role = (scope or "").upper()
     obj = LLMRoleDescription.objects.filter(role=role).first() if role and role != "ALL" else None
     return obj.description if obj else ""

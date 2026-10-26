@@ -1,5 +1,5 @@
 """
-Übersetzung über das im Admin festgelegte Übersetzungs-LLM (Dragoman, Default
+Übersetzung über das im Admin festgelegte Übersetzungs-LLM (Tertius, Default
 lokales Ollama + TowerInstruct). Übersetzungen sind INFORMATIV und NIE normativ
 (CLAUDE.md): der Wortlaut der Projektsprache bleibt allein maßgeblich.
 """
@@ -9,9 +9,9 @@ from django.conf import settings
 
 
 def translation_backend():
-    """Das aktive Übersetzungs-Backend (Dragoman) – im Admin änderbar/nicht löschbar."""
+    """Das aktive Übersetzungs-Backend (Tertius) – im Admin änderbar/nicht löschbar."""
     from app.models import WorkerBackend
-    return WorkerBackend.objects.filter(handle="dragoman", active=True).first()
+    return WorkerBackend.objects.filter(handle="tertius", active=True).first()
 
 
 def translate_text(text, target_language_name):

@@ -326,7 +326,7 @@ def _render_text(request, item, at=None, status_error="", notice="", translation
         show_hist_body = bool(_hb) and _hb != (historical["state"]["title"] or "").strip()
     # Zitierte Normen/Regelwerke aus dem Text erkennen (+ Direktlink, falls vorhanden).
     cited_norms = norm_refs.cited_norms(historical["state"]["body"] if historical else item.body)
-    # Informative Übersetzung (Dragoman) – nie normativ.
+    # Informative Übersetzung (Tertius) – nie normativ.
     translation_html, translation_name = "", ""
     if translation:
         _tlang, _ttext = translation
@@ -757,7 +757,7 @@ def workitem_translate(request, identifier):
         notice = (f"⛔ Übersetzung nach {langs.name(target)} unzulässig: normative "
                   "Sprache — der Wortlaut ist maßgeblich und wird nie übersetzt.")
     else:
-        # ASYNC über MCP: nur PENDING anlegen. Der Dragoman-Worker holt die Aufgabe
+        # ASYNC über MCP: nur PENDING anlegen. Der Tertius-Worker holt die Aufgabe
         # per MCP (next_translation_task), fragt sein LLM und schreibt das Ergebnis
         # per complete_translation zurück. Die UI pollt.
         from .models import ItemTranslation

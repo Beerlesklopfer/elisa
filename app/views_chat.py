@@ -95,9 +95,9 @@ def _render_chat(request, active, sessions):
 _PERSONA_BLURB = {
     "esra": "Normenrecherche – findet die passenden Normen, geerdet an den im "
                "System vorhandenen Norm-Dokumenten (nie frei erfunden).",
-    "dragoman": "Übersetzer – überträgt Items in die Sekundärsprachen des Projekts "
+    "tertius": "Übersetzer – überträgt Items in die Sekundärsprachen des Projekts "
                 "(informativ; die normative Quellsprache bleibt maßgeblich).",
-    "auditor": "Externes Audit – prüft kritisch und kann bei Findings genau eine "
+    "nathan": "Externes Audit – prüft kritisch und kann bei Findings genau eine "
                "Stufe zurückstufen.",
 }
 

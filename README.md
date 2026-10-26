@@ -155,8 +155,8 @@ stellen sie sich so vor.
 |---|---|---|
 | **Lukas** | **L**ookup **U**nderlying **K**nowledge, **A**nswer **S**ourced | RAG-Chat – beantwortet Fragen geerdet an Normen und Projektdokumenten („alles von Anfang an sorgfältig erforscht“, Lk 1,3) |
 | **Esra** (`@esra`) | **E**xtract **S**tandards, **R**eference-**A**nchored | Normenrecherche – findet die passenden Normen (der Schriftgelehrte, Esra 7) |
-| **Tertius** (`@dragoman`) | **T**ranslate **E**xactly, **R**etain **T**erms, **I**nvariants, **U**nchanged **S**tructure | Übersetzer – informativ, die Quellsprache bleibt maßgeblich (der Schreiber des Römerbriefs, Röm 16,22) |
-| **Nathan** (`@auditor`) | **N**onconformities **A**udited against **T**raceability, **H**azards **A**nd **N**orms | Externes Audit – prüft kritisch von außen (der Prophet vor David, 2 Sam 12) |
+| **Tertius** (`@tertius`) | **T**ranslate **E**xactly, **R**etain **T**erms, **I**nvariants, **U**nchanged **S**tructure | Übersetzer – informativ, die Quellsprache bleibt maßgeblich (der Schreiber des Römerbriefs, Röm 16,22) |
+| **Nathan** (`@nathan`) | **N**onconformities **A**udited against **T**raceability, **H**azards **A**nd **N**orms | Externes Audit – prüft kritisch von außen (der Prophet vor David, 2 Sam 12) |
 
 **V-Modell-Schritte**
 

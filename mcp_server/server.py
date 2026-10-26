@@ -844,7 +844,7 @@ def audit_downgrade(project_key: str, identifier: str, finding: str) -> dict:
         ChatMessage.objects.create(
             session=_owner_less_item_chat(w), role=ChatRole.ASSISTANT,
             content=f"🔎 Audit-Finding: {finding}\n→ zurückgestuft auf {ev.to_state}.",
-            author_label="@auditor", generated_by_llm=True, llm_model="mcp/auditor")
+            author_label="@nathan", generated_by_llm=True, llm_model="mcp/nathan")
     except Exception:
         pass
     return {"ok": True, "identifier": identifier, "new_status": ev.to_state}
@@ -854,7 +854,7 @@ def audit_downgrade(project_key: str, identifier: str, finding: str) -> dict:
 def next_translation_task(project_key: str) -> dict:
     """Holt die nächste OFFENE Übersetzungs-Aufgabe (vom „Übersetzen"-Button erzeugt)
     und markiert sie laufend. Liefert identifier, lang, lang_name, title, body. Für
-    den Dragoman-Übersetzer-Worker: danach das LLM fragen und complete_translation
+    den Tertius-Übersetzer-Worker: danach das LLM fragen und complete_translation
     mit dem Ergebnis aufrufen."""
     from app.models import Project, ItemTranslation
     from app import languages as _L
@@ -876,7 +876,7 @@ def next_translation_task(project_key: str) -> dict:
 @mcp.tool()
 def complete_translation(project_key: str, identifier: str, lang: str,
                          text: str, ok: bool = True) -> dict:
-    """Schreibt das Übersetzungs-Ergebnis zurück (DONE/ERROR). Vom Dragoman-Worker
+    """Schreibt das Übersetzungs-Ergebnis zurück (DONE/ERROR). Vom Tertius-Worker
     nach der LLM-Übersetzung aufgerufen; die UI pollt es dann."""
     from app.models import Project, ItemTranslation
     proj = Project.objects.filter(key=project_key).first()

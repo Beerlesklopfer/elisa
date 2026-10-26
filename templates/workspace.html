@@ -414,7 +414,7 @@ Spalten gleich breit, Buttons füllen die Zellen. Mobile-CSS folgt später (BACK
     var log = chatC.querySelector('.chat-log'); if (log) log.scrollTop = log.scrollHeight;
   }
 
-  // Async-Übersetzung: läuft im Hintergrund (Dragoman) → Zone pollen bis fertig.
+  // Async-Übersetzung: läuft im Hintergrund (Tertius) → Zone pollen bis fertig.
   function startTranslationPoll(container) {
     var zone = (container || textC).querySelector('#translation-zone');
     if (!zone || zone.dataset.polling) return;

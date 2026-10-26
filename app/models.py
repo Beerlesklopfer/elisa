@@ -70,8 +70,8 @@ class VModelRole(models.TextChoices):
 # die Personas leben NUR in dieser erweiterten Choices-Liste für LLMRoleDescription.
 LLM_ROLE_CHOICES = list(VModelRole.choices) + [
     ("ESRA", "Esra – Normenrecherche"),
-    ("DRAGOMAN", "Dragoman – Übersetzer"),
-    ("AUDITOR", "Auditor – externes Audit"),
+    ("TERTIUS", "Tertius – Übersetzer"),
+    ("NATHAN", "Nathan – externes Audit"),
 ]
 
 
@@ -407,7 +407,7 @@ class MCPToken(models.Model):
     name = models.CharField(max_length=128)              # z. B. "Claude Desktop – Frömelt"
     token = models.CharField(max_length=64, unique=True, db_index=True)
     active = models.BooleanField(default=True)
-    # System-Token (eingebaute Personas esra/dragoman/auditor): KEINE
+    # System-Token (eingebaute Personas esra/tertius/nathan): KEINE
     # Projekt-Schranke – darf projektübergreifend arbeiten.
     system = models.BooleanField("System (projektübergreifend)", default=False)
     # Scope = WAS darf dieser Zugangspunkt:
@@ -1004,7 +1004,7 @@ def enqueue_esra(project, kind, *, document=None, work_item=None, ref=""):
 class ItemTranslation(models.Model):
     """ASYNC-Übersetzung eines Items in eine Sekundärsprache (informativ, nie
     normativ). Der „Übersetzen"-Button legt sie PENDING an; ein Hintergrund-Thread
-    (Dragoman-LLM) füllt sie; die UI pollt bis DONE. Pro Item+Sprache eine."""
+    (Tertius-LLM) füllt sie; die UI pollt bis DONE. Pro Item+Sprache eine."""
     class Status(models.TextChoices):
         PENDING = "PENDING", "offen"
         RUNNING = "RUNNING", "läuft"

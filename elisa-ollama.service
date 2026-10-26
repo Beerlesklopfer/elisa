@@ -16,8 +16,8 @@ Group=www-data
 WorkingDirectory=/var/lib/elisa
 Environment=OLLAMA_HOST=127.0.0.1:11434
 Environment=OLLAMA_MODELS=/var/lib/elisa/ollama-models
-# Mehrere Personas nutzen verschiedene Modelle (esra/auditor=llama3.1,
-# dragoman=towerinstruct, RAG=nomic-embed-text). Default lädt nur EIN Modell →
+# Mehrere Personas nutzen verschiedene Modelle (esra/nathan=llama3.1,
+# tertius=towerinstruct, RAG=nomic-embed-text). Default lädt nur EIN Modell →
 # ständiges Swappen, blockierte Worker. Genug RAM (>200 GB) → mehrere parallel
 # halten und nicht entladen.
 Environment=OLLAMA_MAX_LOADED_MODELS=4

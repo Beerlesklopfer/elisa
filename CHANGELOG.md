@@ -79,6 +79,12 @@ elisa (0.3.0) unstable; urgency=medium
   * Corporate Identity neu: Nachtblau (#1b2a41), Bernstein (#b45f06), warmes
     Papierweiß – die frühere Farbwelt war auf SALZ abgestimmt; Verweise auf
     CrystalKey entfernt.
+  * Alte Persona-Namen aus dem System entfernt (Migration 0053): Dragoman ->
+    Tertius (@tertius), Auditor -> Nathan (@nathan) bei Handle, Token,
+    Worker-Backend, Rollenbeschreibung und alten Chat-Absendern (auch
+    Wendelin -> Lukas, Salinar -> Esra). Die menschliche Projektrolle
+    "Auditor" bleibt. Achtung: MCP-Clients mit Handle/Token-Namen der alten
+    Personas müssen angepasst werden.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

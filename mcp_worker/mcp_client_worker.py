@@ -390,7 +390,7 @@ async def _esra_once(session, args, proj):
 
 
 async def _translation_once(session, args, proj):
-    """Dragoman: ARBEITET DAS ÜBERSETZUNGS-BACKLOG AB — holt offene Aufgaben (vom
+    """Tertius: ARBEITET DAS ÜBERSETZUNGS-BACKLOG AB — holt offene Aufgaben (vom
     Auto-Übersetzen beim Öffnen erzeugt) per MCP, bis keine mehr offen sind,
     übersetzt je per LLM und schreibt das Ergebnis zurück."""
     for _ in range(50):                               # Backlog-Schranke pro Zyklus
@@ -448,7 +448,7 @@ async def _mcp_loop(args, inbox):
                             await _chat_once(session, args, proj)   # Projekt-/RAG-Chats
                             if args.handle == "esra":
                                 await _esra_once(session, args, proj)
-                            if args.handle == "dragoman":
+                            if args.handle == "tertius":
                                 await _translation_once(session, args, proj)
                         await asyncio.sleep(args.interval)
         except Exception as exc:

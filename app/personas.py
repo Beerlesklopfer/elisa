@@ -2,7 +2,7 @@
 Die Personas von ELISA – biblische Namen mit passendem Akronym.
 
 Reine Darstellung (Vorstellung im Chat, Anzeigenamen). Die technischen Handles
-(@esra, @dragoman, @auditor) und die Rollenbeschreibungen (LLMRoleDescription)
+(@esra, @tertius, @nathan) und die Rollenbeschreibungen (LLMRoleDescription)
 bleiben davon unberührt. Die Personas beraten nur – verbindlich wird nichts ohne
 menschliche Freigabe (CLAUDE.md).
 """
@@ -17,12 +17,12 @@ SYSTEM_PERSONAS = [
     {"name": "Esra", "handle": "esra",
      "acronym": "**E**xtract **S**tandards, **R**eference-**A**nchored",
      "role": _("Normenrecherche – findet die passenden Normen (der Schriftgelehrte, Esra 7)")},
-    {"name": "Tertius", "handle": "dragoman",
+    {"name": "Tertius", "handle": "tertius",
      "acronym": "**T**ranslate **E**xactly, **R**etain **T**erms, **I**nvariants, "
                 "**U**nchanged **S**tructure",
      "role": _("Übersetzer – informativ, die Quellsprache bleibt maßgeblich "
              "(der Schreiber des Römerbriefs, Röm 16,22)")},
-    {"name": "Nathan", "handle": "auditor",
+    {"name": "Nathan", "handle": "nathan",
      "acronym": "**N**onconformities **A**udited against **T**raceability, "
                 "**H**azards **A**nd **N**orms",
      "role": _("Externes Audit – prüft kritisch von außen (der Prophet vor David, 2 Sam 12)")},
@@ -55,7 +55,7 @@ VMODEL_PERSONAS = [
 
 
 def system_persona(handle):
-    """Persona-Eintrag zu einem @-Handle (esra/dragoman/auditor) oder None."""
+    """Persona-Eintrag zu einem @-Handle (esra/tertius/nathan) oder None."""
     handle = (handle or "").lower()
     return next((p for p in SYSTEM_PERSONAS if p["handle"] == handle), None)
 

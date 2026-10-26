@@ -199,7 +199,7 @@ ESRA_PERSONA = (
 
 
 TRANSLATOR_PERSONA = (
-    "Du bist DRAGOMAN — die Übersetzer-Persona (lokales Modell, TowerInstruct). Du "
+    "Du bist TERTIUS — die Übersetzer-Persona (lokales Modell, TowerInstruct). Du "
     "überträgst Texte INFORMATIV in die Zielsprache; die Quell-/Projektsprache bleibt "
     "allein maßgeblich (normativ) — deine Übersetzung ist NIE verbindlich.\n"
     "REGELN:\n"
@@ -216,11 +216,11 @@ TRANSLATOR_PERSONA = (
 )
 
 
-AUDITOR_PERSONA = (
-    "Du bist der SYSTEM-AUDITOR (externes Audit: TÜV / Kunde / Sub). Aufgabe: aus "
+NATHAN_PERSONA = (
+    "Du bist NATHAN, der SYSTEM-AUDITOR (externes Audit: TÜV / Kunde / Sub). Aufgabe: aus "
     "Audit-Dokumenten (auch MS-Office) die ADRESSIERTEN Items (Identifier wie R4.1, "
     "S4.2.3) erkennen, je Item den FINDING/Befund präzise in den Item-Chat posten "
-    "(mit Quelle: Audit-Dok + Auditor) und bei einer Abweichung das Item per "
+    "(mit Quelle: Audit-Dok + Nathan) und bei einer Abweichung das Item per "
     "audit_downgrade um GENAU EINE Stufe ZURÜCKSTUFEN (nie hinauf). Du gibst NIE "
     "frei — die Freigabe bleibt rein menschlich (3-Personen-Regel, IEC 61508). "
     "Belege jedes Finding aus dem Audit-Dokument; erfinde nichts."
@@ -256,7 +256,7 @@ def _ensure_system_persona(handle, name, model="", persona="", iec=""):
         defaults.update(provider="ELIEZER", api_key=dj.ELIEZER_API_KEY,
                         base_url=dj.ELIEZER_BASE_URL.rstrip("/") + "/v1",
                         model=(dj.ELIEZER_TRANSLATE_MODEL or dj.ELIEZER_CHAT_MODEL)
-                        if handle == "dragoman" else dj.ELIEZER_CHAT_MODEL)
+                        if handle == "tertius" else dj.ELIEZER_CHAT_MODEL)
     WorkerBackend.objects.get_or_create(name=name, defaults=defaults)
     # Eine globale Instanz reicht → alte per-Projekt-/Vorgänger-Endpunkte desselben
     # Handles ENTFERNEN (samt verwaistem Token), nicht nur deaktivieren.
@@ -267,7 +267,7 @@ def _ensure_system_persona(handle, name, model="", persona="", iec=""):
     (MCPToken.objects.filter(id__in=old_token_ids)
      .exclude(id=tok.id).filter(worker_backends__isnull=True).delete())
     # Persona-Prompt als ADMIN-EDITIERBARE Rollenbeschreibung seeden (nicht hart-
-    # codiert): role = Handle in Großbuchstaben (ESRA/DRAGOMAN/AUDITOR).
+    # codiert): role = Handle in Großbuchstaben (ESRA/TERTIUS/NATHAN).
     if persona:
         from app.models import LLMRoleDescription
         obj, created = LLMRoleDescription.objects.get_or_create(
@@ -292,15 +292,15 @@ def ensure_esra(sender, **kwargs):
     _ensure_system_persona("esra", "Esra (System)", persona=ESRA_PERSONA)
 
 
-def ensure_dragoman(sender, **kwargs):
-    """post_migrate: EINE globale Dragoman-Persona (Übersetzer, TowerInstruct)."""
-    _ensure_system_persona("dragoman", "Dragoman (System)", "thinkverse/towerinstruct",
+def ensure_tertius(sender, **kwargs):
+    """post_migrate: EINE globale Tertius-Persona (Übersetzer, TowerInstruct)."""
+    _ensure_system_persona("tertius", "Tertius (System)", "thinkverse/towerinstruct",
                            persona=TRANSLATOR_PERSONA)
 
 
-def ensure_auditor(sender, **kwargs):
-    """post_migrate: EINE globale Auditor-Persona (externes Audit, alle Projekte)."""
-    _ensure_system_persona("auditor", "Auditor (System)", persona=AUDITOR_PERSONA)
+def ensure_nathan(sender, **kwargs):
+    """post_migrate: EINE globale Nathan-Persona (externes Audit, alle Projekte)."""
+    _ensure_system_persona("nathan", "Nathan (System)", persona=NATHAN_PERSONA)
 
 
 def _project_saved(sender, instance, created, **kwargs):
@@ -331,7 +331,7 @@ class AppConfig(DjangoAppConfig):
         post_migrate.connect(ensure_iec61508_groups, sender=self)
         post_migrate.connect(ensure_llm_roles, sender=self)
         post_migrate.connect(ensure_esra, sender=self)
-        post_migrate.connect(ensure_dragoman, sender=self)
-        post_migrate.connect(ensure_auditor, sender=self)
+        post_migrate.connect(ensure_tertius, sender=self)
+        post_migrate.connect(ensure_nathan, sender=self)
         user_logged_in.connect(_record_first_login)
         post_save.connect(_project_saved, sender="app.Project")

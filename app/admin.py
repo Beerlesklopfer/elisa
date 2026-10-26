@@ -344,25 +344,25 @@ class ProjectAdmin(JSONExchangeAdmin, admin.ModelAdmin):
     @admin.display(description="Standard-Personas")
     def personas(self, obj):
         """Kontrolle: hat das Projekt seine Standard-Personas? (Esra je Projekt,
-        Dragoman global)."""
+        Tertius global)."""
         from django.utils.html import format_html
         sal = WorkerBackend.objects.filter(handle="esra", active=True,
                                            token__project=obj).exists()
-        drag = WorkerBackend.objects.filter(handle="dragoman", active=True).exists()
+        drag = WorkerBackend.objects.filter(handle="tertius", active=True).exists()
         return format_html(
-            '<span style="color:{}">{} Esra</span> · <span style="color:{}">{} Dragoman</span>',
+            '<span style="color:{}">{} Esra</span> · <span style="color:{}">{} Tertius</span>',
             "#198754" if sal else "#dc3545", "●" if sal else "○",
             "#198754" if drag else "#dc3545", "●" if drag else "○")
 
-    @admin.action(description="Standard-Personas sicherstellen (Esra je Projekt + Dragoman global)")
+    @admin.action(description="Standard-Personas sicherstellen (Esra je Projekt + Tertius global)")
     def ensure_standard_personas(self, request, queryset):
-        from app.apps import ensure_esra_for, ensure_dragoman
-        ensure_dragoman(None)
+        from app.apps import ensure_esra_for, ensure_tertius
+        ensure_tertius(None)
         for p in queryset:
             ensure_esra_for(p)
         self.message_user(
             request, f"Standard-Personas sichergestellt für {queryset.count()} "
-            "Projekt(e) (Esra je Projekt) + Dragoman (global).")
+            "Projekt(e) (Esra je Projekt) + Tertius (global).")
 
 
 class _ReadOnlyInline(admin.TabularInline):
