@@ -140,7 +140,7 @@
       fd.append('title', document.getElementById('ed-title').value);
       fd.append('body', editor.getMarkdown());
       fd.append('rationale', document.getElementById('ed-rationale').value);
-      fetch(saveUrl, { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') }, body: fd })
+      fetch(saveUrl, { method: 'POST', headers: { 'X-CSRFToken': getCookie('elisa_csrftoken') }, body: fd })
         .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
         .then(function () {
           try {

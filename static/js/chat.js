@@ -166,7 +166,7 @@
     if (!window.confirm(history.dataset.deleteConfirm || "Diese Nachricht löschen?")) return;
     try {
       const res = await fetch(history.dataset.deleteUrl.replace("/0/", "/" + msg.dataset.mid + "/"),
-                              { method: "POST", headers: { "X-CSRFToken": getCookie("csrftoken") } });
+                              { method: "POST", headers: { "X-CSRFToken": getCookie("elisa_csrftoken") } });
       if (res.ok) msg.remove();
     } catch (err) { /* Netzfehler: nichts ändern */ }
   });
@@ -327,7 +327,7 @@
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": getCookie("csrftoken"),
+          "X-CSRFToken": getCookie("elisa_csrftoken"),
         },
         body: JSON.stringify({ message: text }),
       });

@@ -511,7 +511,7 @@ Spalten gleich breit, Buttons füllen die Zellen. Mobile-CSS folgt später (BACK
     var fd = new FormData();
     fd.append('target', target); fd.append('direction', dir); fd.append('op', op);
     fetch('/workspace/' + encodeURIComponent(id) + '/ref/', {
-      method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') }, body: fd
+      method: 'POST', headers: { 'X-CSRFToken': getCookie('elisa_csrftoken') }, body: fd
     }).then(function (r) { return r.text(); }).then(function (h) { textC.innerHTML = h; });
   }
   var _rf = document.getElementById('ref-filter');
@@ -552,7 +552,7 @@ Spalten gleich breit, Buttons füllen die Zellen. Mobile-CSS folgt später (BACK
     pane.innerHTML = '<div class="text-muted text-center p-4">' +
       '<span class="typing"><span></span><span></span><span></span></span></div>';
     fetch(form.dataset.action, {
-      method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') },
+      method: 'POST', headers: { 'X-CSRFToken': getCookie('elisa_csrftoken') },
       body: new FormData(form),
     }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
       .then(function (h) {
@@ -693,7 +693,7 @@ Spalten gleich breit, Buttons füllen die Zellen. Mobile-CSS folgt später (BACK
   });
   function postAdd(fd) {
     fetch('/workspace/add/', {
-      method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') }, body: fd
+      method: 'POST', headers: { 'X-CSRFToken': getCookie('elisa_csrftoken') }, body: fd
     })
       .then(function (r) {
         // Immer den Text holen und tolerant parsen – ein HTML-Fehler (500/Redirect)

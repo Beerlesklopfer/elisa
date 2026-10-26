@@ -196,7 +196,7 @@
     try {
       var res = await fetch(url, {
         method: 'POST',
-        headers: { 'X-CSRFToken': getCookie('csrftoken'),
+        headers: { 'X-CSRFToken': getCookie('elisa_csrftoken'),
                    'X-Requested-With': 'XMLHttpRequest',
                    'Content-Type': 'application/x-www-form-urlencoded' },
         body: 'title=' + encodeURIComponent(name),

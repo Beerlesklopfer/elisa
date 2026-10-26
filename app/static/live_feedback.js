@@ -29,7 +29,7 @@ async function postJSON(url, data) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-CSRFToken": getCookie("csrftoken"),
+      "X-CSRFToken": getCookie("elisa_csrftoken"),
     },
     body: JSON.stringify(data),
   });

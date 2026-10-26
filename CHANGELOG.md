@@ -169,6 +169,10 @@ elisa (0.3.0) unstable; urgency=medium
   * Proxy-Port im Compose-Stack jetzt 8480 (ELISA_PROXY_PORT): auf Port 8080
     lauschte auf IPv6 (::1) ein anderer Dienst; "localhost:8080" erreichte je nach
     Namensauflösung die falsche Anwendung (404/Connection reset).
+  * Fix: "CSRF token from POST incorrect" beim Login – Cookies gelten pro Host, nicht
+    pro Port; ein anderer Django-Dienst auf localhost überschrieb csrftoken/sessionid.
+    ELISA nutzt jetzt eigene Cookie-Namen (elisa_csrftoken, elisa_sessionid,
+    elisa_language; per Umgebungsvariable änderbar). Einmaliges Neu-Anmelden nötig.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

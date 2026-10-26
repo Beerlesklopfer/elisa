@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function () {
     fd.append('api_key', val('id_api_key'));
     fd.append('base_url', val('id_base_url'));
     fetch(btn.dataset.url, {
-      method: 'POST', headers: {'X-CSRFToken': cookie('csrftoken'),
+      method: 'POST', headers: {'X-CSRFToken': cookie('elisa_csrftoken'),
                                 'X-Requested-With': 'XMLHttpRequest'},
       body: fd,
     })

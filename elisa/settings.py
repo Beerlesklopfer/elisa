@@ -83,6 +83,12 @@ CSRF_TRUSTED_ORIGINS = [
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = _env_bool("USE_X_FORWARDED_HOST", "True")
 # Cookies nur über HTTPS senden (im Produktivbetrieb hinter TLS).
+# Cookies gelten pro HOST, nicht pro Port: ein anderer Django-Dienst auf localhost
+# (anderer Port) überschrieb sonst csrftoken/sessionid von ELISA → "CSRF token from POST
+# incorrect". Eigene Cookie-Namen entkoppeln das.
+CSRF_COOKIE_NAME = os.getenv("CSRF_COOKIE_NAME", "elisa_csrftoken")
+SESSION_COOKIE_NAME = os.getenv("SESSION_COOKIE_NAME", "elisa_sessionid")
+LANGUAGE_COOKIE_NAME = os.getenv("LANGUAGE_COOKIE_NAME", "elisa_language")
 CSRF_COOKIE_SECURE = _env_bool("CSRF_COOKIE_SECURE", "False")
 SESSION_COOKIE_SECURE = _env_bool("SESSION_COOKIE_SECURE", "False")
 
