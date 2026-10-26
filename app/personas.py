@@ -8,9 +8,9 @@ menschliche Freigabe (CLAUDE.md).
 """
 from django.utils.translation import gettext_lazy as _
 
-# System-Personas: handle = @-Handle im Chat (None = der RAG-Chat selbst).
+# System-Personas: handle = @-Handle im Chat.
 SYSTEM_PERSONAS = [
-    {"name": "Lukas", "handle": None,
+    {"name": "Lukas", "handle": "lukas",
      "acronym": "**L**ookup **U**nderlying **K**nowledge, **A**nswer **S**ourced",
      "role": _("RAG-Chat – beantwortet Fragen geerdet an Normen und Projektdokumenten "
              "(„alles von Anfang an sorgfältig erforscht“, Lk 1,3)")},

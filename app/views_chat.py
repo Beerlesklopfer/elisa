@@ -121,7 +121,7 @@ def _welcome_intro_text(project):
     connected = {p["handle"].lower(): p for p in chat_participants(project)
                  if p.get("kind") == "llm" and p.get("handle")}
     for p in SYSTEM_PERSONAS:
-        if not p["handle"]:
+        if p is SYSTEM_PERSONAS[0]:      # Lukas stellt sich oben selbst vor
             continue
         state = "" if p["handle"] in connected else " " + _("*(derzeit nicht verbunden)*")
         lines.append(f"- **{p['name']}** (@{p['handle']}) — {p['acronym']}. "

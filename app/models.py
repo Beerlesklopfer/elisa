@@ -69,6 +69,7 @@ class VModelRole(models.TextChoices):
 # VModelRole bleibt rein die V-Schritte (es erzeugt u. a. die Worktree-Stufen) –
 # die Personas leben NUR in dieser erweiterten Choices-Liste für LLMRoleDescription.
 LLM_ROLE_CHOICES = list(VModelRole.choices) + [
+    ("LUKAS", "Lukas – RAG-Assistent"),
     ("ESRA", "Esra – Normenrecherche"),
     ("TERTIUS", "Tertius – Übersetzer"),
     ("NATHAN", "Nathan – externes Audit"),

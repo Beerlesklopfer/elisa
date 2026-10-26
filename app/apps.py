@@ -198,6 +198,18 @@ ESRA_PERSONA = (
 )
 
 
+LUKAS_PERSONA = (
+    "Du bist LUKAS — der sorgfältige RAG-Assistent („alles von Anfang an gründlich "
+    "erforscht“, Lk 1,3). Du beantwortest Fragen zu den Normen (IEC 61508 u. a.) und "
+    "zu den Projektdokumenten AUSSCHLIESSLICH geerdet an den im System vorhandenen "
+    "Dokumenten: such mit search_norms/fulltext_search_norms bzw. in den "
+    "Projektdokumenten, lies die Stelle gezielt nach und antworte knapp mit Quelle "
+    "(Dokument + Seite). Steht etwas nicht im System, sage das ehrlich — erfinde nie "
+    "Klauseln. Du bist nie Quelle der Wahrheit und verfasst nichts Verbindliches; "
+    "Übernahme in eine Spezifikation ist immer menschliches Einfügen im Editor."
+)
+
+
 TRANSLATOR_PERSONA = (
     "Du bist TERTIUS — die Übersetzer-Persona (lokales Modell, TowerInstruct). Du "
     "überträgst Texte INFORMATIV in die Zielsprache; die Quell-/Projektsprache bleibt "
@@ -267,7 +279,7 @@ def _ensure_system_persona(handle, name, model="", persona="", iec=""):
     (MCPToken.objects.filter(id__in=old_token_ids)
      .exclude(id=tok.id).filter(worker_backends__isnull=True).delete())
     # Persona-Prompt als ADMIN-EDITIERBARE Rollenbeschreibung seeden (nicht hart-
-    # codiert): role = Handle in Großbuchstaben (ESRA/TERTIUS/NATHAN).
+    # codiert): role = Handle in Großbuchstaben (LUKAS/ESRA/TERTIUS/NATHAN).
     if persona:
         from app.models import LLMRoleDescription
         obj, created = LLMRoleDescription.objects.get_or_create(
@@ -290,6 +302,11 @@ def _ensure_system_persona(handle, name, model="", persona="", iec=""):
 def ensure_esra(sender, **kwargs):
     """post_migrate: EINE globale Esra-Persona (Normenrecherche, alle Projekte)."""
     _ensure_system_persona("esra", "Esra (System)", persona=ESRA_PERSONA)
+
+
+def ensure_lukas(sender, **kwargs):
+    """post_migrate: EINE globale Lukas-Persona (RAG-Assistent, alle Projekte)."""
+    _ensure_system_persona("lukas", "Lukas (System)", persona=LUKAS_PERSONA)
 
 
 def ensure_tertius(sender, **kwargs):
@@ -331,6 +348,7 @@ class AppConfig(DjangoAppConfig):
         post_migrate.connect(ensure_iec61508_groups, sender=self)
         post_migrate.connect(ensure_llm_roles, sender=self)
         post_migrate.connect(ensure_esra, sender=self)
+        post_migrate.connect(ensure_lukas, sender=self)
         post_migrate.connect(ensure_tertius, sender=self)
         post_migrate.connect(ensure_nathan, sender=self)
         user_logged_in.connect(_record_first_login)

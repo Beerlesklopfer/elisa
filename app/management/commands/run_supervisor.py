@@ -48,14 +48,15 @@ def _persona_for(handle, scope):
     from app.models import LLMRoleDescription
     # System-Personas: Prompt aus der ADMIN-editierbaren Rollenbeschreibung
     # (role = ESRA/TERTIUS/NATHAN); Konstante nur als Fallback.
-    sys_role = {"esra": "ESRA", "tertius": "TERTIUS",
+    sys_role = {"lukas": "LUKAS", "esra": "ESRA", "tertius": "TERTIUS",
                 "nathan": "NATHAN"}.get(handle)
     if sys_role:
         rd = LLMRoleDescription.objects.filter(role=sys_role).first()
         if rd and rd.description:
             return rd.description
-        from app.apps import ESRA_PERSONA, TRANSLATOR_PERSONA, NATHAN_PERSONA
-        return {"esra": ESRA_PERSONA, "tertius": TRANSLATOR_PERSONA,
+        from app.apps import (LUKAS_PERSONA, ESRA_PERSONA, TRANSLATOR_PERSONA,
+                              NATHAN_PERSONA)
+        return {"lukas": LUKAS_PERSONA, "esra": ESRA_PERSONA, "tertius": TRANSLATOR_PERSONA,
                 "nathan": NATHAN_PERSONA}[handle]
     role = (scope or "").upper()
     obj = LLMRoleDescription.objects.filter(role=role).first() if role and role != "ALL" else None
