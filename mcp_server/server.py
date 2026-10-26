@@ -976,18 +976,20 @@ def list_norms() -> list:
 
 
 @mcp.tool()
-async def add_standard_from_url(url: str, name: str = "") -> dict:
+async def add_standard_from_url(url: str, name: str = "", language: str = "") -> dict:
     """STANDARD (Norm) laden – ARBEITSAUFTRAG AUSFÜHREN (z. B. „suche frei zugängliche Normen und installiere
     sie ins RAG"): lädt ein frei lizenziertes PDF per https nach incoming/ (Host-
     Allowlist MCP_NORM_HOSTS, nur öffentliche Adressen, max. 80 MB, muss ein PDF sein,
     überschreibt nichts). Danach build_norm_index aufrufen. Lade NUR, was frei
     verfügbar ist (Lizenz prüfen) – keine kostenpflichtigen Normen. `name` = optionaler
-    Dateiname. Quelle und Prüfsumme werden protokolliert. WRITE-Token nötig."""
+    Dateiname. EU-Rechtsakte: EUR-Lex-PDF-URLs (…/legal-content/DE/TXT/PDF/?uri=CELEX:…)
+    werden über die offizielle Cellar-Schnittstelle geladen (EUR-Lex sperrt Programme);
+    `language` = de/en/… (sonst aus der URL). Quelle und Prüfsumme werden protokolliert. WRITE-Token nötig."""
     from app import norm_fetch
     try:
         # Im Thread: der Download kann dauern (EUR-Lex erzeugt PDFs erst) und würde
         # sonst die Event-Loop des MCP-Servers blockieren (Health-Check/andere Clients).
-        res = await asyncio.to_thread(norm_fetch.fetch_pdf, url, name, "mcp")
+        res = await asyncio.to_thread(norm_fetch.fetch_pdf, url, name, "mcp", language)
         return {"ok": True, **res}
     except norm_fetch.FetchError as exc:
         return {"ok": False, "error": str(exc)}

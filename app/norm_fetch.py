@@ -53,9 +53,29 @@ def _safe_name(name, url, disposition=""):
     return name if name.lower().endswith(".pdf") else name + ".pdf"
 
 
-def fetch_pdf(url, name="", requested_by=""):
-    """Lädt ein PDF nach INCOMING_DIR. Liefert {file, bytes, sha256, source_url}."""
-    cur = url
+_LANG3 = {"de": "deu", "en": "eng", "fr": "fra", "it": "ita", "es": "spa", "nl": "nld",
+          "pl": "pol", "cs": "ces", "sv": "swe", "da": "dan", "fi": "fin", "pt": "por"}
+_EURLEX_PDF = re.compile(r"^https://eur-lex\.europa\.eu/legal-content/([A-Za-z]{2})/TXT/PDF/\?uri=CELEX:(\w+)")
+
+
+def _cellar(url, language):
+    """EUR-Lex schützt seine PDF-Links gegen Programme (HTTP 202 + JS-Prüfung). Der
+    OFFIZIELLE maschinenlesbare Weg ist die Cellar-Schnittstelle des Amts für
+    Veröffentlichungen (Content Negotiation) – dorthin wird umgeleitet."""
+    m = _EURLEX_PDF.match(url)
+    lang = (language or "").lower()
+    if m:
+        url, lang = f"https://publications.europa.eu/resource/celex/{m.group(2)}", (lang or m.group(1).lower())
+    if urlparse(url).hostname == "publications.europa.eu" and "/resource/celex/" in url:
+        return url, {"Accept": "application/pdf;type=pdfa2a",
+                     "Accept-Language": _LANG3.get(lang, lang) or "eng"}
+    return url, {}
+
+
+def fetch_pdf(url, name="", requested_by="", language=""):
+    """Lädt ein PDF nach INCOMING_DIR. Liefert {file, bytes, sha256, source_url}.
+    `language`: Sprache für EU-Rechtsakte (de/en/…), sonst aus der EUR-Lex-URL."""
+    cur, extra = _cellar(url, language)
     with httpx.Client(timeout=60, follow_redirects=False,
                       headers={"User-Agent": "ELISA-norm-fetch/1.0"}) as cl:
         for _hop in range(MAX_HOPS + 1):
@@ -64,7 +84,7 @@ def fetch_pdf(url, name="", requested_by=""):
                 raise FetchError("Nur https-URLs sind erlaubt.")
             _check_host(p.hostname)
             for attempt in range(13):           # EUR-Lex liefert zunächst 202 (PDF wird erzeugt)
-                with cl.stream("GET", cur) as r:
+                with cl.stream("GET", cur, headers=extra) as r:
                     if r.status_code == 202 and attempt < 12:
                         time.sleep(5)
                         continue

@@ -163,6 +163,9 @@ elisa (0.3.0) unstable; urgency=medium
     Lese-Tools (list_norms, search_norms, …) behalten ihre Namen.
   * Fix: add_standard_from_url blockierte die Event-Loop des MCP-Servers (langer
     EUR-Lex-Download → Health-Check/Clients brachen ab); läuft jetzt im Thread.
+  * EU-Rechtsakte: EUR-Lex-PDF-Links werden über die offizielle Cellar-Schnittstelle
+    (publications.europa.eu, Content Negotiation pdfa2a, Sprache de/en/…) geladen,
+    da EUR-Lex Programme per HTTP 202/JS-Prüfung aussperrt – statt Umgehung der Sperre.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.
