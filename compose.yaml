@@ -64,7 +64,7 @@ services:
       - "./packaging/nginx/elisa-compose.conf:/etc/nginx/conf.d/default.conf:ro"
       - "data:/var/lib/elisa:ro"
     ports:
-      - "127.0.0.1:${ELISA_PROXY_PORT:-8080}:8080"
+      - "127.0.0.1:${ELISA_PROXY_PORT:-8480}:8080"
     cap_drop:
       - ALL
     security_opt:
@@ -86,7 +86,7 @@ services:
     depends_on:
       - mcp
 
-# Statische Dateien und Proxy: Dienst "proxy" (nginx, Port 8080). Hat man schon
+# Statische Dateien und Proxy: Dienst "proxy" (nginx, Host-Port 8480). Hat man schon
 # einen nginx davor, den Dienst weglassen und packaging/nginx/elisa-proxy.conf nutzen.
 # GPU für Eliezer: zusätzlich -f compose.gpu.yaml (AMD). Ohne GPU läuft Eliezer
 # auf der CPU. Läuft Eliezer stattdessen auf einem anderen Host: Dienst

@@ -166,6 +166,9 @@ elisa (0.3.0) unstable; urgency=medium
   * EU-Rechtsakte: EUR-Lex-PDF-Links werden über die offizielle Cellar-Schnittstelle
     (publications.europa.eu, Content Negotiation pdfa2a, Sprache de/en/…) geladen,
     da EUR-Lex Programme per HTTP 202/JS-Prüfung aussperrt – statt Umgehung der Sperre.
+  * Proxy-Port im Compose-Stack jetzt 8480 (ELISA_PROXY_PORT): auf Port 8080
+    lauschte auf IPv6 (::1) ein anderer Dienst; "localhost:8080" erreichte je nach
+    Namensauflösung die falsche Anwendung (404/Connection reset).
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

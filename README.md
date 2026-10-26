@@ -41,7 +41,7 @@ cp .env.example elisa.env      # Secret, Hosts, Eliezer-URL/Key eintragen
 podman compose -f compose.yaml -f compose.podman.yaml up -d --build
 ```
 
-Sechs Dienste: `proxy` (nginx, Port 8080: liefert `/static/` und leitet `/` und `/mcp/` weiter;
+Sechs Dienste: `proxy` (nginx, Host-Port 8480: liefert `/static/` und leitet `/` und `/mcp/` weiter;
 hier öffnest du ELISA), `eliezer` (Modellmanager, aus `../eliezer` gebaut; ELISAs
 Partner, erreichbar als `http://eliezer:1234`), `db` (PostgreSQL mit pgvector) sowie `web` (daphne, Port 8088, migriert und sammelt
 Static beim Start), `mcp` (MCP-Server, Port 8765) und `worker` (Supervisor). Daten
