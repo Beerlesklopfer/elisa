@@ -132,6 +132,8 @@ elisa (0.3.0) unstable; urgency=medium
     Persona-Antworten und die Begrüßung; sicher bereinigt (bleach, kein rohes
     HTML), Mentions/Norm-Links bleiben, der Server liefert das HTML an Poll und
     Senden mit.
+  * MCP: Streamable HTTP ist standardmäßig stateless (MCP_STATELESS=true) – Clients
+    überleben einen Neustart des Servers (kein "Session not found" mehr).
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

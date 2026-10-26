@@ -48,7 +48,12 @@ _transport_security = TransportSecuritySettings(
     allowed_hosts=_allowed_hosts,
     allowed_origins=_allowed_hosts,
 )
-mcp = FastMCP("ELISA PEP/REQ", transport_security=_transport_security)
+# Stateless Streamable HTTP: keine serverseitigen Sessions – Clients (Claude Code,
+# Worker) überleben einen Neustart/Redeploy des Servers ohne "Session not found".
+# Unsere Tools brauchen keine Server→Client-Nachrichten. MCP_STATELESS=false → Sessions.
+_stateless = os.getenv("MCP_STATELESS", "true").lower() in ("1", "true", "yes", "on")
+mcp = FastMCP("ELISA PEP/REQ", transport_security=_transport_security,
+              stateless_http=_stateless)
 
 
 # ── Tools (read-only) ──────────────────────────────────────────────────────
