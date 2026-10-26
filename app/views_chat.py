@@ -99,6 +99,8 @@ def _render_chat(request, active, sessions):
         "mention_token": f"@{me}" if me else "",
         "can_new_project_chat": is_pm_or_admin(request.user),
         "can_delete_all": _can_delete_all(request.user, active),
+        "chat_target": _current_target(active, chat_participants(get_active_project(request)))
+                       if active else "",
     })
 
 
@@ -213,6 +215,23 @@ def chat_delete(request, pk):
     return redirect("chat")
 
 
+def _current_target(session, parts):
+    """Aktuell gemeinte Persona (zuletzt per @ angesprochener LLM-Teilnehmer)."""
+    from app.chat_addressing import implicit_addressees
+    llm = {(p.get("handle") or "").lstrip("@").lower() for p in parts if p.get("kind") == "llm"}
+    hit = sorted(implicit_addressees(session.messages.order_by("id")) & llm)
+    return "@" + hit[0] if len(hit) == 1 else (", ".join("@" + h for h in hit) if hit else "")
+
+
+def _reply_ref(m):
+    """Kurzbezug auf die Nachricht, auf die m antwortet (oder None)."""
+    r = m.reply_to
+    if not r:
+        return None
+    return {"id": r.id, "sender": r.sender_label(),
+            "text": (r.content or "").replace("\n", " ")[:90]}
+
+
 @login_required
 @require_POST
 def chat_message_delete(request, pk):
@@ -290,11 +309,19 @@ def chat_send(request, pk):
     # generische RAG-LLM – die @-erwähnten Persona-Worker antworten (auch mehrere;
     # Erkennung per Regex). Der Chat lädt deren Antworten per Poll nach.
     import re as _re
-    mentioned = {m.lower() for m in _re.findall(r"@([\w\-äöüÄÖÜß]+)", text)}
+    from app.chat_addressing import mentions as _mentions, implicit_addressees
+    from app.participants import chat_participants
+    mentioned = _mentions(text)
+    parts = chat_participants(session.project)
+    llm_handles = {(p.get("handle") or "").lstrip("@").lower()
+                   for p in parts if p.get("kind") == "llm"}
+    if not mentioned:
+        # Keine @-Erwähnung: gemeint ist, wer zuletzt angesprochen wurde (solange der
+        # Mensch niemand anderen anspricht). Nur LLM-Teilnehmer lösen Antworten aus.
+        prior = list(session.messages.exclude(pk=user_msg.pk).order_by("id"))
+        mentioned = implicit_addressees(prior) & llm_handles
     if mentioned:
-        from app.participants import chat_participants
-        handles = {(p.get("handle") or "").lstrip("@").lower()
-                   for p in chat_participants(session.project)}
+        handles = {(p.get("handle") or "").lstrip("@").lower() for p in parts}
         handles.add("all")          # @all = alle Teilnehmer
         if mentioned & handles:
             session.save(update_fields=["updated_at"])
@@ -405,7 +432,7 @@ def chat_poll(request, pk):
         after = 0
     from app.templatetags.chat_extras import chat_render
     out = [{"id": m.id, "role": m.role.lower(), "content": m.content,
-            "html": str(chat_render(m.content)),
+            "html": str(chat_render(m.content)), "reply": _reply_ref(m),
             "sender": m.sender_label(), "sources": m.cited_sources or []}
            for m in session.messages.filter(id__gt=after).order_by("id")]
     return JsonResponse({"messages": out})

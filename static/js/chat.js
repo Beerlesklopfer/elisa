@@ -195,7 +195,7 @@
     setTimeout(function () { ico.className = "fas fa-copy"; }, 1200);
   });
 
-  function addMessage(role, content, sources, sender, html) {
+  function addMessage(role, content, sources, sender, html, reply) {
     const wrap = document.createElement("div");
     wrap.className = "chat-msg " + role;
     wrap.dataset.raw = content || "";
@@ -209,6 +209,16 @@
       sd.appendChild(i);
       sd.appendChild(document.createTextNode(sender));
       wrap.appendChild(sd);
+    }
+    if (reply && reply.text) {          // Bezug: worauf diese Nachricht antwortet
+      const rr = document.createElement("div");
+      rr.className = "reply-ref small text-muted";
+      const ri = document.createElement("i");
+      ri.className = "fas fa-reply me-1";
+      rr.appendChild(ri);
+      rr.appendChild(document.createTextNode(
+        (history.dataset.replyLabel || "Antwort auf") + " " + (reply.sender || "") + ": „" + reply.text + "“"));
+      wrap.appendChild(rr);
     }
     const bubble = document.createElement("div");
     bubble.className = "bubble";
@@ -233,7 +243,7 @@
     }
     history.appendChild(wrap);
     if (content) ensureCopy(wrap);
-    if (role === "user") wrap.dataset.mine = "1";      // optimistisch: meine eigene Nachricht
+    if (role === "user") { wrap.dataset.mine = "1"; ensureEdit(wrap); }   // optimistisch: meine eigene Nachricht
     history.scrollTop = history.scrollHeight;
     return wrap;
   }
@@ -253,10 +263,56 @@
     histPos = sentHistory.length; histDraft = "";
   }
 
+  // ── Wer ist gemeint? Ohne @ geht eine Nachricht an die zuletzt angesprochene Persona
+  //    (serverseitig dieselbe Regel); der Chip zeigt das aktuelle Ziel. ──
+  const targetEl = document.getElementById("chat-target");
+  function updateTarget(text) {
+    if (!targetEl) return;
+    const hits = [];
+    (text.match(/@([\wäöüÄÖÜß\-]+)/g) || []).forEach(function (t) {
+      const h = t.slice(1).toLowerCase();
+      if (GLYPHS[h] && hits.indexOf(h) === -1) hits.push(h);
+    });
+    if (hits.length) targetEl.textContent = hits.map(function (h) { return "@" + h; }).join(", ");
+  }
+
+  // ── Bearbeiten: Text einer eigenen Nachricht ins Eingabefeld holen; Senden schickt
+  //    sie NEU (die alte bleibt stehen und lässt sich mit dem Papierkorb entfernen). ──
+  const editBanner = document.getElementById("chat-editing");
+  function setEditing(on) { if (editBanner) editBanner.classList.toggle("d-none", !on); }
+  function ensureEdit(msg) {
+    if (!msg || msg.querySelector(".chat-edit") || !msg.dataset.mine) return;
+    const sd = msg.querySelector(".sender");
+    if (!sd) return;
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chat-edit btn btn-sm btn-link p-0 ms-2 text-muted";
+    b.title = history.dataset.editLabel || "Bearbeiten";
+    b.innerHTML = '<i class="fas fa-pen"></i>';
+    sd.appendChild(b);
+  }
+  history.addEventListener("click", function (e) {
+    const btn = e.target.closest(".chat-edit");
+    if (!btn) return;
+    e.preventDefault();
+    const msg = btn.closest(".chat-msg");
+    if (!msg) return;
+    histPos = sentHistory.length;
+    histSet(msg.dataset.raw || "");
+    setEditing(true);
+    input.focus();
+  });
+  const editCancel = document.getElementById("chat-editing-cancel");
+  if (editCancel) editCancel.addEventListener("click", function (e) {
+    e.preventDefault(); input.value = ""; autoGrow(); setEditing(false);
+  });
+
   async function send() {
     const text = input.value.trim();
     if (!text) return;
     remember(text);
+    updateTarget(text);
+    setEditing(false);
     input.value = "";
     autoGrow();                          // Höhe nach dem Leeren zurücksetzen
     const userBubble = addMessage("user", text, null, history.dataset.me || "Ich");
@@ -343,7 +399,7 @@
         msgs.forEach(function (m) {
           lastId = Math.max(lastId, m.id || 0);
           if (m.id && seen.has(m.id)) return;          // schon gerendert (z. B. optimistisch)
-          const w = addMessage(m.role, m.content, m.sources, m.sender, m.html);
+          const w = addMessage(m.role, m.content, m.sources, m.sender, m.html, m.reply);
           if (m.id) { w.dataset.mid = m.id; seen.add(m.id); ensureDelete(w); }
         });
         if (Date.now() < waitUntil) waitBubble = makeWaitBubble();  // unten weiter warten
@@ -366,7 +422,7 @@
     });
   }
   applyProviderIcons();
-  history.querySelectorAll(".chat-msg").forEach(function (m) { ensureCopy(m); ensureDelete(m); });
+  history.querySelectorAll(".chat-msg").forEach(function (m) { ensureCopy(m); ensureEdit(m); ensureDelete(m); });
 
   sendBtn.addEventListener("click", send);
   input.addEventListener("keydown", (e) => {

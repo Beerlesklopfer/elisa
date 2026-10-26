@@ -327,7 +327,8 @@ async def _chat_once(session, args, proj):
         if answer:
             try:
                 await session.call_tool("post_chat", {
-                    "session_id": sid, "message": answer, "sender": "@" + args.handle})
+                    "session_id": sid, "message": answer, "sender": "@" + args.handle,
+                    "reply_to": mn.get("last_id") or 0})
                 print(f"[worker {args.handle}] Chat {sid} beantwortet ({len(answer)} Z.)", flush=True)
             except Exception as exc:
                 print(f"[worker {args.handle}] post_chat: {exc}", file=sys.stderr, flush=True)

@@ -1200,3 +1200,16 @@ msgstr "Delete message"
 
 msgid "Diese Nachricht löschen?"
 msgstr "Delete this message?"
+
+msgid "Antwort auf"
+msgstr "Reply to"
+
+msgid "Schreibt mit:"
+msgstr "Talking to:"
+
+msgid "Ohne @ geht die Nachricht an die zuletzt angesprochene Persona."
+msgstr "Without @ the message goes to the persona addressed last."
+
+msgid "Bearbeiten – Senden schickt die Nachricht neu."
+msgstr "Editing – sending posts the message again."
+

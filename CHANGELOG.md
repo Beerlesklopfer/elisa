@@ -139,6 +139,15 @@ elisa (0.3.0) unstable; urgency=medium
     nur die gestellte Frage, keine Spezifikation/Items/Identifier ohne
     Auftrag, bei Smalltalk kurze Vorstellung); die System-Personas kennen Name und
     Akronym im Prompt.
+  * Chat: Nachricht bearbeiten und neu senden (Stift an der eigenen Nachricht
+    holt den Text ins Eingabefeld; Senden schickt sie neu).
+  * Chat: Bezug sichtbar – Antworten der Personas zeigen „Antwort auf <Absender>:
+    „…““ (neues Feld ChatMessage.reply_to, Migration 0055; post_chat(reply_to),
+    list_my_chat_mentions liefert last_id).
+  * Chat: implizite Adressierung – eine Nachricht ohne @ geht an die zuletzt
+    angesprochene Persona, bis der Mensch jemand anderen anspricht (@all zählt
+    einmalig); Chip „Schreibt mit: @…“ über dem Eingabefeld. Gleiche Regel im
+    RAG-Chat-Server und im MCP (list_my_chat_mentions).
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

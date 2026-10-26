@@ -85,12 +85,13 @@
     {% if session %}
     <div class="chat-history" id="chat-history" data-send-url="{% url 'chat-send' session.pk %}"
          data-copy-label="{% trans 'Kopieren' %}" data-delete-url="{% url 'chat-message-delete' 0 %}"
-         data-delete-label="{% trans 'Nachricht löschen' %}" data-delete-confirm="{% trans 'Diese Nachricht löschen?' %}"
+         data-reply-label="{% trans 'Antwort auf' %}" data-edit-label="{% trans 'Bearbeiten' %}" data-delete-label="{% trans 'Nachricht löschen' %}" data-delete-confirm="{% trans 'Diese Nachricht löschen?' %}"
          data-can-delete-all="{% if can_delete_all %}1{% endif %}" data-poll-url="{% url 'chat-poll' session.pk %}" data-last-id="{{ messages.last.id|default:0 }}"
          data-me="{{ request.user.get_full_name|default:request.user.username }}">
       {% for m in messages %}
       <div class="chat-msg {{ m.role|lower }}{% if mention_token and mention_token in m.content %} msg-tome{% endif %}" data-mid="{{ m.id }}"{% if m.role == 'USER' and m.author_id == request.user.id %} data-mine="1"{% endif %} data-raw="{{ m.content }}">
         <div class="sender small text-muted mb-1"><i class="fas {% if m.role == 'USER' %}fa-user{% elif m.role == 'ASSISTANT' %}{% if m.llm_model %}fa-worm text-success{% else %}fa-robot{% endif %}{% else %}fa-gear{% endif %} me-1"></i>{{ m.sender_label }}</div>
+        {% if m.reply_to %}<div class="reply-ref small text-muted"><i class="fas fa-reply me-1"></i>{% trans "Antwort auf" %} {{ m.reply_to.sender_label }}: „{{ m.reply_to.content|truncatechars:90 }}“</div>{% endif %}
         <div class="bubble">{{ m.content|chat_render }}</div>
         {% if m.cited_sources %}
         <div class="sources">{% trans "Quellen:" %}
@@ -101,6 +102,13 @@
         {% endif %}
       </div>
       {% endfor %}
+    </div>
+    <div class="chat-target small text-muted px-1 pb-1">
+      <i class="fas fa-bullseye me-1"></i>{% trans "Schreibt mit:" %}
+      <strong id="chat-target">{{ chat_target|default:"–" }}</strong>
+      <span class="ms-2" title="{% trans 'Ohne @ geht die Nachricht an die zuletzt angesprochene Persona.' %}"><i class="far fa-circle-question"></i></span>
+      <span id="chat-editing" class="d-none ms-3 text-primary"><i class="fas fa-pen me-1"></i>{% trans "Bearbeiten – Senden schickt die Nachricht neu." %}
+        <a href="#" id="chat-editing-cancel" class="ms-1">{% trans "Abbrechen" %}</a></span>
     </div>
     <div class="chat-input">
       {# @-Wake-Character: Mention-Autocomplete (Liste aller Teilnehmer) #}

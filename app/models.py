@@ -627,6 +627,9 @@ class ChatMessage(models.Model):
     author = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL,
                                related_name="chat_messages")
     author_label = models.CharField(max_length=64, blank=True)
+    # Bezug: auf welche Nachricht diese Antwort antwortet (sichtbar im Chat).
+    reply_to = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL,
+                                 related_name="replies")
 
     # Provenienz (Audit). Bei ASSISTANT immer True.
     generated_by_llm = models.BooleanField(default=False)

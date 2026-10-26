@@ -1160,7 +1160,12 @@ def list_my_chat_mentions(project_key: str, handle: str) -> list:
                                                        # werten. Persona↔Persona bleibt möglich.
         if (last.author_label or "").lstrip("@").lower() == h:
             continue                                   # nicht auf mich selbst antworten
-        tagged = {m.lower() for m in rx.findall(last.content or "")}
+        from app.chat_addressing import mentions as _mentions, implicit_addressees
+        tagged = _mentions(last.content)
+        implicit = False
+        if not tagged and last.role == ChatRole.USER:
+            # Keine @-Erwähnung: gemeint ist, wer zuletzt angesprochen wurde.
+            tagged, implicit = implicit_addressees(msgs[:-1]), True
         # @all richtet sich an alle – aber nur, wenn ein MENSCH schreibt (sonst würden
         # sich Personas gegenseitig endlos anstoßen).
         if h not in tagged and not ("all" in tagged and last.role == ChatRole.USER):
@@ -1173,6 +1178,7 @@ def list_my_chat_mentions(project_key: str, handle: str) -> list:
         if trailing >= CAP:
             continue
         out.append({"session_id": s.id, "title": s.title or "",
+                    "last_id": last.id, "implicit": implicit,
                     "last_message": (last.content or "")[:300],
                     "last_sender": _sender_handle(last),
                     "last_sender_name": last.sender_label()})
@@ -1218,21 +1224,26 @@ def get_chat(session_id: int, after_id: int = 0) -> list:
     if not s:
         return []
     return [{"id": m.id, "role": m.role, "sender": m.sender_label(),
-             "sender_handle": _sender_handle(m), "content": m.content}
+             "sender_handle": _sender_handle(m), "content": m.content,
+             "reply_to": m.reply_to_id}
             for m in s.messages.filter(id__gt=after_id)]
 
 
 @mcp.tool()
-def post_chat(session_id: int, message: str, sender: str = "") -> dict:
+def post_chat(session_id: int, message: str, sender: str = "", reply_to: int = 0) -> dict:
     """Antwortet in einer Chat-Session (Projekt-/RAG-Chat) als Persona (role=
     ASSISTANT, mit Provenienz). `sender` = dein @-Handle. NIE Quelle der Wahrheit;
-    schreibt nichts Verbindliches. WRITE-Token nötig."""
+    schreibt nichts Verbindliches. WRITE-Token nötig.
+    `reply_to` = ID der Nachricht, auf die du antwortest (macht den Bezug im Chat
+    sichtbar; bitte angeben, `last_id` aus list_my_chat_mentions)."""
     from app.models import ChatSession, ChatMessage, ChatRole
     s = ChatSession.objects.filter(id=session_id).first()
     if not s:
         return {"ok": False, "error": "Session nicht gefunden"}
+    ref = s.messages.filter(pk=reply_to).first() if reply_to else None
     ChatMessage.objects.create(session=s, role=ChatRole.ASSISTANT, content=message,
-                               author_label=sender or "@llm", generated_by_llm=True)
+                               author_label=sender or "@llm", generated_by_llm=True,
+                               reply_to=ref)
     return {"ok": True, "session_id": session_id}
 
 
