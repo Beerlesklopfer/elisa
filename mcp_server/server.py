@@ -976,8 +976,8 @@ def list_norms() -> list:
 
 
 @mcp.tool()
-def add_norm_from_url(url: str, name: str = "") -> dict:
-    """ARBEITSAUFTRAG AUSFÜHREN (z. B. „suche frei zugängliche Normen und installiere
+def add_standard_from_url(url: str, name: str = "") -> dict:
+    """STANDARD (Norm) laden – ARBEITSAUFTRAG AUSFÜHREN (z. B. „suche frei zugängliche Normen und installiere
     sie ins RAG"): lädt ein frei lizenziertes PDF per https nach incoming/ (Host-
     Allowlist MCP_NORM_HOSTS, nur öffentliche Adressen, max. 80 MB, muss ein PDF sein,
     überschreibt nichts). Danach build_norm_index aufrufen. Lade NUR, was frei
@@ -993,16 +993,16 @@ def add_norm_from_url(url: str, name: str = "") -> dict:
 
 
 @mcp.tool()
-def build_norm_index(only: str = "") -> dict:
+def build_standard_index(only: str = "") -> dict:
     """Stößt den Aufbau des Norm-RAG-Index im Hintergrund an (neue PDFs aus incoming/
     → Chunks → Embeddings). `only` = optional ein Dateiname/Stamm. Fortschritt:
-    norm_index_status, Ergebnis: list_norms. WRITE-Token nötig."""
+    standard_index_status, Ergebnis: list_norms. WRITE-Token nötig."""
     from app import norm_fetch
     return norm_fetch.start_index(only)
 
 
 @mcp.tool()
-def norm_index_status() -> dict:
+def standard_index_status() -> dict:
     """Läuft die Indexierung? Liefert running und die letzten Log-Zeilen."""
     from app import norm_fetch
     return norm_fetch.index_status()
@@ -1339,7 +1339,7 @@ WRITE_TOOLS = {"set_document_status", "propose_requirement", "update_requirement
                "delete_workitem", "reimport_requirements", "post_item_chat",
                "tag_document", "tag_workitem", "tag_chunk", "audit_downgrade",
                "post_chat", "create_outline_item", "delete_revision",
-               "add_norm_from_url", "build_norm_index"}
+               "add_standard_from_url", "build_standard_index"}
 
 # V-Stufen je Scope-Slug (req/spec/arch/mod). ALL deckt alle ab.
 SCOPE_PHASES = {"req": "REQ", "spec": "SPEC", "arch": "ARCH", "mod": "MOD",
