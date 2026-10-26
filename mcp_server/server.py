@@ -1615,10 +1615,11 @@ class BearerASGIMiddleware:
             if violation:
                 return await self._deny(send, 403, violation)
             i = {"n": 0}
+            _orig_receive = receive      # NICHT `receive` selbst: replay ersetzt es unten
             async def replay():
                 if i["n"] < len(msgs):
                     m = msgs[i["n"]]; i["n"] += 1; return m
-                return await receive()
+                return await _orig_receive()
             receive = replay
 
         # Projekt+Scope abtrennen -> innere App sieht /sse bzw. /messages/.
