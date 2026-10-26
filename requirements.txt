@@ -2,7 +2,7 @@ django>=5.0
 ollama>=0.3
 pypdf>=4.0
 python-dotenv>=1.0   # .env / FHS-/etc/elisa/env laden (settings.py)
-mcp>=1.0             # MCP-Server (SSE) für PEP/REQ-Bereitstellung
+mcp>=1.0,<2             # MCP-Server (SSE) für PEP/REQ-Bereitstellung
 uvicorn>=0.30        # ASGI-Server für den MCP-SSE-Endpunkt
 daphne>=4.0          # ASGI-Server für die Django-App (hinter nginx)
 # Hinweis: Pandoc ist ein System-Tool (apt install pandoc), kein pip-Paket –

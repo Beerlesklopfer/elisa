@@ -1,0 +1,13 @@
+# Eliezer läuft auf dem Host (z. B. systemd-Dienst) statt im Stack:
+#   podman compose -f compose.yaml -f compose.podman.yaml -f compose.host-eliezer.yaml up -d db web mcp worker proxy
+# ELIEZER_API_KEY und die Modell-Keys stehen in elisa.env.
+services:
+  web:
+    environment:
+      ELIEZER_BASE_URL: "http://host.containers.internal:1234"
+  mcp:
+    environment:
+      ELIEZER_BASE_URL: "http://host.containers.internal:1234"
+  worker:
+    environment:
+      ELIEZER_BASE_URL: "http://host.containers.internal:1234"

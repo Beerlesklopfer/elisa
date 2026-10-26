@@ -71,7 +71,8 @@ CSRF_TRUSTED_ORIGINS = [
     for o in os.getenv(
         "DJANGO_CSRF_TRUSTED_ORIGINS",
         f"http://{BIND_ADDRESS}:8000,http://{BIND_ADDRESS},"
-        "http://localhost:8088,http://127.0.0.1:8088",
+        "http://localhost:8088,http://127.0.0.1:8088,"
+        "http://localhost:8080,http://127.0.0.1:8080",
     ).split(",")
     if o.strip()
 ]

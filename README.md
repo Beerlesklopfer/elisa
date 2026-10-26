@@ -41,11 +41,13 @@ cp .env.example elisa.env      # Secret, Hosts, Eliezer-URL/Key eintragen
 podman compose -f compose.yaml -f compose.podman.yaml up -d --build
 ```
 
-Fünf Dienste: `eliezer` (Modellmanager, aus `../eliezer` gebaut; ELISAs
+Sechs Dienste: `proxy` (nginx, Port 8080: liefert `/static/` und leitet `/` und `/mcp/` weiter;
+hier öffnest du ELISA), `eliezer` (Modellmanager, aus `../eliezer` gebaut; ELISAs
 Partner, erreichbar als `http://eliezer:1234`), `db` (PostgreSQL mit pgvector) sowie `web` (daphne, Port 8088, migriert und sammelt
 Static beim Start), `mcp` (MCP-SSE, Port 8765) und `worker` (Supervisor). Daten
 (media, Static, incoming) liegen im Volume `data`, die Datenbank in `pgdata`; die Konfiguration wird
-als `/etc/elisa/env` schreibgeschützt eingehängt. Wer Eliezer extern betreibt, lässt den Dienst weg und setzt die URL; er läuft dann auf dem
+als `/etc/elisa/env` schreibgeschützt eingehängt. Läuft Eliezer schon auf dem Host, startest du zusätzlich mit `-f compose.host-eliezer.yaml`
+und lässt den Dienst `eliezer` weg. Wer Eliezer extern betreibt, lässt den Dienst weg und setzt die URL; er läuft dann auf dem
 GPU-Host (`ELIEZER_BASE_URL`). Für die GPU zusätzlich `-f compose.gpu.yaml`. Der Dienst läuft rootless als UID 10001 ohne
 Capabilities. Static-Dateien liefert normalerweise der vorgeschaltete nginx aus
 (`elisa.nginx.conf`); ohne nginx schaltet `ELISA_SERVE_STATIC=true` WhiteNoise ein.

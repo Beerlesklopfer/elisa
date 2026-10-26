@@ -46,6 +46,12 @@ elisa (0.3.0) unstable; urgency=medium
     Images als www-data; postinst legt /etc/elisa/env an und rendert
     packaging/nginx/elisa-proxy.conf nach sites-available/<host.domain>.conf
     (+ sites-enabled).
+  * Compose: Dienst "proxy" (nginx-unprivileged, Port 8080,
+    packaging/nginx/elisa-compose.conf) liefert Static und proxyt web/mcp;
+    compose.host-eliezer.yaml für einen Eliezer auf dem Host.
+  * Fix: mcp auf <2 gepinnt (mcp 2.x entfernt mcp.server.fastmcp, der
+    MCP-Container lief in eine Absturzschleife).
+  * CSRF-Defaults um die Proxy-Origins (localhost:8080) erweitert.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.
