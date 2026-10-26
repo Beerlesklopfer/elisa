@@ -47,6 +47,27 @@
       <p class="text-muted small">{% trans "Noch keine Chats." %}</p>
       {% endfor %}
     </div>
+    {% if other_chats %}
+    {# Nur für Administratoren: persönliche Chats anderer Nutzer verwalten (Inhalt bleibt verborgen) #}
+    <div class="mt-3 small text-muted"><i class="fas fa-user-shield me-1"></i>{% trans "Chats anderer Nutzer (Admin)" %}</div>
+    <div class="list-group mt-1" id="admin-chat-list">
+      {% for o in other_chats %}
+      <div class="list-group-item d-flex align-items-center gap-2 py-1">
+        <div class="flex-grow-1 overflow-hidden small">
+          <div class="text-truncate">{{ o.owner.get_full_name|default:o.owner.username }}</div>
+          <div style="font-size:.7rem;opacity:.7">{{ o.updated_at|date:"d.m. H:i" }} · {{ o.n_messages }} {% trans "Nachrichten" %}</div>
+        </div>
+        <form method="post" action="{% url 'chat-delete' o.pk %}"
+              onsubmit="return confirm('{% trans "Diesen Chat löschen?" %}');">
+          {% csrf_token %}
+          <button class="btn btn-sm btn-link text-danger p-1" title="{% trans 'Chat löschen' %}">
+            <i class="fas fa-trash-can"></i>
+          </button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
   </aside>
 
   {# Kontextmenü (Rechtsklick auf einen Chat) – nur für umbenennbare Chats #}
@@ -63,10 +84,10 @@
     {% include "partials/chat_participants.html" %}
     {% if session %}
     <div class="chat-history" id="chat-history" data-send-url="{% url 'chat-send' session.pk %}"
-         data-poll-url="{% url 'chat-poll' session.pk %}" data-last-id="{{ messages.last.id|default:0 }}"
+         data-copy-label="{% trans 'Kopieren' %}" data-poll-url="{% url 'chat-poll' session.pk %}" data-last-id="{{ messages.last.id|default:0 }}"
          data-me="{{ request.user.get_full_name|default:request.user.username }}">
       {% for m in messages %}
-      <div class="chat-msg {{ m.role|lower }}{% if mention_token and mention_token in m.content %} msg-tome{% endif %}"{% if m.role == 'USER' and m.author_id == request.user.id %} data-mine="1" data-raw="{{ m.content }}"{% endif %}>
+      <div class="chat-msg {{ m.role|lower }}{% if mention_token and mention_token in m.content %} msg-tome{% endif %}"{% if m.role == 'USER' and m.author_id == request.user.id %} data-mine="1"{% endif %} data-raw="{{ m.content }}">
         <div class="sender small text-muted mb-1"><i class="fas {% if m.role == 'USER' %}fa-user{% elif m.role == 'ASSISTANT' %}{% if m.llm_model %}fa-worm text-success{% else %}fa-robot{% endif %}{% else %}fa-gear{% endif %} me-1"></i>{{ m.sender_label }}</div>
         <div class="bubble">{{ m.content|chat_render }}</div>
         {% if m.cited_sources %}

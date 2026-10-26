@@ -126,9 +126,51 @@
   function escapeHtml(s) { const d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
   function withMentions(s) { return escapeHtml(s).replace(/(@[\wäöüÄÖÜß\-]+)/g, '<span class="mention">$1</span>'); }
 
+  // ── Kopieren: Button an jeder Nachricht kopiert den ROH-Text (Markdown/Quelltext),
+  //    nicht das gerenderte HTML. ──
+  function ensureCopy(msg) {
+    if (!msg || msg.querySelector(".chat-copy")) return;
+    let sd = msg.querySelector(".sender");
+    if (!sd) {
+      sd = document.createElement("div");
+      sd.className = "sender small text-muted mb-1";
+      msg.insertBefore(sd, msg.firstChild);
+    }
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chat-copy btn btn-sm btn-link p-0 ms-2 text-muted";
+    b.title = (history.dataset.copyLabel || "Kopieren");
+    b.innerHTML = '<i class="fas fa-copy"></i>';
+    sd.appendChild(b);
+  }
+  async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); return true; }
+    catch (e) {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      let ok = false;
+      try { ok = document.execCommand("copy"); } catch (e2) {}
+      ta.remove(); return ok;
+    }
+  }
+  history.addEventListener("click", async function (e) {
+    const btn = e.target.closest(".chat-copy");
+    if (!btn) return;
+    e.preventDefault();
+    const msg = btn.closest(".chat-msg");
+    const raw = msg ? (msg.dataset.raw != null ? msg.dataset.raw
+                       : (msg.querySelector(".bubble") || {}).innerText || "") : "";
+    const ok = await copyText(raw);
+    const ico = btn.querySelector("i");
+    ico.className = ok ? "fas fa-check text-success" : "fas fa-triangle-exclamation text-danger";
+    setTimeout(function () { ico.className = "fas fa-copy"; }, 1200);
+  });
+
   function addMessage(role, content, sources, sender) {
     const wrap = document.createElement("div");
     wrap.className = "chat-msg " + role;
+    wrap.dataset.raw = content || "";
     if (sender) {
       const sd = document.createElement("div");
       sd.className = "sender small text-muted mb-1";
@@ -162,6 +204,7 @@
       wrap.appendChild(s);
     }
     history.appendChild(wrap);
+    if (content) ensureCopy(wrap);
     history.scrollTop = history.scrollHeight;
     return wrap;
   }
@@ -290,6 +333,7 @@
     });
   }
   applyProviderIcons();
+  history.querySelectorAll(".chat-msg").forEach(ensureCopy);
 
   sendBtn.addEventListener("click", send);
   input.addEventListener("keydown", (e) => {

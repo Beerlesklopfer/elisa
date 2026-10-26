@@ -80,6 +80,8 @@ body { background-color: var(--elisa-light); }
 .chat-msg.user  { text-align: right; }
 .chat-msg.user  .bubble { background: var(--elisa-dark); color: #fff; }
 .chat-msg.assistant .bubble { background: #fff; border: 1px solid #dee2e6; }
+.chat-msg .chat-copy { opacity: 0; transition: opacity .15s; line-height: 1; }
+.chat-msg:hover .chat-copy, .chat-msg .chat-copy:focus { opacity: .8; }
 .chat-msg .sources { font-size: .75rem; color: #6c757d; margin-top: .25rem; }
 .chat-input { display: flex; gap: .5rem; padding: .75rem 0; }
 .chat-input textarea { flex: 1; resize: none; }

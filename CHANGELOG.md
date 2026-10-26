@@ -104,6 +104,10 @@ elisa (0.3.0) unstable; urgency=medium
     (Entwurf bleibt erhalten). @all spricht alle Teilnehmer an (RAG-Chat,
     Item-Chat, MCP-Erwähnungen, Autocomplete); nur Menschen können @all
     auslösen (keine Persona-Endlosschleifen).
+  * Chat: Administratoren sehen unter "Chats anderer Nutzer (Admin)" die
+    persönlichen Chats der Mitglieder (nur Eigentümer, Datum, Anzahl – ohne
+    Inhalt) und dürfen jeden Chat des Projekts löschen (Item-Chats nicht).
+    Kopieren-Button an jeder Nachricht (kopiert den Rohtext).
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

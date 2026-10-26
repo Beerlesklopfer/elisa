@@ -16,14 +16,14 @@ import json
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.http import JsonResponse, HttpResponseBadRequest, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from .models import ChatSession, ChatMessage, ChatRole
 from .projects import get_active_project, is_project_member
-from .permissions import pm_or_admin_required, is_pm_or_admin
+from .permissions import pm_or_admin_required, is_pm_or_admin, is_admin
 from . import rag_service
 
 CHAT_SYSTEM = """Du bist ein beratender Assistent für funktionale Sicherheit
@@ -79,8 +79,18 @@ def chat_session(request, pk):
 def _render_chat(request, active, sessions):
     from .participants import chat_participants, slug_handle
     me = slug_handle(request.user.first_name) or slug_handle(request.user.username)
+    other_chats = []
+    if is_admin(request.user):
+        # Nur Verwaltungsdaten (Eigentümer, Datum, Anzahl) – der Inhalt fremder
+        # persönlicher Chats wird nicht angezeigt.
+        other_chats = list(
+            ChatSession.objects.filter(project=get_active_project(request),
+                                       related_item__isnull=True, shared=False)
+            .exclude(owner=request.user).select_related("owner")
+            .annotate(n_messages=Count("messages")).order_by("-updated_at"))
     return render(request, "chat.html", {
         "active_tab": "chat",
+        "other_chats": other_chats,
         "sessions": sessions,
         "session": active,
         "messages": active.messages.all() if active else [],
@@ -188,8 +198,13 @@ def _editable_session(request, pk):
 @require_POST
 def chat_delete(request, pk):
     """Chat löschen: geteilte Projekt-Chats nur Admin/PM, persönliche nur der
-    Eigentümer."""
-    _editable_session(request, pk).delete()
+    Eigentümer. ADMINISTRATOREN dürfen jeden Chat des Projekts löschen (auch die
+    persönlichen anderer Nutzer – ohne ihn zu öffnen; Item-Chats bleiben tabu)."""
+    if is_admin(request.user):
+        get_object_or_404(ChatSession, pk=pk, project=get_active_project(request),
+                          related_item__isnull=True).delete()
+    else:
+        _editable_session(request, pk).delete()
     return redirect("chat")
 
 

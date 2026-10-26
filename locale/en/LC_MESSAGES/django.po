@@ -1185,3 +1185,12 @@ msgstr "advisory LLM"
 
 msgid "Mit **@all** sprichst du alle Teilnehmer auf einmal an."
 msgstr "Use **@all** to address all participants at once."
+
+msgid "Chats anderer Nutzer (Admin)"
+msgstr "Other users' chats (admin)"
+
+msgid "Nachrichten"
+msgstr "messages"
+
+msgid "Kopieren"
+msgstr "Copy"
