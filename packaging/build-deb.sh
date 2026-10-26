@@ -12,7 +12,7 @@ git diff --quiet HEAD -- "$SRC" || { echo "$SRC hat uncommittete Änderungen." >
 SUM=$(git show "$SHA:$SRC" | sha256sum | cut -d' ' -f1)
 URL="https://raw.githubusercontent.com/Beerlesklopfer/elisa/$SHA/$SRC"
 
-ROOT=$(mktemp -d); trap 'rm -rf "$ROOT"' EXIT
+ROOT=$(mktemp -d); chmod 755 "$ROOT"; trap 'rm -rf "$ROOT"' EXIT
 install -d "$ROOT/DEBIAN" "$ROOT/usr/share/elisa-stack/initdb" "$ROOT/etc/containers/systemd/users/33"
 cp packaging/deb/DEBIAN/* "$ROOT/DEBIAN/"
 sed -i "s|@VERSION@|$VERSION|; s|@SCRIPT_URL@|$URL|; s|@SCRIPT_SHA256@|$SUM|" "$ROOT/DEBIAN/control" "$ROOT/DEBIAN/preinst"
