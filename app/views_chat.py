@@ -117,6 +117,7 @@ def _welcome_intro_text(project):
                "antworte geerdet an den vorhandenen Dokumenten und bin nie Quelle "
                "der Wahrheit.") % {"name": rag,
                                    "acronym": f" — {me['acronym']}" if me else ""},
+             "", _("Mit **@all** sprichst du alle Teilnehmer auf einmal an."),
              "", _("**System-Personas (per @-Handle ansprechbar):**")]
     connected = {p["handle"].lower(): p for p in chat_participants(project)
                  if p.get("kind") == "llm" and p.get("handle")}
@@ -241,6 +242,7 @@ def chat_send(request, pk):
         from app.participants import chat_participants
         handles = {(p.get("handle") or "").lstrip("@").lower()
                    for p in chat_participants(session.project)}
+        handles.add("all")          # @all = alle Teilnehmer
         if mentioned & handles:
             session.save(update_fields=["updated_at"])
             return JsonResponse({"user": {"id": user_msg.id, "content": user_msg.content},

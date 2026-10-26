@@ -1182,3 +1182,6 @@ msgstr "**Other connected LLMs:**"
 
 msgid "beratendes LLM"
 msgstr "advisory LLM"
+
+msgid "Mit **@all** sprichst du alle Teilnehmer auf einmal an."
+msgstr "Use **@all** to address all participants at once."

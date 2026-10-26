@@ -1065,7 +1065,8 @@ def list_my_mentions(project_key: str, handle: str) -> list:
         msgs = list(s.messages.all())
         if not msgs or msgs[-1].role != ChatRole.USER:
             continue
-        if any(token in (m.content or "").lower() for m in msgs):
+        if any(token in (m.content or "").lower() for m in msgs) or \
+                "@all" in (msgs[-1].content or "").lower():
             out.append({"identifier": s.related_item.identifier,
                         "last_message": (msgs[-1].content or "")[:300],
                         "last_sender": _sender_handle(msgs[-1]),
@@ -1129,7 +1130,8 @@ def _sender_handle(m) -> str:
 def list_my_chat_mentions(project_key: str, handle: str) -> list:
     """Wie list_my_mentions, aber für die CHAT-SESSIONS (Projekt-Chat UND RAG-Chats,
     auch nutzereigene): findet Sessions, in deren LETZTER Nachricht du per @<handle>
-    (regex, wortgenau) erwähnt wurdest und die NICHT von dir stammt. Erlaubt auch
+    (regex, wortgenau) erwähnt wurdest und die NICHT von dir stammt. `@all` in einer
+    Nachricht eines MENSCHEN richtet sich an ALLE Teilnehmer, also auch an dich. Erlaubt auch
     Inter-Persona-Dialoge (eine andere Persona darf dich ansprechen) – begrenzt
     gegen Endlosschleifen (nach mehreren Nicht-Mensch-Nachrichten in Folge wird
     pausiert, bis wieder ein Mensch schreibt). Liefert [{session_id, title,
@@ -1153,8 +1155,11 @@ def list_my_chat_mentions(project_key: str, handle: str) -> list:
                                                        # werten. Persona↔Persona bleibt möglich.
         if (last.author_label or "").lstrip("@").lower() == h:
             continue                                   # nicht auf mich selbst antworten
-        if h not in {m.lower() for m in rx.findall(last.content or "")}:
-            continue                                   # @handle nicht in der LETZTEN Nachricht
+        tagged = {m.lower() for m in rx.findall(last.content or "")}
+        # @all richtet sich an alle – aber nur, wenn ein MENSCH schreibt (sonst würden
+        # sich Personas gegenseitig endlos anstoßen).
+        if h not in tagged and not ("all" in tagged and last.role == ChatRole.USER):
+            continue                                   # weder @handle noch @all in der LETZTEN Nachricht
         trailing = 0                                   # Loop-Schranke
         for m in reversed(msgs):
             if m.role == ChatRole.USER:

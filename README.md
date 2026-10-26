@@ -80,6 +80,14 @@ sudo ELISA_DOMAIN=elisa.firma.de apt install ./dist/elisa-stack_*_all.deb
   `ELISA_SKIP_ELIEZER=1` setzen und `ELIEZER_BASE_URL` in `/etc/elisa/env`.
 - GPU (AMD): Drop-in `elisa-eliezer.container.d/gpu.conf` mit `AddDevice=`.
 
+## Chat
+
+Die Eingabe merkt sich die eigenen Nachrichten der Session: **↑** holt eine frühere,
+**↓** eine spätere, ganz unten steht wieder der angefangene Entwurf (wie in der
+Shell). Mit **@all** sprichst du alle Teilnehmer an (Menschen und Personas); die
+@-Liste schlägt `@all` mit vor. Personas stoßen sich damit nicht gegenseitig an:
+`@all` zählt nur in Nachrichten von Menschen.
+
 ## MCP-Transport
 
 Der MCP-Server spricht **Streamable HTTP** (`…/<projekt>/<scope>/mcp`, aktueller

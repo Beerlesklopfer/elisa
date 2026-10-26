@@ -391,7 +391,7 @@ def _render_chat_pane(request, item):
     if msgs and msgs[-1].role == ChatRole.USER:
         mentioned = set(re.findall(r"@([\w\-äöüß]+)", (msgs[-1].content or "").lower()))
         llm = {p["handle"] for p in parts if p.get("kind") == "llm"}
-        awaiting = sorted(mentioned & llm)
+        awaiting = sorted(llm if "all" in mentioned else mentioned & llm)
     active_llm = "@ollama" if chat.messages.filter(
         role=ChatRole.ASSISTANT, author_label="@ollama").exists() else ""
     return render(request, "partials/item_chat.html", {

@@ -51,15 +51,18 @@
   // Datenquelle sind die Teilnehmer-Chips (.chat-mention) im DOM.
   const mentionPop = document.getElementById("mention-pop");
   let mpItems = [], mpActive = -1;
+  // @all richtet sich an alle Teilnehmer (Menschen und Personas).
+  const ALL_ENTRY = { handle: "all", label: "alle Teilnehmer",
+                      iconClass: "fas fa-users", iconColor: "" };
   function mpParticipants() {
-    return Array.from(document.querySelectorAll(".chat-participants .chat-mention"))
+    return [ALL_ENTRY].concat(Array.from(document.querySelectorAll(".chat-participants .chat-mention"))
       .map(function (ch) {
         const ico = ch.querySelector("i");
         return { handle: ch.dataset.handle || "",
                  label: ((ch.getAttribute("title") || "").split(" · ")[0]) || "",
                  iconClass: ico ? ico.className.replace(/\bme-1\b/, "").trim() : "fas fa-user",
                  iconColor: ico ? ico.style.color : "" };
-      }).filter(function (p) { return p.handle; });
+      }).filter(function (p) { return p.handle; }));
   }
   function mpClose() { if (mentionPop) { mentionPop.classList.add("d-none"); mentionPop.innerHTML = ""; } mpItems = []; mpActive = -1; }
   function mpQueryAt() {                         // aktives @-Token direkt vor dem Cursor?
@@ -163,9 +166,25 @@
     return wrap;
   }
 
+  // ── Eingabe-Historie (wie in der Shell): ↑ = frühere eigene Nachricht, ↓ = spätere,
+  //    ganz unten wieder der angefangene Entwurf. Quelle: meine Nachrichten dieser
+  //    Session (serverseitig mit data-mine/data-raw markiert) + hier gesendete. ──
+  const sentHistory = Array.from(history.querySelectorAll('.chat-msg[data-mine="1"]'))
+    .map(function (el) { return el.dataset.raw || ""; }).filter(Boolean);
+  let histPos = sentHistory.length, histDraft = "";
+  function histSet(v) {
+    input.value = v; autoGrow();
+    input.setSelectionRange(v.length, v.length);
+  }
+  function remember(text) {
+    if (text && sentHistory[sentHistory.length - 1] !== text) sentHistory.push(text);
+    histPos = sentHistory.length; histDraft = "";
+  }
+
   async function send() {
     const text = input.value.trim();
     if (!text) return;
+    remember(text);
     input.value = "";
     autoGrow();                          // Höhe nach dem Leeren zurücksetzen
     const userBubble = addMessage("user", text, null, history.dataset.me || "Ich");
@@ -277,6 +296,24 @@
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       send();
+    }
+  });
+  // NACH dem Mention-Handler registriert: ist die @-Liste offen, hat sie die Pfeile.
+  input.addEventListener("keydown", (e) => {
+    if ((e.key !== "ArrowUp" && e.key !== "ArrowDown") || e.shiftKey || e.altKey
+        || e.ctrlKey || e.metaKey || !sentHistory.length) return;
+    const before = input.value.slice(0, input.selectionStart);
+    const after = input.value.slice(input.selectionEnd);
+    if (e.key === "ArrowUp") {
+      if (before.indexOf("\n") !== -1) return;          // nur in der ersten Zeile
+      if (histPos === sentHistory.length) histDraft = input.value;
+      if (histPos > 0) { e.preventDefault(); histPos--; histSet(sentHistory[histPos]); }
+    } else {
+      if (after.indexOf("\n") !== -1) return;           // nur in der letzten Zeile
+      if (histPos < sentHistory.length) {
+        e.preventDefault(); histPos++;
+        histSet(histPos === sentHistory.length ? histDraft : sentHistory[histPos]);
+      }
     }
   });
 

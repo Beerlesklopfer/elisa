@@ -100,6 +100,10 @@ elisa (0.3.0) unstable; urgency=medium
   * Persona Lukas als System-Persona angelegt (@lukas, Token + Backend
     "Lukas (System)", Rollenbeschreibung LUKAS, Migration 0054) wie Esra,
     Tertius und Nathan; neu im Admin editierbar.
+  * Chat: ↑/↓ in der Eingabe blättert durch die eigenen Nachrichten der Session
+    (Entwurf bleibt erhalten). @all spricht alle Teilnehmer an (RAG-Chat,
+    Item-Chat, MCP-Erwähnungen, Autocomplete); nur Menschen können @all
+    auslösen (keine Persona-Endlosschleifen).
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.
