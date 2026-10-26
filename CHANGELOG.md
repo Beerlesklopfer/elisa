@@ -66,6 +66,9 @@ elisa (0.3.0) unstable; urgency=medium
     Default-URL http://127.0.0.1:1234/v1, Key aus `eliezer --new-key`);
     Migration 0052. Neu angelegte System-Personas nutzen ihn automatisch, wenn
     LOCAL_LLM_BACKEND=eliezer gesetzt ist.
+  * Navigation: eigener Menüpunkt "Admin" (Verweis auf /admin/) für berechtigte
+    Administratoren (is_staff oder Superuser), zusätzlich zum Eintrag im
+    Projektmenü.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

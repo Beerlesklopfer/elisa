@@ -1125,3 +1125,6 @@ msgstr "New sub-item"
 
 msgid "Macht das Unsichtbare sichtbar."
 msgstr "Making the invisible visible."
+
+msgid "Admin"
+msgstr "Admin"

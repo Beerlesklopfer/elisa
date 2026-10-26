@@ -49,10 +49,10 @@
                         <li><a class="dropdown-item" href="{% url 'projects' %}"><i class="fas fa-folder-tree me-1"></i>{% trans "Projektverwaltung" %}</a></li>
                         <li><a class="dropdown-item" href="{% url 'customers' %}"><i class="fas fa-building-user me-1"></i>{% trans "Kundenverwaltung" %}</a></li>
                         {% endif %}
-                        {% if user.is_staff %}
+                        {% if is_admin %}
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'users' %}"><i class="fas fa-users-gear me-1"></i>{% trans "Userverwaltung" %}</a></li>
-                        <li><a class="dropdown-item" href="/admin/"><i class="fas fa-toolbox me-1"></i>{% trans "Django Admin" %}</a></li>
+                        <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="fas fa-toolbox me-1"></i>{% trans "Django Admin" %}</a></li>
                         {% endif %}
                     </ul>
                 </li>
@@ -87,6 +87,13 @@
                         <i class="fas fa-file-word me-1"></i> {% trans "Dokumente" %}
                     </a>
                 </li>
+                {% if is_admin %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin:index' %}" title="{% trans 'Django Admin' %}">
+                        <i class="fas fa-toolbox me-1"></i> {% trans "Admin" %}
+                    </a>
+                </li>
+                {% endif %}
                 <!-- Konto: Profil + Abmelden (links neben dem Sprachmenü) -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" title="{% trans 'Konto' %}">
