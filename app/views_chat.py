@@ -103,28 +103,40 @@ _PERSONA_BLURB = {
 
 
 def _welcome_intro_text(project):
-    """Begrüßung eines NEUEN RAG-Chats: Wendelin stellt sich + die ansprechbaren
-    Personas vor (mit kurzer Aufgaben-Erklärung), damit man weiß, wen man per
-    @-Handle wofür adressiert."""
+    """Begrüßung eines NEUEN RAG-Chats: Lukas stellt sich und alle Personas mit
+    ihrem Akronym vor (mit kurzer Aufgaben-Erklärung), damit man weiß, wen man
+    per @-Handle wofür adressiert."""
     from app.participants import chat_participants
+    from app.personas import SYSTEM_PERSONAS, VMODEL_PERSONAS, rag_persona
     rag = settings.RAG_PERSONA_NAME
-    lines = [f"Willkommen! Ich bin **{rag}**, dein RAG-gestützter Norm-Assistent "
-             "(IEC 61508). Stell deine Frage zu den Normen — ich antworte geerdet an "
-             "den vorhandenen Dokumenten und bin nie Quelle der Wahrheit.",
-             "", "**Wen du außerdem per @-Handle ansprechen kannst:**"]
-    personas = [p for p in chat_participants(project)
-                if p.get("kind") == "llm" and p.get("handle")]
-    for p in personas:
-        h = p["handle"].lower()
-        blurb = _PERSONA_BLURB.get(h)
-        if not blurb:
-            label = (p.get("label") or "").strip()
-            prov = (p.get("provider") or "").title()
-            blurb = (f"beratendes LLM" + (f" ({prov})" if prov else "")
-                     + (f" – {label}" if label else "") + ".")
+    me = rag_persona(rag)
+    lines = [f"Willkommen! Ich bin **{rag}**"
+             + (f" — {me['acronym']}" if me else "")
+             + ", dein RAG-gestützter Norm-Assistent (IEC 61508). Stell deine Frage "
+             "zu den Normen — ich antworte geerdet an den vorhandenen Dokumenten und "
+             "bin nie Quelle der Wahrheit.",
+             "", "**System-Personas (per @-Handle ansprechbar):**"]
+    connected = {p["handle"].lower(): p for p in chat_participants(project)
+                 if p.get("kind") == "llm" and p.get("handle")}
+    for p in SYSTEM_PERSONAS:
+        if not p["handle"]:
+            continue
+        state = "" if p["handle"] in connected else " *(derzeit nicht verbunden)*"
+        lines.append(f"- **{p['name']}** (@{p['handle']}) — {p['acronym']}. "
+                     f"{p['role']}{state}")
+    lines += ["", "**V-Modell-Personas (je Schritt):**"]
+    for p in VMODEL_PERSONAS:
+        lines.append(f"- **{p['name']}** — {p['step']} ({p['code']}): {p['acronym']}")
+    known = {p["handle"] for p in SYSTEM_PERSONAS if p["handle"]}
+    others = [p for h, p in connected.items() if h not in known]
+    if others:
+        lines += ["", "**Weitere verbundene LLMs:**"]
+    for p in others:
+        label = (p.get("label") or "").strip()
+        prov = (p.get("provider") or "").title()
+        blurb = ("beratendes LLM" + (f" ({prov})" if prov else "")
+                 + (f" – {label}" if label else "") + ".")
         lines.append(f"- **@{p['handle']}** — {blurb}")
-    if not personas:
-        lines.append("- (derzeit keine weiteren Personas verbunden)")
     return "\n".join(lines)
 
 
@@ -132,12 +144,12 @@ def _welcome_intro_text(project):
 @require_POST
 def chat_new(request):
     """Persönlichen RAG-Chat anlegen (nur für mich sichtbar) – mit Begrüßung durch
-    Wendelin, die die ansprechbaren System-Personas vorstellt."""
+    Lukas, die die ansprechbaren System-Personas vorstellt."""
     project = get_active_project(request)
     session = ChatSession.objects.create(owner=request.user, project=project)
     ChatMessage.objects.create(
         session=session, role=ChatRole.ASSISTANT, content=_welcome_intro_text(project),
-        author_label=settings.RAG_PERSONA_NAME,     # Absender = Wendelin (nicht Esra)
+        author_label=settings.RAG_PERSONA_NAME,     # Absender = Lukas (nicht Esra)
         # Sentinel: markiert die Auto-Begrüßung, damit ihre @-Handle-Liste KEINE
         # Persona-Antworten auslöst (siehe server.py INTRO_MARKER). Persona↔Persona
         # ohne Mensch bleibt dadurch weiterhin möglich.
@@ -249,7 +261,7 @@ def chat_send(request, pk):
                                      item=session.related_item)
     if role_ctx:
         history.append({"role": "system", "content": role_ctx})
-    # Fragende Person mit adressierbarem @-Handle nennen, damit Wendelin sie direkt
+    # Fragende Person mit adressierbarem @-Handle nennen, damit Lukas sie direkt
     # anspricht (nie generisch „@Mensch"), wie es die Personas auch tun.
     from app.participants import slug_handle
     _ah = slug_handle(request.user.first_name) or slug_handle(request.user.get_username())
@@ -305,7 +317,7 @@ def chat_send(request, pk):
     assistant_msg = ChatMessage.objects.create(
         session=session, role=ChatRole.ASSISTANT, content=answer,
         generated_by_llm=True, llm_model=settings.LOCAL_CHAT_MODEL,
-        author_label=settings.RAG_PERSONA_NAME,     # „Wendelin" statt „llama3.1"
+        author_label=settings.RAG_PERSONA_NAME,     # „Lukas" statt „llama3.1"
         cited_sources=cited,
     )
     session.save(update_fields=["updated_at"])

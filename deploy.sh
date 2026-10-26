@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# ELISA – Deploy (CrystalKey-Stil): Der Code wird nach /usr/share/elisa
+# ELISA – Deploy: Der Code wird nach /usr/share/elisa
 # KOPIERT (lokal, www-data-lesbar – NICHT aus dem NFS-/0700-Home gelinkt), die
 # venv wird DORT gebaut, die Dienste laufen als www-data mit Sandboxing.
 # Schreibbare Daten (DB, media, RAG-Index, incoming) liegen unter /var/lib.

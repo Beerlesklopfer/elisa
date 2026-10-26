@@ -69,6 +69,14 @@ elisa (0.3.0) unstable; urgency=medium
   * Navigation: eigener Menüpunkt "Admin" (Verweis auf /admin/) für berechtigte
     Administratoren (is_staff oder Superuser), zusätzlich zum Eintrag im
     Projektmenü.
+  * Personas mit biblischen Namen und Akronymen (app/personas.py): Lukas
+    (RAG-Chat, vorher Wendelin), Esra, Tertius (@dragoman), Nathan (@auditor)
+    sowie je V-Schritt Mose, Noah, Salomo, Hiram, Gideon, Josua, Daniel,
+    Thomas. Der Chat stellt beim Anlegen alle Personas mit Akronym vor; die
+    technischen Handles bleiben unverändert.
+  * Corporate Identity neu: Nachtblau (#1b2a41), Bernstein (#b45f06), warmes
+    Papierweiß – die frühere Farbwelt war auf SALZ abgestimmt; Verweise auf
+    CrystalKey entfernt.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

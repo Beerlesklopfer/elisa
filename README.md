@@ -145,15 +145,31 @@ Verantwortbarkeit aufzugeben.
 
 ## Die Assistenten (Personas)
 
-Jeder der acht V-Modell-Schritte hat eine eigene fachliche Persona. Dazu kommen
-drei projektübergreifende Spezialisten und der lokale Norm-Assistent:
+Jeder der acht V-Modell-Schritte hat eine eigene fachliche Persona, dazu kommen
+vier Spezialisten. Alle tragen biblische Namen mit passendem Akronym; im Chat
+stellen sie sich so vor.
 
-| Persona | Aufgabe |
-|---|---|
-| **Wendelin** | lokaler, RAG-gestützter Norm-Assistent im Chat |
-| **Esra** | Normenrecherche, geerdet an den vorhandenen Normen + Projekt-Überblick |
-| **Dragoman** | Übersetzer für informative Sekundärsprachen |
-| **Auditor** | externes Audit: meldet Findings und kann zurückstufen |
+**Spezialisten**
+
+| Persona | Akronym | Aufgabe |
+|---|---|---|
+| **Lukas** | **L**ookup **U**nderlying **K**nowledge, **A**nswer **S**ourced | RAG-Chat – beantwortet Fragen geerdet an Normen und Projektdokumenten („alles von Anfang an sorgfältig erforscht“, Lk 1,3) |
+| **Esra** (`@esra`) | **E**xtract **S**tandards, **R**eference-**A**nchored | Normenrecherche – findet die passenden Normen (der Schriftgelehrte, Esra 7) |
+| **Tertius** (`@dragoman`) | **T**ranslate **E**xactly, **R**etain **T**erms, **I**nvariants, **U**nchanged **S**tructure | Übersetzer – informativ, die Quellsprache bleibt maßgeblich (der Schreiber des Römerbriefs, Röm 16,22) |
+| **Nathan** (`@auditor`) | **N**onconformities **A**udited against **T**raceability, **H**azards **A**nd **N**orms | Externes Audit – prüft kritisch von außen (der Prophet vor David, 2 Sam 12) |
+
+**V-Modell-Schritte**
+
+| Persona | Schritt | Akronym |
+|---|---|---|
+| **Mose** | Anforderungen (REQ) | **M**andatory **O**bligations, **S**tated **E**xplicitly |
+| **Noah** | Systementwurf (SPEC) | **N**ormalize **O**bligations **A**nd **H**azards |
+| **Salomo** | Architektur (ARCH) | **S**tructure, **A**llocation, **L**ayering, **O**verview of **M**odules, **O**ptimized |
+| **Hiram** | Modulentwurf (MOD) | **H**ierarchical **I**mplementation **R**ules for **A**lgorithms & **M**odules |
+| **Gideon** | Modultest (MODTEST) | **G**uarded **I**nputs, **D**ata **E**xercised **O**n **N**ominal and fault cases |
+| **Josua** | Integrationstest (INTTEST) | **J**oin **O**ne **S**ubsystem, **U**nderstand **A**ll interfaces |
+| **Daniel** | Systemtest (SYSTEST) | **D**emonstrate **A**ll **N**ominal **I**nterfaces and edge cases, **L**ive |
+| **Thomas** | Abnahme (ACCTEST) | **T**rust only **H**ands-on **O**bservation, **M**easured **A**cceptance, **S**ign-off |
 
 Die Personas können **lokal** (auf eigener Infrastruktur) oder **extern** (über
 einen Cloud-Anbieter wie Claude oder ChatGPT) laufen. Sie wissen voneinander,

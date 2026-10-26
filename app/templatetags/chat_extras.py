@@ -49,14 +49,14 @@ def _link_norms(escaped):
 def glyph_map_json(participants):
     """{handle: {icon,color}} der LLM-Teilnehmer als JSON – damit das Frontend die
     Provider-Icons UND eine provider-spezifische Hintergrund-Tönung an die
-    Nachrichten-Absender hängen kann. Enthält zusätzlich die RAG-Persona (Wendelin,
+    Nachrichten-Absender hängen kann. Enthält zusätzlich die RAG-Persona (Lukas,
     lokales Ollama), die per Klarnamen statt @-Handle auftritt."""
     import json
     from django.conf import settings
     from app.participants import PROVIDER_GLYPH
     m = {p.get("handle"): {"icon": p.get("icon", "fa-robot"), "color": p.get("color", "")}
          for p in (participants or []) if p.get("kind") == "llm" and p.get("handle")}
-    rag = getattr(settings, "RAG_PERSONA_NAME", "Wendelin")
+    rag = getattr(settings, "RAG_PERSONA_NAME", "Lukas")
     icon, color = PROVIDER_GLYPH.get("OLLAMA", ("fa-robot", "#5a5a5a"))
     m.setdefault(rag, {"icon": icon, "color": color})
     return mark_safe(json.dumps(m))

@@ -1,7 +1,7 @@
 """
 Django-Settings für ELISA.
 
-Aufbau analog zu CrystalKey: env-getrieben mit FHS-Erkennung. Läuft im
+Aufbau: env-getrieben mit FHS-Erkennung. Läuft im
 Quell-Checkout (Entwicklung) komplett unter BASE_DIR; ein Debian-Paket würde
 Code nach /usr/share/elisa und Konfig/Daten/Logs nach FHS-Pfade legen.
 
@@ -178,8 +178,8 @@ DATABASE_ROUTERS = ["app.dbrouter.TenantRouter"]
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")
 OLLAMA_CHAT_MODEL = os.getenv("OLLAMA_CHAT_MODEL", "llama3.1")
 OLLAMA_EMBED_MODEL = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
-# Anzeigename des RAG-Chat-Assistenten (der „Normen-Bücherwurm") statt „llama3.1".
-RAG_PERSONA_NAME = os.getenv("RAG_PERSONA_NAME", "Wendelin")
+# Anzeigename des RAG-Chat-Assistenten (Lukas, der Sorgfältige) statt „llama3.1".
+RAG_PERSONA_NAME = os.getenv("RAG_PERSONA_NAME", "Lukas")
 # CPU-Ollama ist langsam → großzügiger Client-Timeout (Sekunden), sonst brechen
 # Generierungen ab. Über die Umgebung anpassbar.
 OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "300"))

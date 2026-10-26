@@ -1,19 +1,20 @@
 /* ===========================================================================
    ELISA — Corporate Identity
-   Markenfarben aus CrystalKey: --gray-dark #343a40, --light #f6f6f6,
-   Akzent #383e44 (Logo).
+   Nachtblau (#1b2a41) und Bernstein (#b45f06): „Macht das Unsichtbare sichtbar" –
+   Licht im Dunkeln. Warmes Papierweiß (#f5f4ef) als Fläche.
    =========================================================================== */
 :root {
-  --elisa-dark: #343a40;
-  --elisa-accent: #383e44;
-  --elisa-light: #f6f6f6;
-  --elisa-primary-rgb: 56, 62, 68;
+  --elisa-dark: #1b2a41;           /* Nachtblau – Navigation, Footer */
+  --elisa-accent: #324a5f;
+  --elisa-light: #f5f4ef;          /* warmes Papierweiß */
+  --elisa-primary-rgb: 180, 95, 6;
 
-  /* EIN durchgängiger Akzent (Mentions, „an-mich"-Outline, Links, Avatare).
-     Teal passt zum Charcoal-Branding und ist von allen Provider-Farben distinkt. */
-  --elisa-primary: #1098ad;
-  --elisa-primary-soft: #e3f6f9;   /* heller Hintergrund (Mention-Chip) */
-  --elisa-primary-text: #0b5d6b;   /* dunkle Schrift auf dem hellen Soft-Ton */
+  /* EIN durchgängiger Akzent (Mentions, „an-mich"-Outline, Links, Avatare):
+     Bernstein = Licht, das Verborgenes sichtbar macht. Weiß auf diesem Ton hat
+     ausreichend Kontrast (> 4,5:1) und ist von allen Provider-Farben distinkt. */
+  --elisa-primary: #b45f06;
+  --elisa-primary-soft: #fdeedd;   /* heller Hintergrund (Mention-Chip) */
+  --elisa-primary-text: #7a3e00;   /* dunkle Schrift auf dem hellen Soft-Ton */
 
   /* V-Modell-/IEC-61508-Phasenfarben (linke Seite) */
   --phase-req:  13, 110, 253;   /* Anforderung   */
