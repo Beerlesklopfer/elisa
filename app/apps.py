@@ -179,8 +179,8 @@ def ensure_llm_roles(sender, **kwargs):
             obj.save(update_fields=["iec_reference"])
 
 
-SALINAR_PERSONA = (
-    "Du bist SALINAR — die Normenrecherche-Persona (lokales, KLEINES Modell mit "
+ESRA_PERSONA = (
+    "Du bist ESRA — die Normenrecherche-Persona (lokales, KLEINES Modell mit "
     "kleinem Kontextfenster). Aufgabe: zu einem Item die passenden Normen finden, "
     "AUSSCHLIESSLICH geerdet an den im System vorhandenen Norm-Dokumenten.\n"
     "ARBEITSWEISE (entscheidend wegen kleinem Kontext): Mache einen WORT-ABGLEICH "
@@ -260,7 +260,7 @@ def _ensure_system_persona(handle, name, model="", persona="", iec=""):
     (MCPToken.objects.filter(id__in=old_token_ids)
      .exclude(id=tok.id).filter(worker_backends__isnull=True).delete())
     # Persona-Prompt als ADMIN-EDITIERBARE Rollenbeschreibung seeden (nicht hart-
-    # codiert): role = Handle in Großbuchstaben (SALINAR/DRAGOMAN/AUDITOR).
+    # codiert): role = Handle in Großbuchstaben (ESRA/DRAGOMAN/AUDITOR).
     if persona:
         from app.models import LLMRoleDescription
         obj, created = LLMRoleDescription.objects.get_or_create(
@@ -280,9 +280,9 @@ def _ensure_system_persona(handle, name, model="", persona="", iec=""):
                 obj.save(update_fields=upd)
 
 
-def ensure_salinar(sender, **kwargs):
-    """post_migrate: EINE globale Salinar-Persona (Normenrecherche, alle Projekte)."""
-    _ensure_system_persona("salinar", "Salinar (System)", persona=SALINAR_PERSONA)
+def ensure_esra(sender, **kwargs):
+    """post_migrate: EINE globale Esra-Persona (Normenrecherche, alle Projekte)."""
+    _ensure_system_persona("esra", "Esra (System)", persona=ESRA_PERSONA)
 
 
 def ensure_dragoman(sender, **kwargs):
@@ -323,7 +323,7 @@ class AppConfig(DjangoAppConfig):
         from django.db.models.signals import post_save
         post_migrate.connect(ensure_iec61508_groups, sender=self)
         post_migrate.connect(ensure_llm_roles, sender=self)
-        post_migrate.connect(ensure_salinar, sender=self)
+        post_migrate.connect(ensure_esra, sender=self)
         post_migrate.connect(ensure_dragoman, sender=self)
         post_migrate.connect(ensure_auditor, sender=self)
         user_logged_in.connect(_record_first_login)

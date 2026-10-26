@@ -85,10 +85,10 @@ def get_req(project_key: str) -> str:
 
 
 @mcp.tool()
-def ask_salinar(prompt: str, project_key: str = "", role: str = "") -> str:
+def ask_esra(prompt: str, project_key: str = "", role: str = "") -> str:
     """
-    Fragt SALINAR – die lokale Normenrecherche-Persona (Ollama), RAG-geerdet an
-    den Normen und, falls project_key gesetzt, an den Projektdokumenten. Salinar
+    Fragt ESRA – die lokale Normenrecherche-Persona (Ollama), RAG-geerdet an
+    den Normen und, falls project_key gesetzt, an den Projektdokumenten. Esra
     antwortet ausschließlich aus den vorhandenen Dokumenten (keine Erfindungen).
     Optional `role` (eine der 8 V-Modell-Rollen: REQ/SPEC/ARCH/MOD/MODTEST/
     INTTEST/SYSTEST/ACCTEST) gibt dem Modell seine Rollen- + Projektbeschreibung mit.
@@ -243,8 +243,8 @@ def propose_requirement(project_key: str, title: str, body: str,
         status=ItemStatus.DRAFT,
         generated_by_llm=True, llm_model="mcp/claude-desktop",
     )
-    from app.models import enqueue_salinar, SalinarTask
-    enqueue_salinar(proj, SalinarTask.Kind.MATCH_ITEM, work_item=w)  # Generate-Event
+    from app.models import enqueue_esra, EsraTask
+    enqueue_esra(proj, EsraTask.Kind.MATCH_ITEM, work_item=w)  # Generate-Event
     return {"ok": True, "identifier": w.identifier, "status": w.status,
             "hinweis": "Als DRAFT-VORSCHLAG angelegt (generated_by_llm). "
                        "Menschliche Prüfung & Freigabe (PL/FSM) erforderlich."}
@@ -520,8 +520,8 @@ def create_workitem(project_key: str, phase: str, title: str, body: str = "",
         if p.pk != w.pk:
             w.derived_from.add(p)
             linked.append(p.identifier)
-    from app.models import enqueue_salinar, SalinarTask
-    enqueue_salinar(proj, SalinarTask.Kind.MATCH_ITEM, work_item=w)  # Generate-Event
+    from app.models import enqueue_esra, EsraTask
+    enqueue_esra(proj, EsraTask.Kind.MATCH_ITEM, work_item=w)  # Generate-Event
     return {"ok": True, "identifier": w.identifier, "phase": w.phase,
             "status": w.status, "derived_from": linked,
             "derived_from_missing": missing}
@@ -806,7 +806,7 @@ def tag_chunk(project_key: str, chunk_uid: str, keywords: list) -> dict:
 @mcp.tool()
 def list_document_chunks(project_key: str, doc_id: int, limit: int = 300) -> list:
     """Listet die RAG-Chunks eines Projektdokuments (uid, Seite, Textauszug, bereits
-    vergebene Schlagworte) — damit Salinar JEDEN Chunk einzeln per tag_chunk
+    vergebene Schlagworte) — damit Esra JEDEN Chunk einzeln per tag_chunk
     verschlagwortet."""
     from app.models import Project, ProjectDocument, EmbeddingChunk
     from app import project_index
@@ -892,20 +892,20 @@ def complete_translation(project_key: str, identifier: str, lang: str,
 
 
 @mcp.tool()
-def next_salinar_task(project_key: str) -> dict:
-    """Holt die nächste OFFENE Salinar-Aufgabe (event-getrieben bei Upload/Generate
+def next_esra_task(project_key: str) -> dict:
+    """Holt die nächste OFFENE Esra-Aufgabe (event-getrieben bei Upload/Generate
     erzeugt) und markiert sie als laufend. Liefert kind (TAG_DOC|TAG_NORM|MATCH_ITEM)
     + Ziel (doc_id/identifier/ref). Leeres Objekt = nichts zu tun. Nach Erledigung
-    complete_salinar_task aufrufen."""
-    from app.models import Project, SalinarTask
+    complete_esra_task aufrufen."""
+    from app.models import Project, EsraTask
     proj = Project.objects.filter(key=project_key).first()
     if not proj:
         return {}
-    t = (SalinarTask.objects.filter(project=proj, status=SalinarTask.Status.PENDING)
+    t = (EsraTask.objects.filter(project=proj, status=EsraTask.Status.PENDING)
          .order_by("created_at").first())
     if not t:
         return {}
-    t.status = SalinarTask.Status.RUNNING
+    t.status = EsraTask.Status.RUNNING
     t.save(update_fields=["status"])
     return {"task_id": t.id, "kind": t.kind, "doc_id": t.document_id,
             "identifier": t.work_item.identifier if t.work_item_id else "",
@@ -913,14 +913,14 @@ def next_salinar_task(project_key: str) -> dict:
 
 
 @mcp.tool()
-def complete_salinar_task(task_id: int, ok: bool = True, note: str = "") -> dict:
-    """Schließt eine Salinar-Aufgabe ab (DONE/ERROR) mit kurzer Notiz."""
+def complete_esra_task(task_id: int, ok: bool = True, note: str = "") -> dict:
+    """Schließt eine Esra-Aufgabe ab (DONE/ERROR) mit kurzer Notiz."""
     from django.utils import timezone
-    from app.models import SalinarTask
-    t = SalinarTask.objects.filter(pk=task_id).first()
+    from app.models import EsraTask
+    t = EsraTask.objects.filter(pk=task_id).first()
     if not t:
         return {"ok": False, "error": "Task nicht gefunden"}
-    t.status = SalinarTask.Status.DONE if ok else SalinarTask.Status.ERROR
+    t.status = EsraTask.Status.DONE if ok else EsraTask.Status.ERROR
     t.note = (note or "")[:2000]
     t.processed_at = timezone.now()
     t.save(update_fields=["status", "note", "processed_at"])
@@ -969,7 +969,7 @@ def list_norms() -> list:
 @mcp.tool()
 def list_norm_chunks(source: str, limit: int = 200, offset: int = 0) -> list:
     """Listet RAG-Chunks EINER Norm (uid, Seite, Auszug, bereits vergebene
-    Schlagworte), PAGINIERT (limit/offset) — damit Salinar JEDEN Norm-Chunk per
+    Schlagworte), PAGINIERT (limit/offset) — damit Esra JEDEN Norm-Chunk per
     tag_chunk verschlagwortet und so den Normen-Schlagwortkatalog (hunderte/
     tausende, Keywords UNIQUE) aufbaut. `source` = Dateiname aus list_norms."""
     from app.models import EmbeddingChunk

@@ -105,13 +105,13 @@ from .models import (
     Customer, Project, WorkItem, NormClause, NormLink, ChatSession, ChatMessage,
     ProjectDocument, ProjectMembership, MCPToken, EmailSettings, LLMRoleDescription,
     FeedbackRequest, FeedbackStatus, WorkerBackend, WorkItemHistory, LifecycleEvent,
-    Keyword, KeywordLink, EmbeddingChunk, SalinarTask, EmbeddedImage,
+    Keyword, KeywordLink, EmbeddingChunk, EsraTask, EmbeddedImage,
 )
 
 
-@admin.register(SalinarTask)
-class SalinarTaskAdmin(admin.ModelAdmin):
-    """Event-getriebene Salinar-Aufgaben (Upload → Tag, Generate → Norm-Abgleich)."""
+@admin.register(EsraTask)
+class EsraTaskAdmin(admin.ModelAdmin):
+    """Event-getriebene Esra-Aufgaben (Upload → Tag, Generate → Norm-Abgleich)."""
     list_display = ("id", "project", "kind", "status", "document", "work_item",
                     "created_at", "processed_at")
     list_filter = ("status", "kind", "project")
@@ -188,7 +188,7 @@ class MCPTokenAdmin(JSONExchangeAdmin, admin.ModelAdmin):
               "connection_json", "created_at", "last_used")
 
     def has_delete_permission(self, request, obj=None):
-        # Tokens geschützter Endpunkte (Salinar/Übersetzer) sind nicht löschbar.
+        # Tokens geschützter Endpunkte (Esra/Übersetzer) sind nicht löschbar.
         if obj is not None and obj.worker_backends.filter(protected=True).exists():
             return False
         return super().has_delete_permission(request, obj)
@@ -343,26 +343,26 @@ class ProjectAdmin(JSONExchangeAdmin, admin.ModelAdmin):
 
     @admin.display(description="Standard-Personas")
     def personas(self, obj):
-        """Kontrolle: hat das Projekt seine Standard-Personas? (Salinar je Projekt,
+        """Kontrolle: hat das Projekt seine Standard-Personas? (Esra je Projekt,
         Dragoman global)."""
         from django.utils.html import format_html
-        sal = WorkerBackend.objects.filter(handle="salinar", active=True,
+        sal = WorkerBackend.objects.filter(handle="esra", active=True,
                                            token__project=obj).exists()
         drag = WorkerBackend.objects.filter(handle="dragoman", active=True).exists()
         return format_html(
-            '<span style="color:{}">{} Salinar</span> · <span style="color:{}">{} Dragoman</span>',
+            '<span style="color:{}">{} Esra</span> · <span style="color:{}">{} Dragoman</span>',
             "#198754" if sal else "#dc3545", "●" if sal else "○",
             "#198754" if drag else "#dc3545", "●" if drag else "○")
 
-    @admin.action(description="Standard-Personas sicherstellen (Salinar je Projekt + Dragoman global)")
+    @admin.action(description="Standard-Personas sicherstellen (Esra je Projekt + Dragoman global)")
     def ensure_standard_personas(self, request, queryset):
-        from app.apps import ensure_salinar_for, ensure_dragoman
+        from app.apps import ensure_esra_for, ensure_dragoman
         ensure_dragoman(None)
         for p in queryset:
-            ensure_salinar_for(p)
+            ensure_esra_for(p)
         self.message_user(
             request, f"Standard-Personas sichergestellt für {queryset.count()} "
-            "Projekt(e) (Salinar je Projekt) + Dragoman (global).")
+            "Projekt(e) (Esra je Projekt) + Dragoman (global).")
 
 
 class _ReadOnlyInline(admin.TabularInline):
@@ -808,7 +808,7 @@ class WorkerBackendAdmin(JSONExchangeAdmin, admin.ModelAdmin):
         return obj.effective_handle
 
     def has_delete_permission(self, request, obj=None):
-        # Geschützte Endpunkte (z. B. Salinar) sind nicht löschbar.
+        # Geschützte Endpunkte (z. B. Esra) sind nicht löschbar.
         if obj is not None and getattr(obj, "protected", False):
             return False
         return super().has_delete_permission(request, obj)
@@ -881,7 +881,7 @@ _ADMIN_GROUPS = [
     ("Schlagwortkatalog & RAG", ["Keyword", "KeywordLink", "EmbeddingChunk"]),
     ("Chats", ["ChatSession", "ChatMessage"]),
     ("LLM, MCP & Worker", ["WorkerBackend", "MCPToken", "LLMRoleDescription",
-                           "SalinarTask", "FeedbackRequest"]),
+                           "EsraTask", "FeedbackRequest"]),
     ("Projekte, Kunden & Dokumente", ["Project", "Customer", "ProjectDocument",
                                       "ProjectMembership"]),
     ("Benutzer & System", ["UserProfile", "EmailSettings", "User", "Group"]),

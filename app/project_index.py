@@ -98,10 +98,10 @@ def index_document(doc) -> int:
         n += len(chunks)
     if rows:
         EmbeddingChunk.objects.bulk_create(rows, batch_size=200)
-    # EVENT (Upload): Salinar soll die neuen Chunks verschlagworten.
+    # EVENT (Upload): Esra soll die neuen Chunks verschlagworten.
     if n:
-        from app.models import enqueue_salinar, SalinarTask
-        enqueue_salinar(doc.project, SalinarTask.Kind.TAG_DOCUMENT, document=doc)
+        from app.models import enqueue_esra, EsraTask
+        enqueue_esra(doc.project, EsraTask.Kind.TAG_DOCUMENT, document=doc)
     return n
 
 

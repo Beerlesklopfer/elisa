@@ -43,19 +43,19 @@ def _worker_provider(provider) -> str:
 
 
 def _persona_for(handle, scope):
-    """System-Prompt je Persona: Salinar = Normenrecherche; sonst die V-Schritt-
+    """System-Prompt je Persona: Esra = Normenrecherche; sonst die V-Schritt-
     Persona (LLMRoleDescription) passend zum Token-Scope; ALL/unbekannt = leer."""
     from app.models import LLMRoleDescription
     # System-Personas: Prompt aus der ADMIN-editierbaren Rollenbeschreibung
-    # (role = SALINAR/DRAGOMAN/AUDITOR); Konstante nur als Fallback.
-    sys_role = {"salinar": "SALINAR", "dragoman": "DRAGOMAN",
+    # (role = ESRA/DRAGOMAN/AUDITOR); Konstante nur als Fallback.
+    sys_role = {"esra": "ESRA", "dragoman": "DRAGOMAN",
                 "auditor": "AUDITOR"}.get(handle)
     if sys_role:
         rd = LLMRoleDescription.objects.filter(role=sys_role).first()
         if rd and rd.description:
             return rd.description
-        from app.apps import SALINAR_PERSONA, TRANSLATOR_PERSONA, AUDITOR_PERSONA
-        return {"salinar": SALINAR_PERSONA, "dragoman": TRANSLATOR_PERSONA,
+        from app.apps import ESRA_PERSONA, TRANSLATOR_PERSONA, AUDITOR_PERSONA
+        return {"esra": ESRA_PERSONA, "dragoman": TRANSLATOR_PERSONA,
                 "auditor": AUDITOR_PERSONA}[handle]
     role = (scope or "").upper()
     obj = LLMRoleDescription.objects.filter(role=role).first() if role and role != "ALL" else None

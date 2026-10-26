@@ -66,7 +66,7 @@ def _llm_text(provider, model, base_url, api_key, system, user):
 
 def _tool_json(result):
     """MCP-Tool-Ergebnis → EIN Python-Objekt (erster Content-Block). Für Tools,
-    die ein einzelnes dict zurückgeben (get_workitem, next_salinar_task)."""
+    die ein einzelnes dict zurückgeben (get_workitem, next_esra_task)."""
     try:
         for c in result.content:
             t = getattr(c, "text", None)
@@ -132,7 +132,7 @@ async def _socket_register(args, inbox):
 
 
 async def _vstep_persona(session, proj, phase):
-    """V-Schritt-Persona (LLMRoleDescription) zur Item-Phase – damit Salinar im
+    """V-Schritt-Persona (LLMRoleDescription) zur Item-Phase – damit Esra im
     jeweiligen V-Modell-Schritt ‚in Rolle geht'."""
     if not phase:
         return ""
@@ -172,8 +172,8 @@ async def _poll_once(session, args, proj):
                 f"Chatverlauf:\n{json.dumps(chat, ensure_ascii=False)[:4000]}\n\n"
                 f"Die LETZTE Nachricht stammt von {who}:\n{mn.get('last_message', '')}\n\n"
                 f"Antworte INHALTLICH. {addr} – NIE generisch '@Mensch'.")
-        if args.handle == "salinar":
-            # Salinar geht in die V-Schritt-Persona des Items UND nutzt die Norm-Tools.
+        if args.handle == "esra":
+            # Esra geht in die V-Schritt-Persona des Items UND nutzt die Norm-Tools.
             try:
                 vp = await _vstep_persona(session, proj, item.get("phase"))
                 if vp:
@@ -271,8 +271,8 @@ async def _chat_once(session, args, proj):
                 f"Antworte als @{args.handle} INHALTLICH auf diese letzte Nachricht "
                 f"(keine Begrüßungsfloskel). {addr} – NIE generisch '@Mensch'. "
                 f"Andere darfst du per ihren sender_handle adressieren. Halte dich kurz.")
-        if args.handle == "salinar":
-            # Salinar darf/soll im PROJEKT-Chat Aussagen über das GANZE Projekt
+        if args.handle == "esra":
+            # Esra darf/soll im PROJEKT-Chat Aussagen über das GANZE Projekt
             # treffen → Projekt-Überblick (alle Items + Eingangsdokumente) UND die
             # Norm-Treffer zur Frage über die MCP-Tools beziehen.
             try:
@@ -317,7 +317,7 @@ async def _chat_once(session, args, proj):
                 print(f"[worker {args.handle}] post_chat: {exc}", file=sys.stderr, flush=True)
 
 
-# ── Salinar: event-getriebene Normenrecherche (Queue-Tasks) ─────────────────
+# ── Esra: event-getriebene Normenrecherche (Queue-Tasks) ─────────────────
 def _llm_keywords(args, text):
     """Lässt das (lokale) LLM 4–8 prägnante Schlagwort-Slugs für einen Chunk
     vergeben. Liefert eine Liste kurzer Slugs."""
@@ -335,7 +335,7 @@ def _llm_keywords(args, text):
     return [str(x).strip().lower()[:60] for x in arr if str(x).strip()][:8]
 
 
-async def _salinar_tag_document(session, args, proj, doc_id):
+async def _esra_tag_document(session, args, proj, doc_id):
     chunks = _tool_rows(await session.call_tool(
         "list_document_chunks", {"project_key": proj, "doc_id": doc_id, "limit": 300}))
     tagged = 0
@@ -350,7 +350,7 @@ async def _salinar_tag_document(session, args, proj, doc_id):
     return f"{tagged} Chunk(s) verschlagwortet"
 
 
-async def _salinar_match_item(session, args, proj, identifier):
+async def _esra_match_item(session, args, proj, identifier):
     item = _tool_json(await session.call_tool(
         "get_workitem", {"project_key": proj, "identifier": identifier})) or {}
     catalog = _tool_rows(await session.call_tool("list_norm_keywords", {}))
@@ -360,32 +360,32 @@ async def _salinar_match_item(session, args, proj, identifier):
             "WORT-ABGLEICH: welche Normen passen über ÜBEREINSTIMMENDE Schlagworte? "
             "Antworte knapp: passende Norm(en) + die Treffer-Schlagworte.")
     ans = await asyncio.to_thread(_llm_text, args.provider, args.model, args.llm_base,
-                                  args.api_key, args.persona or "Du bist Salinar.", user)
+                                  args.api_key, args.persona or "Du bist Esra.", user)
     if ans:
         await session.call_tool("post_item_chat", {
             "project_key": proj, "identifier": identifier,
-            "message": "🧂 Salinar (Normenabgleich):\n" + ans, "sender": "@salinar"})
+            "message": "📜 Esra (Normenabgleich):\n" + ans, "sender": "@esra"})
     return "Item↔Normen abgeglichen"
 
 
-async def _salinar_once(session, args, proj):
+async def _esra_once(session, args, proj):
     task = _tool_json(await session.call_tool(
-        "next_salinar_task", {"project_key": proj})) or {}
+        "next_esra_task", {"project_key": proj})) or {}
     tid = task.get("task_id")
     if not tid:
         return
-    print(f"[worker {args.handle}] Salinar-Task {tid} ({task.get('kind')}) @ {proj}", flush=True)
+    print(f"[worker {args.handle}] Esra-Task {tid} ({task.get('kind')}) @ {proj}", flush=True)
     try:
         if task.get("kind") == "TAG_DOC" and task.get("doc_id"):
-            note = await _salinar_tag_document(session, args, proj, task["doc_id"])
+            note = await _esra_tag_document(session, args, proj, task["doc_id"])
         elif task.get("kind") == "MATCH_ITEM" and task.get("identifier"):
-            note = await _salinar_match_item(session, args, proj, task["identifier"])
+            note = await _esra_match_item(session, args, proj, task["identifier"])
         else:
             note = "übersprungen (kein Ziel)"
-        await session.call_tool("complete_salinar_task",
+        await session.call_tool("complete_esra_task",
                                 {"task_id": tid, "ok": True, "note": note[:500]})
     except Exception as exc:
-        await session.call_tool("complete_salinar_task",
+        await session.call_tool("complete_esra_task",
                                 {"task_id": tid, "ok": False, "note": str(exc)[:500]})
 
 
@@ -446,8 +446,8 @@ async def _mcp_loop(args, inbox):
                         for proj in await _projects(session, args):
                             await _poll_once(session, args, proj)
                             await _chat_once(session, args, proj)   # Projekt-/RAG-Chats
-                            if args.handle == "salinar":
-                                await _salinar_once(session, args, proj)
+                            if args.handle == "esra":
+                                await _esra_once(session, args, proj)
                             if args.handle == "dragoman":
                                 await _translation_once(session, args, proj)
                         await asyncio.sleep(args.interval)
@@ -474,7 +474,7 @@ def main():
     ap.add_argument("--llm-base", default="")
     ap.add_argument("--api-key", default="")
     ap.add_argument("--socket", default="")
-    ap.add_argument("--persona", default="")     # System-Prompt (z. B. Salinar); leer = generisch
+    ap.add_argument("--persona", default="")     # System-Prompt (z. B. Esra); leer = generisch
     ap.add_argument("--system", action="store_true")  # projektübergreifend (alle Projekte)
     ap.add_argument("--interval", type=float, default=5.0)
     args = ap.parse_args()

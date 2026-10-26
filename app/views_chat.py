@@ -93,7 +93,7 @@ def _render_chat(request, active, sessions):
 # Kurze Aufgaben-Erklärung je System-Persona (Handle → Beschreibung). Andere
 # (projekt-zugeteilte) LLMs bekommen eine generische Erklärung.
 _PERSONA_BLURB = {
-    "salinar": "Normenrecherche – findet die passenden Normen, geerdet an den im "
+    "esra": "Normenrecherche – findet die passenden Normen, geerdet an den im "
                "System vorhandenen Norm-Dokumenten (nie frei erfunden).",
     "dragoman": "Übersetzer – überträgt Items in die Sekundärsprachen des Projekts "
                 "(informativ; die normative Quellsprache bleibt maßgeblich).",
@@ -137,7 +137,7 @@ def chat_new(request):
     session = ChatSession.objects.create(owner=request.user, project=project)
     ChatMessage.objects.create(
         session=session, role=ChatRole.ASSISTANT, content=_welcome_intro_text(project),
-        author_label=settings.RAG_PERSONA_NAME,     # Absender = Wendelin (nicht Salinar)
+        author_label=settings.RAG_PERSONA_NAME,     # Absender = Wendelin (nicht Esra)
         # Sentinel: markiert die Auto-Begrüßung, damit ihre @-Handle-Liste KEINE
         # Persona-Antworten auslöst (siehe server.py INTRO_MARKER). Persona↔Persona
         # ohne Mensch bleibt dadurch weiterhin möglich.

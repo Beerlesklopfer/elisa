@@ -152,7 +152,7 @@ def chat_participants(project):
                     **_glyph(None)})
     # Ollama ist KEIN Sonderfall mehr: es läuft (wie jedes LLM) als MCP-Worker über
     # ein WorkerBackend + Token und erscheint darüber als Teilnehmer.
-    # Globale System-Personas (salinar/dragoman/auditor) sind in JEDEM Projekt
+    # Globale System-Personas (esra/dragoman/auditor) sind in JEDEM Projekt
     # verfügbar – auch wenn ihr System-Token auf einem anderen Projekt gebunden ist.
     for b in (WorkerBackend.objects.filter(active=True, token__system=True)
               .select_related("token")):

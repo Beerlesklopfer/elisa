@@ -69,7 +69,7 @@ class VModelRole(models.TextChoices):
 # VModelRole bleibt rein die V-Schritte (es erzeugt u. a. die Worktree-Stufen) –
 # die Personas leben NUR in dieser erweiterten Choices-Liste für LLMRoleDescription.
 LLM_ROLE_CHOICES = list(VModelRole.choices) + [
-    ("SALINAR", "Salinar – Normenrecherche"),
+    ("ESRA", "Esra – Normenrecherche"),
     ("DRAGOMAN", "Dragoman – Übersetzer"),
     ("AUDITOR", "Auditor – externes Audit"),
 ]
@@ -407,7 +407,7 @@ class MCPToken(models.Model):
     name = models.CharField(max_length=128)              # z. B. "Claude Desktop – Frömelt"
     token = models.CharField(max_length=64, unique=True, db_index=True)
     active = models.BooleanField(default=True)
-    # System-Token (eingebaute Personas salinar/dragoman/auditor): KEINE
+    # System-Token (eingebaute Personas esra/dragoman/auditor): KEINE
     # Projekt-Schranke – darf projektübergreifend arbeiten.
     system = models.BooleanField("System (projektübergreifend)", default=False)
     # Scope = WAS darf dieser Zugangspunkt:
@@ -767,10 +767,10 @@ class WorkerBackend(models.Model):
     mcp_base = models.CharField("MCP-Basis-URL", max_length=255, blank=True,
                                 help_text="Leer = MCP_PUBLIC_BASE bzw. http://127.0.0.1:8765.")
     active = models.BooleanField(default=True)
-    # Freier @-Handle im Chat (z. B. "salinar"); leer = aus dem Provider abgeleitet.
+    # Freier @-Handle im Chat (z. B. "esra"); leer = aus dem Provider abgeleitet.
     handle = models.CharField(max_length=32, blank=True,
                               help_text="@-Handle im Chat (leer = aus Provider abgeleitet).")
-    # Fester Endpunkt (z. B. Salinar/Normenrecherche): im Admin nicht löschbar.
+    # Fester Endpunkt (z. B. Esra/Normenrecherche): im Admin nicht löschbar.
     protected = models.BooleanField("Geschützt (nicht löschbar)", default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -945,11 +945,11 @@ class KeywordLink(models.Model):
         return f"{self.keyword} → {target}"
 
 
-class SalinarTask(models.Model):
-    """EVENT-GETRIEBENE Aufgabe für die Salinar-Persona (Normenrecherche).
+class EsraTask(models.Model):
+    """EVENT-GETRIEBENE Aufgabe für die Esra-Persona (Normenrecherche).
     Wird angelegt bei jedem UPLOAD (Dokument indiziert → Chunks verschlagworten)
     und jedem GENERATE (Item erzeugt → Item-Text gegen den Schlagwortkatalog
-    abgleichen und passende Normen finden). Der Salinar-Worker holt PENDING-Tasks,
+    abgleichen und passende Normen finden). Der Esra-Worker holt PENDING-Tasks,
     erledigt sie agentisch und setzt sie auf DONE/ERROR."""
     class Kind(models.TextChoices):
         TAG_DOCUMENT = "TAG_DOC", "Dokument verschlagworten"
@@ -963,7 +963,7 @@ class SalinarTask(models.Model):
         ERROR = "ERROR", "Fehler"
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE,
-                                related_name="salinar_tasks")
+                                related_name="esra_tasks")
     kind = models.CharField(max_length=12, choices=Kind.choices)
     document = models.ForeignKey(ProjectDocument, null=True, blank=True,
                                  on_delete=models.CASCADE)
@@ -980,22 +980,22 @@ class SalinarTask(models.Model):
         ordering = ["created_at"]
 
     def __str__(self):
-        return f"Salinar[{self.get_kind_display()}] {self.project.key} ({self.status})"
+        return f"Esra[{self.get_kind_display()}] {self.project.key} ({self.status})"
 
 
-def enqueue_salinar(project, kind, *, document=None, work_item=None, ref=""):
-    """Legt eine PENDING-Salinar-Aufgabe an (idempotent je offenem Ziel). Nur wenn
-    der Salinar-Endpunkt aktiv ist – sonst kein Sinn."""
+def enqueue_esra(project, kind, *, document=None, work_item=None, ref=""):
+    """Legt eine PENDING-Esra-Aufgabe an (idempotent je offenem Ziel). Nur wenn
+    der Esra-Endpunkt aktiv ist – sonst kein Sinn."""
     if project is None:
         return None
-    if not WorkerBackend.objects.filter(handle="salinar", active=True).exists():
+    if not WorkerBackend.objects.filter(handle="esra", active=True).exists():
         return None
-    existing = SalinarTask.objects.filter(
+    existing = EsraTask.objects.filter(
         project=project, kind=kind, document=document, work_item=work_item,
-        ref=ref, status=SalinarTask.Status.PENDING).first()
+        ref=ref, status=EsraTask.Status.PENDING).first()
     if existing:
         return existing
-    return SalinarTask.objects.create(
+    return EsraTask.objects.create(
         project=project, kind=kind, document=document, work_item=work_item, ref=ref)
 
 

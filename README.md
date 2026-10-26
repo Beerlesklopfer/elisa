@@ -151,7 +151,7 @@ drei projektübergreifende Spezialisten und der lokale Norm-Assistent:
 | Persona | Aufgabe |
 |---|---|
 | **Wendelin** | lokaler, RAG-gestützter Norm-Assistent im Chat |
-| **Salinar** | Normenrecherche, geerdet an den vorhandenen Normen + Projekt-Überblick |
+| **Esra** | Normenrecherche, geerdet an den vorhandenen Normen + Projekt-Überblick |
 | **Dragoman** | Übersetzer für informative Sekundärsprachen |
 | **Auditor** | externes Audit: meldet Findings und kann zurückstufen |
 
