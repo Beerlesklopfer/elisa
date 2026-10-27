@@ -182,6 +182,9 @@ elisa (0.3.0) unstable; urgency=medium
     (pgrep fehlt im Container).
   * OCR: bei abgebrochener Verbindung (Eliezer lädt das Modell beim ersten Aufruf)
     bis zu 4 Versuche mit Pause.
+  * OCR: Seiten werden auf max. 1600 px Kantenlänge begrenzt und als JPEG gesendet –
+    große Scans (mehrere MB als PNG) überschritten das Request-Limit der Inferenz
+    ("Connection reset by peer").
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.
