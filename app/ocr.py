@@ -5,6 +5,7 @@ Text landet nur im RAG-Index (beratender Kontext), nie in verbindlichen Feldern.
 """
 import base64
 import io
+import time
 
 from django.conf import settings
 
@@ -37,10 +38,16 @@ def ocr_page(path, page_index, model, dpi=150):
     from app import local_llm
     png = render_page_png(path, page_index, dpi)
     uri = "data:image/png;base64," + base64.b64encode(png).decode()
-    try:
-        out = local_llm.chat([{"role": "user", "content": [
-            {"type": "text", "text": PROMPT},
-            {"type": "image_url", "image_url": {"url": uri}}]}], model=model)
-    except Exception as exc:
-        raise OcrError(f"OCR-Modell '{model}' antwortet nicht: {exc}")
-    return (out or "").strip()
+    msgs = [{"role": "user", "content": [
+        {"type": "text", "text": PROMPT},
+        {"type": "image_url", "image_url": {"url": uri}}]}]
+    last = None
+    for attempt in range(4):
+        try:
+            return (local_llm.chat(msgs, model=model) or "").strip()
+        except Exception as exc:
+            # Beim ersten Aufruf lädt Eliezer das Modell (ggf. nach Verdrängen eines
+            # anderen) und bricht die Verbindung kurz ab → mit Pause erneut versuchen.
+            last = exc
+            time.sleep(10 * (attempt + 1))
+    raise OcrError(f"OCR-Modell '{model}' antwortet nicht: {last}")

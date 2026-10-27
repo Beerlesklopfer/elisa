@@ -180,6 +180,8 @@ elisa (0.3.0) unstable; urgency=medium
     erkennbaren Text werden nicht mehr als „fertig“ archiviert, sondern bleiben mit
     Hinweis in incoming/. Laufstatus der Indexierung aus der Fortschrittsdatei
     (pgrep fehlt im Container).
+  * OCR: bei abgebrochener Verbindung (Eliezer lädt das Modell beim ersten Aufruf)
+    bis zu 4 Versuche mit Pause.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.
