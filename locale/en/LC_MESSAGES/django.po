@@ -1233,3 +1233,6 @@ msgstr ""
 "documents. %(llm)s generates the embeddings locally; the model is not trained. "
 "Scanned PDFs are read with OCR when a model is selected in the admin under "
 "“RAG settings (OCR)”."
+
+msgid "V-Schritt"
+msgstr "V-model step"

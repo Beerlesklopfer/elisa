@@ -72,6 +72,21 @@ def vmodel_persona(handle):
     return next((p for p in VMODEL_PERSONAS if p["handle"] == handle), None)
 
 
+def tooltip(handle):
+    """Vorstellung für den Hover (Tooltip): Name, Akronym und Aufgabe der Persona –
+    leer, wenn der Handle keine Persona ist."""
+    from django.utils.translation import gettext as _
+    handle = (handle or "").lstrip("@").lower()
+    sp = system_persona(handle)
+    if sp:
+        return f"{sp['name']} — {plain(sp['acronym'])}\n{sp['role']}"
+    vp = vmodel_persona(handle)
+    if vp:
+        return (f"{vp['name']} — {plain(vp['acronym'])}\n"
+                f"{_('V-Schritt')}: {vp['step']} ({vp['code']})")
+    return ""
+
+
 def plain(text):
     """Akronym ohne Markdown-Fettung (für Prompts)."""
     return str(text).replace("**", "")

@@ -55,11 +55,13 @@ def glyph_map_json(participants):
     import json
     from django.conf import settings
     from app.participants import PROVIDER_GLYPH
-    m = {p.get("handle"): {"icon": p.get("icon", "fa-robot"), "color": p.get("color", "")}
+    m = {p.get("handle"): {"icon": p.get("icon", "fa-robot"), "color": p.get("color", ""),
+                           "tip": p.get("tip", "")}
          for p in (participants or []) if p.get("kind") == "llm" and p.get("handle")}
     rag = getattr(settings, "RAG_PERSONA_NAME", "Lukas")
     icon, color = PROVIDER_GLYPH.get("OLLAMA", ("fa-robot", "#5a5a5a"))
-    m.setdefault(rag, {"icon": icon, "color": color})
+    from app.personas import tooltip
+    m.setdefault(rag, {"icon": icon, "color": color, "tip": tooltip("lukas")})
     return mark_safe(json.dumps(m))
 
 

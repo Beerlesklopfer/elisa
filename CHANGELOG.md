@@ -195,6 +195,8 @@ elisa (0.3.0) unstable; urgency=medium
   * Links aus dem Inhalt (Chat-Nachrichten/Markdown, Norm-Quellen und -Zitate,
     Norm-Downloads auf Normen-Seite und im Item-Text) öffnen in einem neuen Tab
     (rel=noopener noreferrer); Navigation, Menüs und Formulare bleiben im selben Tab.
+  * Hover über Personas im Chat (Teilnehmer-Chips und Absenderzeilen) stellt sie vor:
+    Name, Akronym und Aufgabe (app/personas.tooltip, lokalisiert).
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

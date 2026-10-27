@@ -208,6 +208,7 @@
       if (g && g.color) i.style.color = g.color;
       sd.appendChild(i);
       sd.appendChild(document.createTextNode(sender));
+      if (g && g.tip) sd.title = g.tip;                     // Hover: Persona-Vorstellung
       wrap.appendChild(sd);
     }
     if (reply && reply.text) {          // Bezug: worauf diese Nachricht antwortet
@@ -417,6 +418,7 @@
       const g = s ? glyphFor(s.textContent || "") : null;
       const i = s ? s.querySelector("i") : null;
       if (g && i) { i.className = "fas " + g.icon + " me-1"; if (g.color) i.style.color = g.color; }
+      if (g && g.tip && s) s.title = g.tip;                 // Hover: Persona-Vorstellung
       const bubble = msg.querySelector(".bubble");
       const role = msg.classList.contains("user") ? "user" : "assistant";
       if (bubble) tintBubble(bubble, s ? s.textContent : "", role);

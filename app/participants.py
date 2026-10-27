@@ -165,4 +165,9 @@ def chat_participants(project):
         out.append({"handle": h, "label": b.name, "kind": "llm",
                     "info": "System-Persona · alle Projekte",
                     "online": bool(lu and lu >= cutoff), **_glyph(b.provider)})
+    # Hover-Vorstellung der Personas (Name, Akronym, Aufgabe)
+    from .personas import tooltip
+    for p in out:
+        if p.get("kind") == "llm":
+            p["tip"] = tooltip(p.get("handle"))
     return out
