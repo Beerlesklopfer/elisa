@@ -232,12 +232,14 @@ def list_requirements(project_key: str) -> list[dict]:
 
 @mcp.tool()
 def propose_requirement(project_key: str, title: str, body: str,
-                        rationale: str = "", identifier: str = "") -> dict:
+                        rationale: str = "", identifier: str = "", llm_model: str = "") -> dict:
     """
     Schlägt eine neue Anforderung (REQ) VOR. Governance: wird als DRAFT mit
     generated_by_llm=True angelegt und NIE durch das LLM freigegeben. Ein Mensch
     prüft, überarbeitet und gibt frei (Statusautomat DRAFT→PROPOSED→APPROVED,
-    letzter Schritt menschlich). Erfordert ein WRITE-Token.
+    letzter Schritt menschlich). Erfordert ein WRITE-Token. `llm_model` = Herkunft des
+    Entwurfs für die Provenienz (z. B. "mcp/claude-code"); `rationale` = Begründung
+    inkl. QUELLE (Dokument/Abschnitt).
     """
     from app.models import WorkItem, Phase, ItemStatus
     proj = Project.objects.filter(key=project_key).first()
@@ -250,7 +252,7 @@ def propose_requirement(project_key: str, title: str, body: str,
         project=proj, phase=Phase.REQUIREMENT, identifier=ident,
         title=title, body=body, rationale=rationale,
         status=ItemStatus.DRAFT,
-        generated_by_llm=True, llm_model="mcp/claude-desktop",
+        generated_by_llm=True, llm_model=(llm_model or "mcp/claude-desktop")[:64],
     )
     from app.models import enqueue_esra, EsraTask
     enqueue_esra(proj, EsraTask.Kind.MATCH_ITEM, work_item=w)  # Generate-Event

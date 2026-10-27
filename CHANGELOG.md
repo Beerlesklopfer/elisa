@@ -203,6 +203,7 @@ elisa (0.3.0) unstable; urgency=medium
     Antwortprüfung (gültige Nummern, keine Normverweise ohne Beleg), feste Absage ohne
     Quelle, Ersatzantwort mit wörtlichen Auszügen. Begrüßung/Smalltalk ohne Modell
     (feste Vorstellung). MCP: search_norms liefert distance, post_chat(sources=…).
+  * MCP propose_requirement: optionaler Parameter llm_model für die Provenienz.
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.
