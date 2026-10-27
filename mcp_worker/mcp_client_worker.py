@@ -299,7 +299,7 @@ async def _chat_once(session, args, proj):
             except Exception as exc:
                 print(f"[worker {args.handle}] search_norms: {exc}", file=sys.stderr, flush=True)
                 continue
-            sources = grounding.numbered(hits)
+            sources = grounding.numbered(hits, query=query)
             if not sources:
                 answer = grounding.NO_SOURCE
             else:

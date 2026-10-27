@@ -17,6 +17,7 @@ import re
 from urllib.parse import quote
 
 MAX_DISTANCE = float(os.getenv("RAG_MAX_DISTANCE", "0.62"))   # Cosinus-Abstand, kleiner = ähnlicher
+STRICT_DISTANCE = float(os.getenv("RAG_STRICT_DISTANCE", "0.22"))
 MAX_SOURCES = 5
 
 RULES = (
@@ -45,13 +46,38 @@ def is_smalltalk(text):
     return bool(_SMALLTALK.match((text or "").strip()))
 
 
-def numbered(hits, max_distance=None):
+_WORD = re.compile(r"[A-Za-zÄÖÜäöüß0-9]{5,}")
+_STOP = {"welche", "wieviel", "wieviele", "diese", "dieser", "dieses", "einer", "eines", "einem",
+         "einen", "bitte", "sollte", "sollen", "müssen", "muss", "werden", "wird", "können",
+         "kann", "gibt", "habe", "haben", "beachten", "wichtig", "dazu", "über", "damit",
+         "which", "should", "would", "could", "about", "there", "their"}
+
+
+def _stems(text):
+    return {w.lower()[:6] for w in _WORD.findall(text or "") if w.lower() not in _STOP}
+
+
+def _relevant(query, text, distance):
+    """Relevanz = Wortüberlappung zwischen Frage und Fundstelle ODER sehr geringer
+    Abstand (für fremdsprachige Quellen). Der Abstand allein trennt in der Praxis nicht
+    (themenfremde Fragen liegen bei ~0.30, einschlägige bei 0.19–0.31)."""
+    if distance is not None and distance <= STRICT_DISTANCE:
+        return True
+    q = _stems(query)
+    if not q:
+        return distance is None or distance <= MAX_DISTANCE
+    return len(q & _stems(text)) >= (1 if len(q) <= 2 else 2)
+
+
+def numbered(hits, max_distance=None, query=None):
     """Treffer [{source,page,text,distance?}] → nummerierte, relevante, deduplizierte Quellen."""
     lim = MAX_DISTANCE if max_distance is None else max_distance
     out, seen = [], set()
     for h in hits or []:
         d = h.get("distance")
         if d is not None and d > lim:
+            continue
+        if query is not None and not _relevant(query, h.get("text"), d):
             continue
         key = (h.get("source"), h.get("page"))
         if key in seen or not h.get("source"):
@@ -126,11 +152,40 @@ def extract_answer(sources):
     return "\n".join(parts)
 
 
+def verify(answer, sources, min_overlap=0.5):
+    """Satzweise Prüfung: jede Aussage braucht eine gültige Quellennummer UND muss sich
+    inhaltlich (Wortüberlappung) in der zitierten Quelle wiederfinden. Rückgabe:
+    (behaltene Zeilen, entfernte Zeilen)."""
+    by_n = {s["n"]: _stems(s["text"]) for s in sources}
+    kept, dropped = [], []
+    for raw in re.split(r"(?<=[.!?])\s+(?=[A-ZÄÖÜ•\-\*\d])|\n+", answer or ""):
+        line = raw.strip()
+        if not line or re.match(r"^(\*\*)?quellen?:?(\*\*)?\b", line, re.I):
+            continue                                  # Quellenzeilen des Modells: der Fuß ersetzt sie
+        nums = {int(n) for n in re.findall(r"\[(\d{1,2})\]", line)} & set(by_n)
+        words = _stems(re.sub(r"\[\d+\]", "", line))
+        if not nums:
+            (dropped if words else kept).append(line)
+            continue
+        cited = set().union(*(by_n[n] for n in nums))
+        if words and len(words & cited) / len(words) < min_overlap:
+            dropped.append(line)
+        else:
+            kept.append(line)
+    return kept, dropped
+
+
 def finalize(answer, sources):
     """Antwort + Quellenfuß, oder die Ersatzantwort. Rückgabe: (text, genutzte Quellennummern, ok)."""
     answer = (answer or "").strip()
     if "KEINE_QUELLE" in answer:
         return NO_SOURCE, set(), False
+    kept, dropped = verify(answer, sources)
+    if kept:
+        answer = "\n".join(kept) + (
+            f"\n\n_({len(dropped)} Aussage(n) ohne ausreichenden Beleg entfernt.)_" if dropped else "")
+    else:
+        answer = ""
     ok, _problems = check(answer, sources)
     if ok:
         used = {int(n) for n in re.findall(r"\[(\d{1,2})\]", answer)} & {s["n"] for s in sources}

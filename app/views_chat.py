@@ -342,7 +342,7 @@ def chat_send(request, pk):
     # klickbaren Links; ohne relevante Quelle antwortet das Modell gar nicht.
     from app import grounding
     from app.personas import tooltip
-    g_sources = grounding.numbered(
+    g_sources = grounding.numbered(query=text, hits=
         [{"source": m.get("quelle"), "page": m.get("seite"), "text": doc,
           "distance": m.get("distanz"), "kind": "norm"} for doc, m in hits]
         + [{"source": m.get("quelle"), "page": m.get("seite"), "text": doc,
@@ -367,47 +367,25 @@ def chat_send(request, pk):
                           "html": str(chat_render(pre)), "model": "rag/grounding",
                           "sender": assistant_msg.sender_label(), "sources": []}})
 
-    # 3) Historie + System + Kontext an Ollama.
-    history = [{"role": "system", "content": CHAT_SYSTEM}]
-    # Rollenbeschreibung (falls Item bezogen) + Projektbeschreibung mitgeben.
-    from app import llm_roles
-    role_ctx = llm_roles.context_for(project=session.project,
-                                     item=session.related_item)
-    if role_ctx:
-        history.append({"role": "system", "content": role_ctx})
-    # Fragende Person mit adressierbarem @-Handle nennen, damit Lukas sie direkt
-    # anspricht (nie generisch „@Mensch"), wie es die Personas auch tun.
+    # 3) Schlanke Anfrage: Persona + Quellenpflicht + NUR die belegbaren Quellen und der
+    #    Gesprächsverlauf (keine ungeprüften Zusatzlisten – die würden Erfundenes erlauben).
     from app.participants import slug_handle
     _ah = slug_handle(request.user.first_name) or slug_handle(request.user.get_username())
     _aname = request.user.get_full_name() or request.user.get_username()
     _ahandle = ("@" + _ah) if _ah else _aname
-    history.append({"role": "system", "content": (
-        f"Die fragende Person ist {_aname} (Handle {_ahandle}). Sprich sie in deiner "
-        f"Antwort mit {_ahandle} an – nie generisch '@Mensch'.")})
-    # Deterministische Liste der wirklich vorhandenen Normen (gegen Halluzination).
-    # Kanonisch gruppiert: eine Zeile je Norm, mit verfügbaren Sprachen/Ausgaben.
-    from app import norm_refs
-    groups = norm_refs.available_norms_grouped()
-    if groups:
-        norm_list = "\n".join(
-            f"- {g['label']} (Sprachen: {', '.join(g['langs'])}; "
-            f"{len(g['files'])} Ausgabe(n))" for g in groups)
-    else:
-        norm_list = "(noch keine Norm indexiert)"
-    history.append({
-        "role": "system",
-        "content": f"VERFÜGBARE NORMEN (vollständig, nur diese existieren):\n{norm_list}",
-    })
-    # Schlagwortkatalog (kompakter Doku-Index) – spart Kontext-Breite.
-    from app import keywords
-    kw_cat = keywords.catalog_text(session.project)
-    if kw_cat:
-        history.append({"role": "system", "content": kw_cat})
-    history.append({"role": "system",
-                    "content": grounding.RULES + "\n\n" + grounding.sources_block(g_sources)})
-    for m in session.messages.all():
-        role = "assistant" if m.role == ChatRole.ASSISTANT else "user"
-        history.append({"role": role, "content": m.content})
+    recent = [f"{('Assistent' if m.role == ChatRole.ASSISTANT else _aname)}: {(m.content or '')[:300]}"
+              for m in session.messages.exclude(pk=user_msg.pk).order_by("-id")[:4][::-1]]
+    history = [
+        {"role": "system", "content": (
+            "Du bist LUKAS, der RAG-Assistent für Normen und Projektdokumente (IEC 61508 u. a.). "
+            "Antworte knapp auf Deutsch. Du berätst nur; verbindliche Inhalte trägt der Mensch im "
+            f"Editor ein. Sprich die fragende Person ({_aname}) mit {_ahandle} an.\n\n"
+            + grounding.RULES)},
+        {"role": "user", "content": (
+            grounding.sources_block(g_sources)
+            + ("\n\nBisheriger Verlauf:\n" + "\n".join(recent) if recent else "")
+            + f"\n\nFrage von {_aname}: {text}")},
+    ]
 
     try:
         from app import local_llm
