@@ -1052,11 +1052,12 @@ def list_norm_keywords(source: str = "") -> list:
 def search_norms(query: str, n: int = 5) -> list:
     """Semantische Suche (RAG-Index) in den vorhandenen Normen. Liefert die
     ähnlichsten Stellen mit Quelle, Seite und Textauszug – z. B. um zu einer
-    Anforderung die passende Norm/Klausel zu finden."""
+    Anforderung die passende Norm/Klausel zu finden. `distance` = Cosinus-Abstand
+    (kleiner = ähnlicher; über ~0.6 ist der Treffer meist nicht mehr einschlägig)."""
     from app import rag_service
     hits = rag_service.retrieve_norm_context(query, n)
     return [{"source": meta.get("quelle"), "page": meta.get("seite"),
-             "text": (doc or "")[:600]} for doc, meta in hits]
+             "distance": meta.get("distanz"), "text": (doc or "")[:600]} for doc, meta in hits]
 
 
 @mcp.tool()
@@ -1270,12 +1271,15 @@ def get_chat(session_id: int, after_id: int = 0) -> list:
 
 
 @mcp.tool()
-def post_chat(session_id: int, message: str, sender: str = "", reply_to: int = 0) -> dict:
+def post_chat(session_id: int, message: str, sender: str = "", reply_to: int = 0,
+              sources: list | None = None) -> dict:
     """Antwortet in einer Chat-Session (Projekt-/RAG-Chat) als Persona (role=
     ASSISTANT, mit Provenienz). `sender` = dein @-Handle. NIE Quelle der Wahrheit;
     schreibt nichts Verbindliches. WRITE-Token nötig.
     `reply_to` = ID der Nachricht, auf die du antwortest (macht den Bezug im Chat
-    sichtbar; bitte angeben, `last_id` aus list_my_chat_mentions)."""
+    sichtbar; bitte angeben, `last_id` aus list_my_chat_mentions).
+    `sources` = [{"quelle": Dateiname, "seite": n}] – die Belege (klickbare Quellenzeile
+    unter der Nachricht). Aussagen im Chat MÜSSEN durch Quellen im RAG belegt sein."""
     from app.models import ChatSession, ChatMessage, ChatRole
     s = ChatSession.objects.filter(id=session_id).first()
     if not s:
@@ -1283,7 +1287,9 @@ def post_chat(session_id: int, message: str, sender: str = "", reply_to: int = 0
     ref = s.messages.filter(pk=reply_to).first() if reply_to else None
     ChatMessage.objects.create(session=s, role=ChatRole.ASSISTANT, content=message,
                                author_label=sender or "@llm", generated_by_llm=True,
-                               reply_to=ref)
+                               reply_to=ref,
+                               cited_sources=[{"quelle": x.get("quelle"), "seite": x.get("seite")}
+                                              for x in (sources or []) if isinstance(x, dict)])
     return {"ok": True, "session_id": session_id}
 
 

@@ -197,6 +197,12 @@ elisa (0.3.0) unstable; urgency=medium
     (rel=noopener noreferrer); Navigation, Menüs und Formulare bleiben im selben Tab.
   * Hover über Personas im Chat (Teilnehmer-Chips und Absenderzeilen) stellt sie vor:
     Name, Akronym und Aufgabe (app/personas.tooltip, lokalisiert).
+  * QUELLENPFLICHT im Chat (app/grounding.py): Personas (Worker) und der RAG-Assistent
+    (Lukas) antworten nur mit Aussagen aus RAG-Treffern – nummerierte Quellen [n] mit
+    klickbaren Links auf die Seite (Normen-Viewer), Relevanzfilter (RAG_MAX_DISTANCE),
+    Antwortprüfung (gültige Nummern, keine Normverweise ohne Beleg), feste Absage ohne
+    Quelle, Ersatzantwort mit wörtlichen Auszügen. Begrüßung/Smalltalk ohne Modell
+    (feste Vorstellung). MCP: search_norms liefert distance, post_chat(sources=…).
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

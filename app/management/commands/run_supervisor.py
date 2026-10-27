@@ -98,6 +98,18 @@ def _chat_persona_for(handle, scope):
             f"Du schreibst im Chat keine Spezifikationen.")
 
 
+def _chat_intro_for(handle):
+    """Feste Selbstvorstellung (Name, Akronym, Aufgabe) für Begrüßungen im Chat – ohne
+    Modell, damit nichts erfunden wird."""
+    from app.personas import tooltip
+    tip = tooltip(handle)
+    if not tip:
+        return ""
+    head, _, task = tip.partition("\n")
+    return (f"Ich bin **{head}**. {task}. Stell mir eine Frage – ich antworte nur mit "
+            f"Aussagen, die ich im RAG belegen kann (mit Quellenlinks).")
+
+
 def _load_backends():
     """Aktive WorkerBackends als self-contained dicts (für Subprozess-Args)."""
     from app.models import WorkerBackend
@@ -116,6 +128,7 @@ def _load_backends():
             "handle": b.effective_handle,
             "persona": _persona_for(b.effective_handle, t.scope_slug),
             "chat_persona": _chat_persona_for(b.effective_handle, t.scope_slug),
+            "chat_intro": _chat_intro_for(b.effective_handle),
             "system": bool(getattr(t, "system", False)),
         })
     return out
@@ -129,6 +142,8 @@ async def _spawn(b):
             "--persona", b.get("persona", ""), "--socket", str(settings.SUPERVISOR_SOCKET)]
     if b.get("chat_persona"):
         args += ["--chat-persona", b["chat_persona"]]
+    if b.get("chat_intro"):
+        args += ["--chat-intro", b["chat_intro"]]
     if b.get("system"):
         args.append("--system")
     print(f"[supervisor] starte {b['name']} ({b['handle']} @ {b['project']}/{b['scope']})",

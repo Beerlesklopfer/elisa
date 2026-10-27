@@ -72,6 +72,11 @@ Diese Regeln sind der Grund, warum das Werkzeug überhaupt zulässig ist
      verbindliches Feld; Übernahme in eine Spezifikation ist immer manuelles,
      menschliches Einfügen im Editor. Provenienz an jeder Assistenten-Nachricht.
 
+   *Quellenpflicht im Chat:* Aussagen von Personas und vom RAG-Assistenten müssen durch
+   RAG-Treffer belegt sein (`app/grounding.py`): nummerierte Quellen, klickbare Links auf
+   die Stelle, Antwortprüfung (gültige Quellennummern, keine nicht belegten Normverweise),
+   Absage ohne relevante Quelle, deterministische Ersatzantwort aus wörtlichen Auszügen.
+
 4. **Provenienz wird mitgeschrieben** (`generated_by_llm`, `llm_model`), damit
    jeder Datensatz auditierbar bleibt.
 

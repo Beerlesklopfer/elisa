@@ -338,6 +338,35 @@ def chat_send(request, pk):
         context += ("\n\nProjektdokumente:\n"
                     + rag_service.format_context(proj_hits))
 
+    # QUELLENPFLICHT (app/grounding.py): nur belegte Aussagen, nummerierte Quellen mit
+    # klickbaren Links; ohne relevante Quelle antwortet das Modell gar nicht.
+    from app import grounding
+    from app.personas import tooltip
+    g_sources = grounding.numbered(
+        [{"source": m.get("quelle"), "page": m.get("seite"), "text": doc,
+          "distance": m.get("distanz"), "kind": "norm"} for doc, m in hits]
+        + [{"source": m.get("quelle"), "page": m.get("seite"), "text": doc,
+            "distance": m.get("distanz"), "kind": "doc"} for doc, m in proj_hits])
+    pre = None
+    if grounding.is_smalltalk(text):
+        head, _, task = tooltip("lukas").partition("\n")
+        pre = (f"Ich bin **{head}**. {task}. Stell mir eine Frage – ich antworte nur mit "
+               f"Aussagen, die ich im RAG belegen kann (mit Quellenlinks).")
+    elif not g_sources:
+        pre = grounding.NO_SOURCE
+    if pre is not None:
+        assistant_msg = ChatMessage.objects.create(
+            session=session, role=ChatRole.ASSISTANT, content=pre, generated_by_llm=False,
+            llm_model="rag/grounding", author_label=settings.RAG_PERSONA_NAME,
+            reply_to=user_msg, cited_sources=[])
+        session.save(update_fields=["updated_at"])
+        return JsonResponse({
+            "user": {"id": user_msg.id, "content": user_msg.content,
+                     "html": str(chat_render(user_msg.content))},
+            "assistant": {"id": assistant_msg.id, "content": pre,
+                          "html": str(chat_render(pre)), "model": "rag/grounding",
+                          "sender": assistant_msg.sender_label(), "sources": []}})
+
     # 3) Historie + System + Kontext an Ollama.
     history = [{"role": "system", "content": CHAT_SYSTEM}]
     # Rollenbeschreibung (falls Item bezogen) + Projektbeschreibung mitgeben.
@@ -374,36 +403,28 @@ def chat_send(request, pk):
     kw_cat = keywords.catalog_text(session.project)
     if kw_cat:
         history.append({"role": "system", "content": kw_cat})
-    if context:
-        history.append({
-            "role": "system",
-            "content": f"Norm-Kontext (Auszüge):\n{context}",
-        })
+    history.append({"role": "system",
+                    "content": grounding.RULES + "\n\n" + grounding.sources_block(g_sources)})
     for m in session.messages.all():
         role = "assistant" if m.role == ChatRole.ASSISTANT else "user"
         history.append({"role": role, "content": m.content})
 
     try:
         from app import local_llm
-        answer = local_llm.chat(history)
+        raw = local_llm.chat(history)
+        answer, used, _ok = grounding.finalize(raw, g_sources)
+        cited = grounding.cited_payload(used, g_sources)
     except Exception as exc:
         from app import local_llm
         answer = f"({local_llm.backend_label()} nicht erreichbar: {exc})"
-
-    # Zitierte Quellen dedupen (je Datei der erste Treffer).
-    seen = {}
-    for _, m in hits + proj_hits:
-        q = m.get("quelle")
-        if q and q not in seen:
-            seen[q] = m.get("seite")
-    cited = [{"quelle": q, "seite": p} for q, p in seen.items()]
+        cited = []
 
     # 4) Assistenten-Antwort mit Provenienz speichern (nie Quelle der Wahrheit).
     assistant_msg = ChatMessage.objects.create(
         session=session, role=ChatRole.ASSISTANT, content=answer,
         generated_by_llm=True, llm_model=settings.LOCAL_CHAT_MODEL,
         author_label=settings.RAG_PERSONA_NAME,     # „Lukas" statt „llama3.1"
-        cited_sources=cited,
+        reply_to=user_msg, cited_sources=cited,
     )
     session.save(update_fields=["updated_at"])
 

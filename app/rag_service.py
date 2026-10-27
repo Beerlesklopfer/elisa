@@ -158,8 +158,10 @@ def _search(collection: str, question: str, n: int):
     if emb is None:
         return []
     qs = (EmbeddingChunk.objects.filter(collection=collection)
-          .order_by(CosineDistance("embedding", emb))[:n])
-    return [(c.text, {"quelle": c.source, "seite": c.page}) for c in qs]
+          .annotate(dist=CosineDistance("embedding", emb))
+          .order_by("dist")[:n])
+    return [(c.text, {"quelle": c.source, "seite": c.page, "distanz": float(c.dist)})
+            for c in qs]
 
 
 def retrieve_norm_context(question: str, n: int = TOP_K):

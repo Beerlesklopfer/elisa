@@ -24,6 +24,8 @@ import json
 import os
 import sys
 
+from app import grounding   # Quellenpflicht (reines Python, ohne Django-Setup)
+
 CHAT_SYSTEM = (
     "Du bist {handle}, ein beratendes LLM im ELISA (IEC 61508). Antworte knapp, "
     "sachlich, auf Deutsch. Du berätst nur — verbindliche Inhalte trägt der Mensch "
@@ -273,64 +275,60 @@ async def _chat_once(session, args, proj):
             chat = _tool_rows(await session.call_tool("get_chat", {"session_id": sid}))
         except Exception:
             chat = []
-        system = ((args.chat_persona or args.persona
-                   or CHAT_SYSTEM.format(handle="@" + args.handle))
-                  + "\n\n" + CHAT_MODE_RULES)
+        last_msg = (mn.get("last_message") or "").strip()
         last_sender = mn.get("last_sender") or ""
         last_name = mn.get("last_sender_name") or ""
         who = (f"{last_sender} ({last_name})" if last_sender and last_name
                else last_sender or last_name or "ein Teilnehmer")
         addr = (f"Sprich {last_sender} direkt mit diesem Handle an"
                 if last_sender else "Sprich die Person nicht mit einem erfundenen Handle an")
-        user = (f"Chat-Verlauf (jede Nachricht hat 'sender_handle'):\n"
-                f"{json.dumps(chat, ensure_ascii=False)[:4000]}\n\n"
-                f"Die LETZTE Nachricht stammt von {who}:\n{mn.get('last_message', '')}\n\n"
-                f"Antworte als @{args.handle} INHALTLICH auf diese letzte Nachricht "
-                f"(keine Begrüßungsfloskel). {addr} – NIE generisch '@Mensch'. "
-                f"Andere darfst du per ihren sender_handle adressieren. Halte dich kurz.")
-        if args.handle == "esra":
-            # Esra darf/soll im PROJEKT-Chat Aussagen über das GANZE Projekt
-            # treffen → Projekt-Überblick (alle Items + Eingangsdokumente) UND die
-            # Norm-Treffer zur Frage über die MCP-Tools beziehen.
+        cited, used_llm = [], False
+        # QUELLENPFLICHT (app/grounding.py): nur belegte Aussagen, Quellen als klickbare Links.
+        if grounding.is_smalltalk(last_msg):
+            answer = args.chat_intro or f"Ich bin @{args.handle}."
+        else:
+            query = last_msg
+            if len(query) < 40:          # Rückfrage: die vorige Frage des Menschen mitnehmen
+                prev = [m.get("content") or "" for m in chat
+                        if m.get("role") == "USER" and (m.get("content") or "").strip() != last_msg]
+                if prev:
+                    query = (prev[-1][:300] + " " + query).strip()
             try:
-                items = _tool_rows(await session.call_tool(
-                    "list_workitems", {"project_key": proj}))
-                if items:
-                    user += ("\n\nPROJEKT-ITEMS (komplett, list_workitems):\n"
-                             + json.dumps(items, ensure_ascii=False)[:3500])
-            except Exception:
-                pass
-            try:
-                docs = _tool_rows(await session.call_tool(
-                    "list_project_documents", {"project_key": proj}))
-                if docs:
-                    user += ("\n\nPROJEKT-DOKUMENTE (list_project_documents):\n"
-                             + json.dumps(docs, ensure_ascii=False)[:1500])
-            except Exception:
-                pass
-            try:
-                norms = _tool_rows(await session.call_tool("search_norms", {
-                    "query": (mn.get('last_message') or '')[:400], "n": 5}))
-                if norms:
-                    user += ("\n\nNORM-TREFFER (search_norms):\n"
-                             + json.dumps(norms, ensure_ascii=False)[:2000])
-            except Exception:
-                pass
-        loc = await _locality_line(session, proj, args.handle)
-        if loc:
-            user += "\n\n" + loc
-        try:
-            answer = await asyncio.to_thread(_llm_text, args.provider, args.model,
-                                             args.llm_base, args.api_key, system, user)
-        except Exception as exc:
-            print(f"[worker {args.handle}] Chat-LLM-Fehler: {exc}", file=sys.stderr, flush=True)
-            continue
+                hits = _tool_rows(await session.call_tool(
+                    "search_norms", {"query": query[:500], "n": 8}))
+            except Exception as exc:
+                print(f"[worker {args.handle}] search_norms: {exc}", file=sys.stderr, flush=True)
+                continue
+            sources = grounding.numbered(hits)
+            if not sources:
+                answer = grounding.NO_SOURCE
+            else:
+                system = ((args.chat_persona or args.persona
+                           or CHAT_SYSTEM.format(handle="@" + args.handle))
+                          + "\n\n" + CHAT_MODE_RULES + "\n\n" + grounding.RULES)
+                recent = [{"von": m.get("sender_handle") or m.get("sender"),
+                           "text": (m.get("content") or "")[:300]} for m in chat[-4:]]
+                user = (f"{grounding.sources_block(sources)}\n\n"
+                        f"Letzte Chat-Nachrichten: {json.dumps(recent, ensure_ascii=False)}\n\n"
+                        f"Die LETZTE Nachricht stammt von {who}:\n{last_msg}\n\n"
+                        f"Antworte als @{args.handle} NUR mit belegten Aussagen. {addr} – "
+                        f"NIE generisch '@Mensch'.")
+                try:
+                    raw = await asyncio.to_thread(_llm_text, args.provider, args.model,
+                                                  args.llm_base, args.api_key, system, user)
+                except Exception as exc:
+                    print(f"[worker {args.handle}] Chat-LLM-Fehler: {exc}", file=sys.stderr, flush=True)
+                    continue
+                answer, used, ok = grounding.finalize(raw, sources)
+                cited = grounding.cited_payload(used, sources)
+                used_llm = ok
         if answer:
             try:
                 await session.call_tool("post_chat", {
                     "session_id": sid, "message": answer, "sender": "@" + args.handle,
-                    "reply_to": mn.get("last_id") or 0})
-                print(f"[worker {args.handle}] Chat {sid} beantwortet ({len(answer)} Z.)", flush=True)
+                    "reply_to": mn.get("last_id") or 0, "sources": cited})
+                print(f"[worker {args.handle}] Chat {sid} beantwortet ({len(answer)} Z., "
+                      f"{len(cited)} Quellen{'' if used_llm or not cited else ', Ersatzantwort'})", flush=True)
             except Exception as exc:
                 print(f"[worker {args.handle}] post_chat: {exc}", file=sys.stderr, flush=True)
 
@@ -510,6 +508,7 @@ def main():
     ap.add_argument("--api-key", default="")
     ap.add_argument("--socket", default="")
     ap.add_argument("--persona", default="")     # System-Prompt (z. B. Esra); leer = generisch
+    ap.add_argument("--chat-intro", default="")    # feste Selbstvorstellung (Begrüßung) ohne Modell
     ap.add_argument("--chat-persona", default="")  # kurze Persona nur für den Chat (optional)
     ap.add_argument("--system", action="store_true")  # projektübergreifend (alle Projekte)
     ap.add_argument("--interval", type=float, default=5.0)
