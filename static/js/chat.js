@@ -233,6 +233,7 @@
         const a = document.createElement("a");
         a.href = "/normen/download/?name=" + encodeURIComponent(x.quelle);
         a.className = "norm-cite";
+        a.target = "_blank"; a.rel = "noopener noreferrer";
         a.dataset.name = x.quelle;
         a.dataset.page = x.seite || 1;
         a.textContent = x.quelle + (x.seite ? " S." + x.seite : "");

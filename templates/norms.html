@@ -52,7 +52,7 @@
           <tbody>
             {% for i in indexed %}
             <tr><td>
-                  <a href="{% url 'norms-download' %}?name={{ i.name|urlencode }}" title="{% trans 'herunterladen' %}">
+                  <a href="{% url 'norms-download' %}?name={{ i.name|urlencode }}" title="{% trans 'herunterladen' %}" target="_blank" rel="noopener noreferrer">
                     <i class="fas fa-file-pdf text-danger me-1"></i>{{ i.name }}
                   </a>
                 </td><td class="text-end text-muted small">{% blocktrans with n=i.chunks %}{{ n }} Chunks{% endblocktrans %}</td></tr>
@@ -162,7 +162,7 @@
       <tr><td>
             <a href="{% url 'norms-download' %}?name={{ i.name|urlencode }}"
                class="norm-cite" data-name="{{ i.name }}" data-page="1"
-               title="{% trans 'Ansehen (Strg-Klick: Download)' %}">
+               title="{% trans 'Ansehen (Strg-Klick: Download)' %}" target="_blank" rel="noopener noreferrer">
               <i class="fas fa-file-pdf text-danger me-1"></i>{{ i.name }}
             </a>
           </td><td>{{ i.chunks }}</td>
@@ -252,6 +252,7 @@ document.getElementById('normModal').addEventListener('show.bs.modal', function 
   document.getElementById('nm-cls-name').value = n;
   document.getElementById('nm-class').value = b.dataset.kind || '';
   document.getElementById('nm-dl').href = "{% url 'norms-download' %}?name=" + encodeURIComponent(n);
+  document.getElementById('nm-dl').target = '_blank';
 });
 </script>
 

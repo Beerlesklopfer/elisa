@@ -37,6 +37,7 @@ def _link_norms(escaped):
         f = norm_refs.file_for(token, maps)
         if f:
             return (f'<a href="{base}?name={quote(f)}" class="norm-cite" '
+                    f'target="_blank" rel="noopener noreferrer" '
                     f'data-name="{escape(f)}" title="{escape(f)}">'
                     f'<i class="fas fa-book-open me-1"></i>{token}</a>')
         return (f'<span class="text-danger fw-bold" '
@@ -75,8 +76,10 @@ def _markdown_html(text):
     import bleach
     import markdown
     html = markdown.markdown(text or "", extensions=["extra", "sane_lists", "nl2br"])
-    return bleach.clean(html, tags=_MD_TAGS, attributes=_MD_ATTRS,
-                        protocols=["http", "https", "mailto"], strip=True)
+    clean = bleach.clean(html, tags=_MD_TAGS, attributes=_MD_ATTRS,
+                         protocols=["http", "https", "mailto"], strip=True)
+    # Links aus Nachrichten öffnen in einem neuen Tab (ohne Zugriff auf das Chat-Fenster).
+    return re.sub(r"<a (?![^>]*target=)", '<a target="_blank" rel="noopener noreferrer" ', clean)
 
 
 @register.filter

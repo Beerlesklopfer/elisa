@@ -161,7 +161,7 @@
             {% for c in cited_norms %}
             <li>{% if c.in_system %}<a href="{% url 'norms-download' %}?name={{ c.name|urlencode }}"
                    class="norm-cite" data-name="{{ c.name }}" data-page="1"
-                   title="{% trans 'Im System – im Viewer öffnen' %}"><i class="fas fa-book-open me-1"></i>{{ c.label }}</a>
+                   title="{% trans 'Im System – im Viewer öffnen' %}" target="_blank" rel="noopener noreferrer"><i class="fas fa-book-open me-1"></i>{{ c.label }}</a>
               {% else %}{{ c.label }} <span class="text-muted">({% trans "nicht im System" %})</span>{% endif %}</li>
             {% endfor %}
             {% for n in norms %}
