@@ -1,5 +1,6 @@
 import json
 
+from django import forms
 from django.contrib import admin
 from django.contrib import messages as admin_messages
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -103,7 +104,7 @@ class JSONExchangeAdmin:
 
 from .models import (
     Customer, Project, WorkItem, NormClause, NormLink, ChatSession, ChatMessage,
-    ProjectDocument, ProjectMembership, MCPToken, EmailSettings, LLMRoleDescription,
+    ProjectDocument, ProjectMembership, MCPToken, EmailSettings, RagSettings, LLMRoleDescription,
     FeedbackRequest, FeedbackStatus, WorkerBackend, WorkItemHistory, LifecycleEvent,
     Keyword, KeywordLink, EmbeddingChunk, EsraTask, EmbeddedImage,
 )
@@ -128,6 +129,47 @@ class LLMRoleDescriptionAdmin(JSONExchangeAdmin, admin.ModelAdmin):
     @admin.display(description="Beschreibung")
     def short(self, obj):
         return (obj.description[:80] + "…") if len(obj.description) > 80 else obj.description
+
+
+class RagSettingsForm(forms.ModelForm):
+    """OCR-Modell als Auswahl der Eliezer-Modelle mit OCR/Vision (Fallback: aktueller Wert)."""
+    class Meta:
+        model = RagSettings
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from app import local_llm
+        models = [m for m in local_llm.list_models()
+                  if m["type"] == "llm" and (m["ocr"] or m["vision"])]
+        models.sort(key=lambda m: (not m["ocr"], m["key"]))      # OCR-Modelle zuerst
+        choices = [("", "— kein OCR —")] + [
+            (m["key"], m["key"] + (" (OCR)" if m["ocr"] else " (Vision)")) for m in models]
+        cur = (self.instance.ocr_model or "").strip()
+        if cur and cur not in {c[0] for c in choices}:
+            choices.append((cur, cur + " (aktuell)"))
+        self.fields["ocr_model"] = forms.ChoiceField(
+            label=self.fields["ocr_model"].label, choices=choices, required=False,
+            help_text=self.fields["ocr_model"].help_text)
+
+
+@admin.register(RagSettings)
+class RagSettingsAdmin(admin.ModelAdmin):
+    """Genau ein Datensatz: OCR-Modell für die Indexierung eingescannter PDFs."""
+    form = RagSettingsForm
+    list_display = ("__str__", "ocr_model", "ocr_min_chars", "ocr_dpi")
+    fieldsets = ((None, {
+        "fields": ("ocr_model", "ocr_min_chars", "ocr_dpi"),
+        "description": "OCR für eingescannte PDFs bei der Indexierung (Normen-Seite, "
+                       "Projektdokumente): Seiten mit zu wenig Text werden als Bild an das "
+                       "gewählte Modell der lokalen Inferenz (Eliezer) geschickt. Der "
+                       "erkannte Text dient nur dem RAG (beratend)."}),)
+
+    def has_add_permission(self, request):
+        return not RagSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(EmailSettings)

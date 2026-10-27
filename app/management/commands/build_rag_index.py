@@ -140,13 +140,26 @@ class Command(BaseCommand):
                 continue
 
             reader = PdfReader(path)
-            file_chunks = 0
+            from app import ocr as ocr_mod
+            from app.models import RagSettings
+            rs = RagSettings.current()
+            file_chunks, ocr_pages, ocr_failed = 0, 0, 0
             resume_from = existing_max.get(name, 0)
             for page_no, page in enumerate(reader.pages, start=1):
                 if page_no < resume_from:
                     fp["pages_done"] = page_no
                     continue
                 text = (page.extract_text() or "").strip()
+                if len(text) < (rs.ocr_min_chars or 0) and rs.ocr_model:
+                    # Scan (kaum Text): per OCR-Modell lesen.
+                    try:
+                        ocr_text = ocr_mod.ocr_page(path, page_no - 1, rs.ocr_model, rs.ocr_dpi)
+                        if len(ocr_text) > len(text):
+                            text, ocr_pages = ocr_text, ocr_pages + 1
+                    except ocr_mod.OcrError as exc:
+                        ocr_failed += 1
+                        if ocr_failed == 1:
+                            self.stderr.write(f"  ! {name}, S. {page_no}: {exc}")
                 chunks = chunk_text(text) if text else []
                 if chunks:
                     vecs = rag_service.embed_many(chunks)
@@ -166,6 +179,20 @@ class Command(BaseCommand):
                 progress["updated"] = time.time()
                 rag_service.write_progress(progress)
 
+            if file_chunks == 0 and f["pages_total"] > 0:
+                # Kein einziger Text: NICHT als erledigt archivieren (Scan ohne OCR o. ä.).
+                fp["status"] = "error"
+                progress["files_done"] += 1
+                fp["note"] = ("kein Text" + ("" if rs.ocr_model else
+                              " – OCR-Modell im Admin (RAG-Einstellungen) wählen"))
+                rag_service.write_progress(progress)
+                self.stderr.write(self.style.ERROR(
+                    f"  ✗ {name}: kein Text erkannt"
+                    + (f" (OCR-Fehler auf {ocr_failed} Seiten)" if ocr_failed else "")
+                    + ("" if rs.ocr_model else " – Scan? OCR-Modell im Admin unter "
+                       "„RAG-Einstellungen (OCR)“ einstellen.")
+                    + " Datei bleibt in incoming/."))
+                continue
             fp["status"] = "done"
             progress["files_done"] += 1
             total_chunks += file_chunks
@@ -175,7 +202,8 @@ class Command(BaseCommand):
                 self.stderr.write(f"  ! Verschieben fehlgeschlagen ({name}): {exc}")
             rag_service.write_progress(progress)
             self.stdout.write(self.style.SUCCESS(
-                f"  ✓ {name}: {file_chunks} Chunks -> archiviert"))
+                f"  ✓ {name}: {file_chunks} Chunks"
+                + (f" ({ocr_pages} Seiten per OCR)" if ocr_pages else "") + " -> archiviert"))
 
         progress["running"] = False
         progress["current"] = None

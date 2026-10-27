@@ -173,6 +173,13 @@ elisa (0.3.0) unstable; urgency=medium
     pro Port; ein anderer Django-Dienst auf localhost überschrieb csrftoken/sessionid.
     ELISA nutzt jetzt eigene Cookie-Namen (elisa_csrftoken, elisa_sessionid,
     elisa_language; per Umgebungsvariable änderbar). Einmaliges Neu-Anmelden nötig.
+  * Indexierung per Upload: OCR für eingescannte PDFs. Neue Admin-Seite „RAG-
+    Einstellungen (OCR)“ (Modell RagSettings, Migration 0056): OCR-/Vision-Modell aus
+    Eliezers Modellen wählen (z. B. allenai/olmocr-2-7b); Seiten mit zu wenig Text
+    werden per pypdfium2 gerendert und vom Modell gelesen (app/ocr.py). PDFs ohne
+    erkennbaren Text werden nicht mehr als „fertig“ archiviert, sondern bleiben mit
+    Hinweis in incoming/. Laufstatus der Indexierung aus der Fortschrittsdatei
+    (pgrep fehlt im Container).
   * Defaults auf localhost: DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
     ELISA_BIND_ADDRESS=127.0.0.1, MCP_PUBLIC_BASE=http://localhost/mcp.
   * .mcp.json (enthält Bearer-Token) aus dem Repository ausgeschlossen.

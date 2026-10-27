@@ -1,6 +1,7 @@
 django>=5.0
 ollama>=0.3
 pypdf>=4.0
+pypdfium2>=4.30     # PDF-Seiten rendern (OCR für Scans)
 fonttools>=4.0       # volle Schrift-Dekodierung beim PDF-Textauszug (pypdf)
 python-dotenv>=1.0   # .env / FHS-/etc/elisa/env laden (settings.py)
 mcp>=1.0,<2             # MCP-Server (SSE) für PEP/REQ-Bereitstellung

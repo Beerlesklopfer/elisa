@@ -361,6 +361,39 @@ class ProjectMembership(models.Model):
         return f"{self.user} @ {self.project} ({self.get_role_display()})"
 
 
+class RagSettings(models.Model):
+    """
+    Einstellungen der Dokument-Indexierung (nur ein Datensatz). OCR für eingescannte
+    PDFs: Seiten ohne (genug) Text werden als Bild an ein Vision-/OCR-Modell der lokalen
+    Inferenz (Eliezer) geschickt, z. B. allenai/olmocr-2-7b. Leer = kein OCR.
+    """
+    ocr_model = models.CharField(
+        "OCR-/Vision-Modell", max_length=128, blank=True,
+        help_text="Modell-Key aus Eliezers Allowlist mit OCR/Vision (z. B. "
+                  "allenai/olmocr-2-7b). Leer = kein OCR; Scans ergeben dann keinen Text.")
+    ocr_min_chars = models.PositiveIntegerField(
+        "OCR ab weniger Zeichen je Seite", default=25,
+        help_text="Hat eine Seite weniger Text, wird sie per OCR gelesen.")
+    ocr_dpi = models.PositiveIntegerField(
+        "Auflösung (dpi)", default=150,
+        help_text="Höher = genauer, aber langsamer und speicherhungriger (100–300).")
+
+    class Meta:
+        verbose_name = "RAG-Einstellung (OCR)"
+        verbose_name_plural = "RAG-Einstellungen (OCR)"
+
+    def __str__(self):
+        return f"OCR: {self.ocr_model or 'aus'}"
+
+    @classmethod
+    def current(cls):
+        import os
+        obj = cls.objects.first()
+        if obj is None:
+            obj = cls(ocr_model=os.getenv("RAG_OCR_MODEL", ""))
+        return obj
+
+
 class EmailSettings(models.Model):
     """
     SMTP-Einstellungen, im Admin pflegbar. Überschreibt die env-Defaults aus

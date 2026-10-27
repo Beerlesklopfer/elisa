@@ -28,6 +28,25 @@ def _ollama_client():
     return ollama.Client(host=settings.OLLAMA_HOST, timeout=settings.OLLAMA_TIMEOUT)
 
 
+def list_models() -> list:
+    """Modelle der lokalen Inferenz mit Typ/Fähigkeiten (nur Eliezer; sonst leer):
+    [{"key", "type", "ocr", "vision"}]. Fehler → []."""
+    if settings.LOCAL_LLM_BACKEND != "eliezer":
+        return []
+    try:
+        r = httpx.get(settings.ELIEZER_BASE_URL.rstrip("/") + "/api/v1/models",
+                      headers=_eliezer_headers(), timeout=10)
+        r.raise_for_status()
+        out = []
+        for m in r.json().get("models", []):
+            cap = m.get("capabilities") or {}
+            out.append({"key": m.get("key"), "type": m.get("type"),
+                        "ocr": bool(cap.get("ocr")), "vision": bool(cap.get("vision"))})
+        return out
+    except Exception:
+        return []
+
+
 def backend_label() -> str:
     return "Eliezer" if settings.LOCAL_LLM_BACKEND == "eliezer" else "Ollama"
 

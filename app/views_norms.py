@@ -308,9 +308,10 @@ def norms_build(request):
 
 
 def _is_indexing():
-    try:
-        out = subprocess.run(["pgrep", "-f", "build_rag_index"],
-                             capture_output=True, text=True)
-        return bool(out.stdout.strip())
-    except Exception:
-        return False
+    """Läuft eine Indexierung? Aus der Fortschrittsdatei (läuft + Lebenszeichen der
+    letzten 3 Minuten) – pgrep gibt es im Container-Image nicht, und der Lauf kann
+    in einem anderen Container (MCP) gestartet worden sein."""
+    import time
+    from app import rag_service
+    pr = rag_service.read_progress()
+    return bool(pr.get("running")) and time.time() - float(pr.get("updated", 0)) < 180
