@@ -1,5 +1,5 @@
 // Beratungs-Chat (RAG-gestützt). Schickt die Nachricht an den Server, der
-// Norm-Kontext holt, Ollama mit der Historie fragt und beides persistiert.
+// Norm-Kontext holt, das lokale Modell (Eliezer/Ollama) mit der Historie fragt und beides persistiert.
 // Der Chat ist beratend und nie Quelle der Wahrheit (CLAUDE.md, Regel 3).
 (function () {
   const history = document.getElementById("chat-history");

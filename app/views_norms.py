@@ -307,6 +307,26 @@ def norms_build(request):
     return redirect("norms")
 
 
+@login_required
+@require_POST
+def norms_reindex(request):
+    """Alle ARCHIVIERTEN PDFs neu indexieren (z. B. nach Einrichten des OCR-Modells):
+    Seiten werden neu gelesen (Scans per OCR), Chunks seitenweise ersetzt, die
+    Klassifizierung bleibt. Nur Projektleitung/Administratoren."""
+    from .permissions import is_pm_or_admin
+    if not is_pm_or_admin(request.user):
+        raise Http404()
+    from app import norm_fetch
+    if _is_indexing():
+        messages.warning(request, "Es läuft bereits eine Indexierung.")
+    else:
+        res = norm_fetch.start_index(reindex=True)
+        messages.info(request, "Neuindexierung aller Normen gestartet (läuft im Hintergrund; "
+                               "Scans werden per OCR gelesen)." if res.get("started")
+                      else res.get("reason", "Nicht gestartet."))
+    return redirect("norms")
+
+
 def _is_indexing():
     """Läuft eine Indexierung? Aus der Fortschrittsdatei (läuft + Lebenszeichen der
     letzten 3 Minuten) – pgrep gibt es im Container-Image nicht, und der Lauf kann

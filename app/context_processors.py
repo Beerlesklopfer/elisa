@@ -38,7 +38,9 @@ def languages(request):
 
 def branding(request):
     """Stellt Markendaten & Navigation für base.html bereit."""
+    from app import local_llm
     return {
         "company": {"product": "ELISA"},
         "ollama_chat_model": settings.LOCAL_CHAT_MODEL,
+        "local_llm_label": local_llm.backend_label(),     # "Eliezer" oder "Ollama"
     }

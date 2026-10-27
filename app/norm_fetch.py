@@ -143,7 +143,7 @@ def _download(url, cur, extra, name, requested_by):
         raise FetchError("Zu viele Weiterleitungen.")
 
 
-def start_index(only=""):
+def start_index(only="", reindex=False):
     """Startet build_rag_index im Hintergrund (ein Lauf zur Zeit)."""
     global _INDEX_PROC
     if index_running():
@@ -151,6 +151,8 @@ def start_index(only=""):
     args = [sys.executable, str(settings.BASE_DIR / "manage.py"), "build_rag_index"]
     if only:
         args += ["--only", Path(only).stem]
+    if reindex:
+        args += ["--reindex"]
     try:
         log = open(Path(settings.DATA_DIR) / "rag_index.log", "ab")
     except OSError:

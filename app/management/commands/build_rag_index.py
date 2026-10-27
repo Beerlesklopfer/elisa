@@ -43,6 +43,10 @@ class Command(BaseCommand):
                             help="Nur Dateien mit diesem Teilstring im Namen.")
         parser.add_argument("--reset", action="store_true",
                             help="Collection vor dem Aufbau leeren (Neuaufbau).")
+        parser.add_argument("--reindex", action="store_true",
+                            help="Alle ARCHIVIERTEN PDFs erneut lesen (z. B. nach Einrichten "
+                                 "des OCR-Modells): Quelle = Archiv, Chunks werden seitenweise "
+                                 "ersetzt, Klassifizierung bleibt; nichts wird gelöscht.")
 
     def handle(self, *args, **opts):
         import shutil
@@ -53,6 +57,9 @@ class Command(BaseCommand):
         source = opts["source"]
         only = opts["only"].lower()
         archive = settings.RAG_ARCHIVE_DIR
+        reindex = opts["reindex"]
+        if reindex:
+            source = str(archive)
         archive.mkdir(parents=True, exist_ok=True)
 
         pdfs = sorted(glob.glob(os.path.join(source, "*.pdf"))
@@ -93,7 +100,7 @@ class Command(BaseCommand):
 
         # Bereits indexierte Dateien erkennen (Resume).
         existing_max = {}
-        if not opts["reset"]:
+        if not opts["reset"] and not reindex:
             for row in (EmbeddingChunk.objects.filter(collection=COLL)
                         .values("source").annotate(mx=Max("page"))):
                 existing_max[row["source"]] = row["mx"] or 0
@@ -140,6 +147,9 @@ class Command(BaseCommand):
                 continue
 
             reader = PdfReader(path)
+            old_kind = (EmbeddingChunk.objects.filter(collection=COLL, source=name)
+                        .exclude(kind="").values_list("kind", flat=True).first() or "") if reindex else ""
+            had_chunks = reindex and EmbeddingChunk.objects.filter(collection=COLL, source=name).exists()
             from app import ocr as ocr_mod
             from app.models import RagSettings
             rs = RagSettings.current()
@@ -170,6 +180,12 @@ class Command(BaseCommand):
                                        text=chunk, content_hash=file_hash,
                                        uid=rag_service.make_uid(COLL, name, page_no, j),
                                        embedding=vec)
+                        for j, (chunk, vec) in enumerate(zip(chunks, vecs))]
+                        ) if not old_kind else EmbeddingChunk.objects.bulk_create([
+                        EmbeddingChunk(collection=COLL, source=name, page=page_no,
+                                       text=chunk, content_hash=file_hash, kind=old_kind,
+                                       uid=rag_service.make_uid(COLL, name, page_no, j),
+                                       embedding=vec)
                         for j, (chunk, vec) in enumerate(zip(chunks, vecs))])
                     file_chunks += len(chunks)
                 fp["pages_done"] = page_no
@@ -179,7 +195,7 @@ class Command(BaseCommand):
                 progress["updated"] = time.time()
                 rag_service.write_progress(progress)
 
-            if file_chunks == 0 and f["pages_total"] > 0:
+            if file_chunks == 0 and f["pages_total"] > 0 and not had_chunks:
                 # Kein einziger Text: NICHT als erledigt archivieren (Scan ohne OCR o. ä.).
                 fp["status"] = "error"
                 progress["files_done"] += 1
@@ -197,7 +213,9 @@ class Command(BaseCommand):
             progress["files_done"] += 1
             total_chunks += file_chunks
             try:
-                shutil.move(path, str(archive / name)); fp["archived"] = True
+                if not reindex:                    # beim Neuindexieren liegt die Datei schon im Archiv
+                    shutil.move(path, str(archive / name))
+                fp["archived"] = True
             except Exception as exc:
                 self.stderr.write(f"  ! Verschieben fehlgeschlagen ({name}): {exc}")
             rag_service.write_progress(progress)

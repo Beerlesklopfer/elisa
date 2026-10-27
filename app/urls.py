@@ -73,6 +73,7 @@ urlpatterns = [
     path("normen/progress/", views_norms.norms_progress, name="norms-progress"),
     path("normen/upload/", views_norms.norms_upload, name="norms-upload"),
     path("normen/build/", views_norms.norms_build, name="norms-build"),
+    path("normen/reindex/", views_norms.norms_reindex, name="norms-reindex"),
     path("normen/forget/", views_norms.norms_forget, name="norms-forget"),
     path("normen/rename/", views_norms.norms_rename, name="norms-rename"),
     path("normen/classify/", views_norms.norms_classify, name="norms-classify"),

@@ -998,12 +998,14 @@ async def add_standard_from_url(url: str, name: str = "", language: str = "") ->
 
 
 @mcp.tool()
-def build_standard_index(only: str = "") -> dict:
+def build_standard_index(only: str = "", reindex: bool = False) -> dict:
     """Stößt den Aufbau des Norm-RAG-Index im Hintergrund an (neue PDFs aus incoming/
-    → Chunks → Embeddings). `only` = optional ein Dateiname/Stamm. Fortschritt:
+    → Chunks → Embeddings). `only` = optional ein Dateiname/Stamm. `reindex=true` liest
+    alle ARCHIVIERTEN PDFs neu (z. B. nach Einrichten des OCR-Modells; ersetzt Chunks
+    seitenweise, behält die Klassifizierung). Fortschritt:
     standard_index_status, Ergebnis: list_norms. WRITE-Token nötig."""
     from app import norm_fetch
-    return norm_fetch.start_index(only)
+    return norm_fetch.start_index(only, reindex)
 
 
 @mcp.tool()

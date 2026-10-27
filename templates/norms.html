@@ -8,7 +8,7 @@
 
 <div class="advisory-banner mb-3">
   <i class="fas fa-circle-info me-1"></i>
-  {% trans "Norm-PDFs sind i. d. R. lizenzpflichtig — bitte nur lizenzierte Dokumente hochladen. Ollama erzeugt die Embeddings lokal; das Modell wird nicht trainiert." %}
+  {% blocktrans with llm=local_llm_label %}Norm-PDFs sind i. d. R. lizenzpflichtig — bitte nur lizenzierte Dokumente hochladen. {{ llm }} erzeugt die Embeddings lokal; das Modell wird nicht trainiert. Eingescannte PDFs werden per OCR gelesen, wenn im Admin unter „RAG-Einstellungen (OCR)“ ein Modell gewählt ist.{% endblocktrans %}
 </div>
 
 {% if messages %}
@@ -100,12 +100,24 @@
     <span><i class="fas fa-inbox me-1"></i>{% trans "Warteschlange (incoming/)" %} —
       <span id="rag-status" class="text-muted small">{% if indexing %}{% trans "Indexierung läuft …" %}{% else %}{% trans "im Leerlauf" %}{% endif %}</span>
     </span>
-    <form method="post" action="{% url 'norms-build' %}">
-      {% csrf_token %}
-      <button class="btn btn-sm btn-outline-dark" id="rag-build-all" {% if indexing %}disabled{% endif %}>
-        <i class="fas fa-database me-1"></i>{% trans "Alle indexieren" %}
-      </button>
-    </form>
+    <div class="d-flex gap-2">
+      <form method="post" action="{% url 'norms-build' %}">
+        {% csrf_token %}
+        <button class="btn btn-sm btn-outline-dark" id="rag-build-all" {% if indexing %}disabled{% endif %}>
+          <i class="fas fa-database me-1"></i>{% trans "Alle indexieren" %}
+        </button>
+      </form>
+      {% if is_pm_or_admin %}
+      <form method="post" action="{% url 'norms-reindex' %}"
+            onsubmit="return confirm('{% trans "Alle bereits indexierten Normen neu lesen (inkl. OCR für Scans)? Das kann dauern." %}');">
+        {% csrf_token %}
+        <button class="btn btn-sm btn-outline-secondary" {% if indexing %}disabled{% endif %}
+                title="{% trans 'Liest alle archivierten PDFs erneut, z. B. nach dem Einrichten des OCR-Modells' %}">
+          <i class="fas fa-rotate me-1"></i>{% trans "Alle neu indexieren" %}
+        </button>
+      </form>
+      {% endif %}
+    </div>
   </div>
   <table class="table mb-0 align-middle">
     <thead><tr><th>{% trans "Datei" %}</th><th>{% trans "Größe" %}</th><th style="width:38%">{% trans "Fortschritt" %}</th><th></th></tr></thead>

@@ -1213,3 +1213,23 @@ msgstr "Without @ the message goes to the persona addressed last."
 msgid "Bearbeiten – Senden schickt die Nachricht neu."
 msgstr "Editing – sending posts the message again."
 
+
+msgid "Alle bereits indexierten Normen neu lesen (inkl. OCR für Scans)? Das kann dauern."
+msgstr "Re-read all indexed standards (including OCR for scans)? This may take a while."
+
+msgid "Liest alle archivierten PDFs erneut, z. B. nach dem Einrichten des OCR-Modells"
+msgstr "Re-reads all archived PDFs, e.g. after setting up the OCR model"
+
+msgid "Alle neu indexieren"
+msgstr "Re-index all"
+
+msgid ""
+"Norm-PDFs sind i. d. R. lizenzpflichtig — bitte nur lizenzierte Dokumente "
+"hochladen. %(llm)s erzeugt die Embeddings lokal; das Modell wird nicht "
+"trainiert. Eingescannte PDFs werden per OCR gelesen, wenn im Admin unter "
+"„RAG-Einstellungen (OCR)“ ein Modell gewählt ist."
+msgstr ""
+"Standard PDFs are usually subject to licensing — please upload only licensed "
+"documents. %(llm)s generates the embeddings locally; the model is not trained. "
+"Scanned PDFs are read with OCR when a model is selected in the admin under "
+"“RAG settings (OCR)”."
